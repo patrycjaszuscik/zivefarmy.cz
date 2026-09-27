@@ -185,7 +185,8 @@
   }
   .icon-btn:hover{background:var(--surface-3);}
   .icon-btn svg{width:16px;height:16px;}
-  #listToggle{display:none;}
+  #listToggle{display:inline-flex;}
+  #listToggle.on{background:var(--accent);border-color:transparent;color:var(--accent-ink);}
 
   /* ---------- Filters ---------- */
   .filters{
@@ -238,12 +239,12 @@
   .dd-trigger{
     display:inline-flex;align-items:center;gap:8px;
     font-family:inherit;font-size:0.85rem;font-weight:500;
-    color:var(--text-soft);background:var(--surface-2);
+    color:var(--text);background:var(--surface-2);
     border:1px solid var(--border);border-radius:999px;
     padding:8px 13px 8px 15px;cursor:pointer;max-width:250px;
   }
   .dd-trigger .dd-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .dd-icon{display:inline-flex;flex-shrink:0;opacity:0.7;}
+  .dd-icon{display:inline-flex;flex-shrink:0;opacity:0.85;}
   .dd-icon svg{width:15px;height:15px;}
   .dd.on .dd-icon{opacity:1;}
   /* Clearing is an action, not another filter - and it has to stay reachable:
@@ -273,7 +274,7 @@
   .chip-clear:hover .chip-count{background:var(--accent-ink);color:var(--accent);}
   .chip-clear .chip-count:empty{display:none;}
   .chip-clear[hidden]{display:none;}
-  .dd-chev{width:14px;height:14px;flex-shrink:0;opacity:0.75;transition:transform .15s ease;}
+  .dd-chev{width:14px;height:14px;flex-shrink:0;opacity:0.8;transition:transform .15s ease;}
   .dd.open .dd-chev{transform:rotate(180deg);}
   .dd-trigger:hover{background:var(--surface-3);}
   .dd-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
@@ -408,20 +409,22 @@
   .layout{
     flex:1;
     display:grid;
-    grid-template-columns:300px 1fr;
+    grid-template-columns:1fr;
     min-height:0;
   }
+  .layout.list-open{grid-template-columns:300px 1fr;}
 
   .sidebar{
+    display:none;
     border-right:1px solid var(--border);
     background:var(--surface);
     overflow-y:auto;
     min-height:0;
     padding:14px;
-    display:flex;
     flex-direction:column;
     gap:10px;
   }
+  .layout.list-open .sidebar{display:flex;}
   .sidebar-head{
     display:flex;align-items:baseline;justify-content:space-between;gap:8px;
     padding:2px 4px 8px;
@@ -557,14 +560,15 @@
      that stays readable over the deep green of a selected region and over the
      pale pasture around it, in either theme. */
   .cities.zoomed text{
-    font-size:calc(19px / var(--zoom-scale,1));
-    fill:#FFFDF7;
-    stroke:#234F39;
-    stroke-width:calc(3.4px / var(--zoom-scale,1));
+    font-size:max(6.5px, calc(16px / var(--zoom-scale,1)));
+    fill:#24503A;
+    stroke:var(--surface);
+    stroke-width:max(1.7px, calc(3.4px / var(--zoom-scale,1)));
+    stroke-opacity:0.96;
   }
-  .cities.zoomed circle{fill:#FFFDF7;stroke:#234F39;opacity:0.95;}
-  .cities.zoomed .capital text{font-size:calc(21px / var(--zoom-scale,1));}
-  .cities.zoomed .town text{font-size:calc(16px / var(--zoom-scale,1));font-weight:600;}
+  .cities.zoomed circle{fill:#24503A;stroke:var(--surface);opacity:0.95;}
+  .cities.zoomed .capital text{font-size:max(7.4px, calc(18px / var(--zoom-scale,1)));}
+  .cities.zoomed .town text{font-size:max(6px, calc(14px / var(--zoom-scale,1)));font-weight:600;}
   /* Zoomed in, the farms that match keep their name showing. */
   /* Zoomed in, the pins speak for themselves - a name appears on hover,
      focus or selection, so the region stays readable. */
@@ -674,16 +678,23 @@
   .scrim.show{opacity:1;pointer-events:auto;}
 
   .drawer{
-    position:fixed;top:0;right:0;height:100%;width:400px;max-width:92vw;
+    position:fixed;left:50%;top:50%;
+    width:min(680px, calc(100vw - 56px));
+    max-height:min(88vh, 940px);
     background:var(--surface);
-    border-left:1px solid var(--border);
-    box-shadow:-8px 0 24px var(--shadow);
-    transform:translateX(100%);
-    transition:transform .22s cubic-bezier(.32,.72,0,1);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    box-shadow:0 24px 64px var(--shadow);
+    transform:translate(-50%,-48%) scale(0.98);
+    opacity:0;pointer-events:none;
+    transition:opacity .18s ease, transform .18s cubic-bezier(.32,.72,0,1);
     z-index:21;
     overflow-y:auto;
   }
-  .drawer.open{transform:translateX(0);}
+  .drawer.open{
+    transform:translate(-50%,-50%) scale(1);
+    opacity:1;pointer-events:auto;
+  }
 .drawer-tools{
   position:sticky;top:0;z-index:2;
   display:flex;justify-content:flex-end;gap:8px;
@@ -729,7 +740,7 @@
     :root:not([data-theme="light"]) .cert-bio{background:#33452A;color:#C6DCAB;border-color:#55703F;}
   }
   :root[data-theme="dark"] .cert-bio{background:#33452A;color:#C6DCAB;border-color:#55703F;}
-  .d-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .d-cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;padding-right:86px;}
   .d-cat-pill{
     font-size:0.72rem;font-weight:600;color:#fff;
     padding:4px 10px;border-radius:999px;
@@ -991,10 +1002,13 @@
     #listToggle{display:inline-flex;}
     .search input{width:150px;}
     .tagline{display:none;}
-    .drawer{width:100%;max-width:100%;top:auto;bottom:0;height:86vh;
-      border-left:none;border-top:1px solid var(--border);
+    /* Too narrow to centre a card: it comes up from the bottom instead. */
+    .drawer{width:100%;max-width:100%;left:0;top:auto;bottom:0;
+      height:86vh;max-height:86vh;
+      border:none;border-top:1px solid var(--border);
       border-radius:20px 20px 0 0;
-      transform:translateY(100%);
+      transform:translateY(100%);opacity:1;pointer-events:auto;
+      transition:transform .22s cubic-bezier(.32,.72,0,1);
     }
     .drawer.open{transform:translateY(0);}
     .drawer::before{
@@ -4000,7 +4014,15 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     mobileListDrawer.setAttribute('aria-hidden','true');
     if (!drawer.classList.contains('open')) scrim.classList.remove('show');
   }
-  document.getElementById('listToggle').addEventListener('click', openMobileList);
+  /* Wide enough for a column, the list opens beside the map; on a narrow
+     screen there is no room for that, so it slides over instead. */
+  document.getElementById('listToggle').addEventListener('click', function(){
+    if (window.matchMedia('(max-width:960px)').matches){ openMobileList(); return; }
+    var open = document.querySelector('.layout').classList.toggle('list-open');
+    this.classList.toggle('on', open);
+    this.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (typeof updateTipSides === 'function') setTimeout(updateTipSides, 60);
+  });
 
 
 /* ---- Favourites ---- */
@@ -4153,6 +4175,7 @@ searchEl.addEventListener('keydown', function(e){
     document.querySelector('.chip[data-cat="all"] .chip-label').textContent = t('chipAll');
     document.getElementById('txtListHeading').textContent = t('listHeading');
     document.getElementById('txtFavChip').textContent = t('favChip');
+    document.getElementById('txtNearChip').textContent = t('nearChip');
     document.getElementById('txtClear').textContent = t('clearFilters');
     document.getElementById('txtMapReset').textContent = t('mapReset');
     Object.keys(CAT).forEach(function(c){
