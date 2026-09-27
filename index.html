@@ -187,6 +187,20 @@
   .icon-btn svg{width:16px;height:16px;}
   #listToggle{display:inline-flex;}
   #listToggle.on{background:var(--accent);border-color:transparent;color:var(--accent-ink);}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  .fav-toggle{position:relative;padding:9px 11px;}
+  .fav-toggle .dot.cat-icon{width:18px;height:18px;color:var(--text-soft);}
+  .fav-toggle .dot.cat-icon svg{width:18px;height:18px;}
+  .fav-toggle.active{background:var(--accent);border-color:transparent;}
+  .fav-toggle.active .dot.cat-icon{color:#fff;}
+  .fav-toggle .chip-count{
+    position:absolute;top:-3px;right:-3px;
+    min-width:17px;height:17px;padding:0 4px;border-radius:999px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--accent);color:var(--accent-ink);
+    font-size:0.66rem;font-weight:700;opacity:1;
+  }
+  .fav-toggle .chip-count:empty{display:none;}
 
   /* ---------- Filters ---------- */
   .filters{
@@ -310,20 +324,6 @@
     vector-effect:non-scaling-stroke;
   }
   .near-ring circle{fill:var(--accent);stroke:var(--surface);stroke-width:2;vector-effect:non-scaling-stroke;}
-  .map-hint{
-    position:absolute;left:50%;top:14px;transform:translateX(-50%);
-    display:flex;align-items:center;gap:10px;
-    padding:9px 16px;border-radius:999px;
-    background:var(--text);color:var(--bg);
-    font-size:0.84rem;font-weight:600;
-    box-shadow:0 3px 14px var(--shadow);
-    max-width:calc(100% - 36px);
-  }
-  .map-hint[hidden]{display:none;}
-  .map-hint button{
-    border:none;background:none;color:var(--bg);opacity:0.7;
-    font-size:0.8rem;text-decoration:underline;cursor:pointer;padding:0;
-  }
   .picking .map-stage{cursor:crosshair;}
   .chip-near.active{background:var(--accent);border-color:transparent;color:#fff;}
   .chip-near .icon{width:15px;height:15px;}
@@ -485,6 +485,7 @@
   /* ---------- Map ---------- */
   .map-wrap{
     position:relative;
+    touch-action:none;
     min-height:0;
     background:
       radial-gradient(ellipse at 30% 15%, var(--surface-2), var(--bg) 60%);
@@ -493,12 +494,12 @@
   .map-inner{
     position:absolute;inset:0;
     display:flex;align-items:center;justify-content:center;
-    padding:32px 18px 18px;
+    padding:30px 22px 58px;
   }
   .map-stage{
     position:relative;
-    width:100%;
-    max-width:1100px;
+    width:min(1100px, 100%);
+    max-height:100%;
     aspect-ratio:900/532.92;
     transform-origin:0 0;
     transition:transform .5s cubic-bezier(.4,0,.2,1);
@@ -600,6 +601,11 @@
   .pins.zoomed .pin:hover,
   .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.5 / var(--zoom-scale,1)));}
   .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.55 / var(--zoom-scale,1)));}
+  @media (pointer:coarse){
+    .pin{filter:none;}
+    .pin.hovered,.pin:hover{filter:none;}
+    .pin-badge .pin-outline{stroke-width:2.6;}
+  }
   .pin.selected{z-index:6;filter:drop-shadow(0 0 5px var(--accent)) drop-shadow(0 3px 6px var(--shadow));}
   .pin-badge{width:29px;height:36px;display:block;}
   .pin.selected .pin-badge .pin-outline{stroke:var(--text);stroke-width:3;}
@@ -711,6 +717,16 @@
   width:34px;height:34px;border-radius:50%;
   background:var(--surface-2);border:1px solid var(--border);
   color:var(--text);cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+/* A finger is not a cursor: on touch the buttons grow to a size that can
+   actually be hit, and stop sharing an edge with each other. */
+@media (pointer:coarse){
+  .drawer-tools{gap:12px;padding:14px 14px 0;margin-bottom:-46px;}
+  .drawer-tool{width:44px;height:44px;}
+  .drawer-tool svg{width:20px;height:20px;}
+  .d-cats{padding-right:110px;}
 }
 .drawer-tool:hover{background:var(--surface-3);}
 .drawer-tool svg{width:17px;height:17px;}
@@ -1058,6 +1074,10 @@
       </div>
     </div>
     <div class="controls">
+      <button class="icon-btn fav-toggle" id="favChip" aria-pressed="false" title="Obl&#237;ben&#233;">
+        <span class="dot cat-icon" aria-hidden="true"></span>
+        <span class="sr-only" id="txtFavChip">Obl&#237;ben&#233;</span><span class="chip-count" id="count-fav"></span>
+      </button>
       <div class="lang-switch" id="langSwitch" role="group" aria-label="Jazyk / Language">
         <button data-lang="cs" class="active">CZ</button>
         <button data-lang="en">EN</button>
@@ -1121,10 +1141,6 @@
       </button>
     </div>
     <span class="filter-sep" aria-hidden="true"></span>
-    <button class="chip chip-fav" id="favChip" aria-pressed="false">
-      <span class="dot cat-icon" aria-hidden="true"></span>
-      <span id="txtFavChip">Obl&#237;ben&#233;</span><span class="chip-count" id="count-fav"></span>
-    </button>
     <button class="chip chip-near" id="nearChip" aria-pressed="false">
       <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/><line x1="12" y1="1.4" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.6"/><line x1="1.4" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.6" y2="12"/></svg>
       <span id="txtNearChip">Bl&#237;zko m&#283;</span>
@@ -1172,7 +1188,6 @@
           <div class="pins" id="pinsLayer"></div>
         </div>
       </div>
-      <div class="map-hint" id="mapHint" hidden></div>
       <div class="map-caption" id="mapCaption">10 farem</div>
       <div class="map-zoom" role="group" aria-label="Zoom">
         <button type="button" id="zoomIn" aria-label="+">
@@ -1238,6 +1253,7 @@
     var box = document.getElementById('toast');
     document.getElementById('toastText').textContent = msg;
     var undo = document.getElementById('toastUndo');
+    undo.hidden = !undoId;
     undo.textContent = t('undo');
     undo.onclick = function(){ toggleFav(undoId, true); hideToast(); };
     box.hidden = false;
@@ -1490,9 +1506,18 @@
   var PIN_SHAPE = "M14.5 36C14.5 36 2 20.2 2 13A12.5 12.5 0 0 1 27 13C27 20.2 14.5 36 14.5 36Z";
   /* One colour per pin, taken from the farm's main category \u2014 a farm selling
      several things still gets a single flat colour rather than stripes. */
+  function displayCat(f){
+    var sel = (typeof activeCats !== 'undefined' && activeCats) ? activeCats : [];
+    for (var i = 0; i < f.cats.length; i++){
+      if (sel.indexOf(f.cats[i]) !== -1) return f.cats[i];
+    }
+    return f.cats[0];
+  }
+
   function buildPinSVG(f){
-    var fillLayer = '<path d="'+PIN_SHAPE+'" fill="'+CAT[f.cats[0]].color+'"/>';
-    var iconGlyph = '<g transform="translate(6.8,5.3) scale(0.64)" fill="#fff" stroke="none">'+CAT[f.cats[0]].icon+'</g>';
+    var cat = CAT[displayCat(f)];
+    var fillLayer = '<path d="'+PIN_SHAPE+'" fill="'+cat.color+'"/>';
+    var iconGlyph = '<g transform="translate(6.8,5.3) scale(0.64)" fill="#fff" stroke="none">'+cat.icon+'</g>';
     return '<svg class="pin-badge" viewBox="0 0 29 36" aria-hidden="true">' +
       fillLayer +
       '<path class="pin-outline" d="'+PIN_SHAPE+'" fill="none" stroke="var(--surface)" stroke-width="2.2"/>' +
@@ -2589,6 +2614,7 @@
   sellers:[{ name:"Gurm\u00E1n, Al\u0161ovo n\u00E1m., Ostrava-Poruba" },
            { name:"Ml\u00E9\u010Dn\u00FD bar Naproti, Ostrava centrum" },
            { name:"Galerie u vlak. n\u00E1dra\u017E\u00ED, Kop\u0159ivnice" },
+           { name:"P\u0159\u00EDbor" },
            { name:"Natura zdrav\u00E1 v\u00FD\u017Eiva, Nov\u00FD Ji\u010D\u00EDn" },
            { name:"Elektro Frydrych, B\u00EDlovec" },
            { name:"Slune\u010Dnice, Ro\u017Enov pod Radho\u0161t\u011Bm" }],
@@ -2767,18 +2793,20 @@
   instagram:"https://www.instagram.com/ekofarmabilymrak/",
   email:"susovi@bilymrak.cz", phone:"+420 603 967 880",
   delivery:["praha"],
-  sellers:[{ name:"Localis, Hradec Kr\u00E1lov\u00E9" }, { name:"KAFEMYSL, Litomy\u0161l" }],
+  shops:{ scuk:"https://www.scuk.cz/bily-mrak" },
+  sellers:[{ name:"Localis, Hradec Kr\u00E1lov\u00E9", url:"https://www.localis.cz/" },
+           { name:"KAFEMYSL, Litomy\u0161l", url:"https://kafemysl.cz/" }],
   name:"Ekofarma B\u00EDl\u00FD mrak",
   town:{cs:"\u0160achov 13, Borohr\u00E1dek", en:"\u0160achov 13, Borohr\u00E1dek"},
   region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
   lat:50.0979, lon:16.0934, cats:["veggies","meat"],
   story:{ cs:["Certifikovan\u00E1 ekologick\u00E1 ovocn\u00E1\u0159sk\u00E1 farma na Rychnovsku.",
               "BIO jablka, \u0161vestky, hru\u0161ky a t\u0159e\u0161n\u011B, d\u00FDn\u011B hokkaido, mrkev a \u010Derven\u00E1 \u0159epa; k tomu vlastn\u00ED \u0161\u0165\u00E1vy.",
-              "Sezonn\u011B nab\u00EDzej\u00ED i jehn\u011B\u010D\u00ED.",
+              "Jehn\u011B\u010D\u00ED maj\u00ED jen sezonn\u011B \u2014 na maso se ozv\u011Bte p\u0159edem, jestli je zrovna v nab\u00EDdce.",
               "Prod\u00E1vaj\u00ED ze dvora, v\u011Bt\u0161\u00ED dod\u00E1vky voz\u00ED do Prahy a Hradce, spolupracuj\u00ED se Scukem."],
           en:["A certified organic fruit farm in the Rychnov area.",
               "Organic apples, plums, pears and cherries, Hokkaido pumpkin, carrots and beetroot, plus their own juices.",
-              "Lamb is available seasonally.",
+              "Lamb is seasonal only \u2014 ask ahead whether any is available.",
               "They sell from the yard, deliver larger orders to Prague and Hradec, and work with Scuk."] } },
 
 { id:"fojtstvi", cert:"bio", website:"https://www.na-fojtstvi.cz/",
@@ -3118,7 +3146,7 @@
 
   /* ---- Render sidebar lists ---- */
   function farmCardHTML(f){
-    var cat = CAT[f.cats[0]];
+    var cat = CAT[displayCat(f)];
     var d = (nearActive && userLoc) ? farmDistance(f) : null;
     var dist = d === null ? '' : '<span class="dist">'+Math.round(d)+' km</span>';
     return '<button class="farm-card" data-id="'+f.id+'">' +
@@ -3195,13 +3223,15 @@
     FARMS.forEach(function(f){ f.cats.forEach(function(c){ counts[c]++; }); });
     Object.keys(counts).forEach(function(k){
       var el = document.getElementById('count-'+k);
-      if (el) el.textContent = ' \u00B7 ' + counts[k];
+      if (!el) return;
+      if (k === 'fav'){ el.textContent = counts.fav ? String(counts.fav) : ''; return; }
+      el.textContent = ' \u00B7 ' + counts[k];
     });
   }
   updateCounts();
 
   /* ---- Filtering ---- */
-  var activeCat = 'all';
+  var activeCats = [];   /* empty = every category */
   var activeChannel = 'all';
   var activeRegion = 'all';
   var activeDelivery = 'all';
@@ -3272,7 +3302,7 @@ function farmHaystack(f){
 function matches(f){
     if (onlyFavs && !FAVS.has(f.id)) return false;
     if (nearActive && userLoc && farmDistance(f) > nearRadiusKm()) return false;
-    var catOk = activeCat === 'all' || f.cats.indexOf(activeCat) !== -1;
+    var catOk = !activeCats.length || f.cats.some(function(c){ return activeCats.indexOf(c) !== -1; });
     var chanOk = activeChannel === 'all' || farmChannels(f).indexOf(activeChannel) !== -1;
     var regionOk = activeRegion === 'all' || f.region.cs === activeRegion;
     var delivOk = activeDelivery === 'all' || (f.delivery || []).indexOf(activeDelivery) !== -1;
@@ -3434,11 +3464,12 @@ function matches(f){
       el.hidden = visibleCount > 0;
       el.textContent = (onlyFavs && FAVS.size === 0) ? t('favEmpty') : t('noMatch');
     });
-    var filtered = activeCat !== 'all' || activeChannel !== 'all' || activeRegion !== 'all' || activeDelivery !== 'all' ||
+    var filtered = activeCats.length > 0 || activeChannel !== 'all' || activeRegion !== 'all' || activeDelivery !== 'all' ||
                    nearActive || searchQuery;
     document.getElementById('mapCaption').textContent = visibleCount + ' ' + t('farmWord')(visibleCount) + (filtered ? t('farmsShown') + FARMS.length : '');
     document.getElementById('sidebarCount').textContent = visibleCount + (filtered ? '/' + FARMS.length : '');
-    var activeCount = [activeCat !== 'all', activeChannel !== 'all', activeDelivery !== 'all',
+    refreshPinMarks();
+    var activeCount = [activeCats.length > 0, activeChannel !== 'all', activeDelivery !== 'all',
                        activeRegion !== 'all', onlyFavs, nearActive, !!searchQuery]
                       .filter(Boolean).length;
     var clearBtn = document.getElementById('clearFilters');
@@ -3447,19 +3478,45 @@ function matches(f){
     updateMapControls();
   }
 
+  /* "V\u0161e" clears the lot; any other chip toggles itself on or off, and with
+     nothing chosen we are back to showing everything. */
+  function refreshPinMarks(){
+    FARMS.forEach(function(f){
+      var pin = pinsLayer.querySelector('.pin[data-id="' + f.id + '"]');
+      if (!pin) return;
+      var dc = displayCat(f);
+      if (pin.dataset.mark === dc) return;
+      pin.dataset.mark = dc;
+      pin.innerHTML = buildPinSVG(f) + '<span class="pin-tip">' + f.name + '</span>';
+    });
+  }
+
+  function syncCatChips(){
+    document.querySelectorAll('.chip[data-cat]').forEach(function(c){
+      c.classList.toggle('active', c.dataset.cat === 'all'
+        ? activeCats.length === 0
+        : activeCats.indexOf(c.dataset.cat) !== -1);
+      c.setAttribute('aria-pressed', c.classList.contains('active') ? 'true' : 'false');
+    });
+  }
+
   document.getElementById('filterBar').addEventListener('click', function(e){
     var chip = e.target.closest('.chip[data-cat]');
     if (!chip) return;
-    document.querySelectorAll('.chip[data-cat]').forEach(function(c){ c.classList.remove('active'); });
-    chip.classList.add('active');
-    activeCat = chip.dataset.cat;
+    var cat = chip.dataset.cat;
+    if (cat === 'all'){
+      activeCats = [];
+    } else {
+      var at = activeCats.indexOf(cat);
+      if (at === -1) activeCats.push(cat); else activeCats.splice(at, 1);
+    }
+    syncCatChips();
     applyFilters();
   });
 
   /* ---- Proximity controls ---- */
   var nearChip = document.getElementById('nearChip');
   var nearDDHost = document.getElementById('nearDD');
-  var mapHint = document.getElementById('mapHint');
   var nearRing = document.getElementById('nearRing');
 
   function renderNearOptions(){
@@ -3469,15 +3526,8 @@ function matches(f){
     nearDD.setOn(true);
   }
 
-  function showHint(text, withChange){
-    mapHint.innerHTML = '<span></span>' + (withChange ? '<button type="button" id="rePick"></button>' : '');
-    mapHint.querySelector('span').textContent = text;
-    if (withChange){
-      var btn = mapHint.querySelector('#rePick');
-      btn.textContent = t('changeLoc');
-      btn.addEventListener('click', function(){ startPicking(); });
-    }
-    mapHint.hidden = false;
+  function showHint(text){
+    showToast(text);
   }
 
   function startPicking(){
@@ -3519,7 +3569,7 @@ function matches(f){
     nearDDHost.hidden = false;
     renderNearOptions();
     drawNearRing();
-    showHint(t('youAreHere') + ' \u00B7 ' + t('nearNote'), true);
+    showHint(t('youAreHere'), true);
     renderFarmLists();
   }
 
@@ -3531,7 +3581,6 @@ function matches(f){
     nearChip.setAttribute('aria-pressed', 'false');
     nearDDHost.hidden = true;
     nearRing.hidden = true;
-    mapHint.hidden = true;
     renderFarmLists();
   }
 
@@ -3587,6 +3636,102 @@ function matches(f){
     setTimeout(updateTipSides, 520);
   }
 
+
+/* ---- Pinch to zoom, drag to pan ------------------------------------------
+   The +/- buttons were the only way in, which is not how anyone uses a map
+   on a phone. Two fingers scale around the point between them; one finger
+   pans once you are zoomed in. The CSS transition is switched off while a
+   gesture is running, otherwise every frame chases the last one. */
+(function(){
+  var wrap = document.querySelector('.map-wrap');
+  if (!wrap) return;
+
+  var gest = null;
+
+  function dist(t){
+    var dx = t[0].clientX - t[1].clientX, dy = t[0].clientY - t[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function mid(t){
+    return t.length > 1
+      ? { x:(t[0].clientX + t[1].clientX) / 2, y:(t[0].clientY + t[1].clientY) / 2 }
+      : { x:t[0].clientX, y:t[0].clientY };
+  }
+  /* Where a screen point sits in the map's own 0-1 space, so the spot under
+     the fingers stays under the fingers as the scale changes. */
+  function toStage(px, py){
+    var b = wrap.getBoundingClientRect();
+    return {
+      x: view.fx + (px - b.left - b.width / 2) / (b.width * view.s),
+      y: view.fy + (py - b.top - b.height / 2) / (b.height * view.s)
+    };
+  }
+  function live(on){
+    mapStage.style.transition = on ? 'none' : '';
+  }
+
+  wrap.addEventListener('touchstart', function(e){
+    if (pickingLocation) return;
+    var t = e.touches;
+    if (t.length === 2){
+      gest = { mode:'pinch', d0:dist(t), s0:view.s, anchor:toStage(mid(t).x, mid(t).y) };
+      live(true);
+    } else if (t.length === 1 && view.s > 1.01){
+      gest = { mode:'pan', x:t[0].clientX, y:t[0].clientY, fx:view.fx, fy:view.fy };
+      live(true);
+    }
+  }, { passive:true });
+
+  wrap.addEventListener('touchmove', function(e){
+    if (!gest) return;
+    var t = e.touches;
+
+    if (gest.mode === 'pinch' && t.length === 2){
+      e.preventDefault();
+      var next = Math.max(1, Math.min(gest.s0 * (dist(t) / gest.d0), 6));
+      var b = wrap.getBoundingClientRect(), m = mid(t);
+      view.s = next;
+      /* Keep the anchor under the fingers. */
+      view.fx = gest.anchor.x - (m.x - b.left - b.width / 2) / (b.width * next);
+      view.fy = gest.anchor.y - (m.y - b.top - b.height / 2) / (b.height * next);
+      clampView();
+      paint();
+    } else if (gest.mode === 'pan' && t.length === 1){
+      e.preventDefault();
+      var b2 = wrap.getBoundingClientRect();
+      view.fx = gest.fx - (t[0].clientX - gest.x) / (b2.width * view.s);
+      view.fy = gest.fy - (t[0].clientY - gest.y) / (b2.height * view.s);
+      clampView();
+      paint();
+    }
+  }, { passive:false });
+
+  function end(){
+    if (!gest) return;
+    gest = null;
+    live(false);
+    applyView();
+  }
+  wrap.addEventListener('touchend', end);
+  wrap.addEventListener('touchcancel', end);
+
+  /* Never let the map be dragged off screen. */
+  function clampView(){
+    if (view.s <= 1.001){ view.s = 1; view.fx = 0.5; view.fy = 0.5; return; }
+    var half = 0.5 / view.s;
+    view.fx = Math.max(half, Math.min(view.fx, 1 - half));
+    view.fy = Math.max(half, Math.min(view.fy, 1 - half));
+  }
+  /* The cheap half of applyView: move it now, do the bookkeeping on release. */
+  function paint(){
+    mapStage.style.transform =
+      'translate(' + ((0.5 - view.fx * view.s) * 100).toFixed(2) + '%,' +
+                     ((0.5 - view.fy * view.s) * 100).toFixed(2) + '%)' +
+      ' scale(' + view.s.toFixed(3) + ')';
+    mapStage.style.setProperty('--zoom-scale', view.s.toFixed(3));
+  }
+})();
+
   function zoomBy(factor){
     view.s = Math.max(1, Math.min(view.s * factor, 6));
     applyView();
@@ -3637,7 +3782,7 @@ function focusLabels(kraj){
   function updateMapControls(){
     document.getElementById('zoomIn').disabled = view.s >= 6;
     document.getElementById('zoomOut').disabled = view.s <= 1;
-    var filtered = activeCat !== 'all' || activeChannel !== 'all' || activeRegion !== 'all' ||
+    var filtered = activeCats.length > 0 || activeChannel !== 'all' || activeRegion !== 'all' ||
                    nearActive || searchQuery || view.s > 1;
     document.getElementById('mapReset').hidden = !filtered;
   }
@@ -3647,13 +3792,11 @@ function focusLabels(kraj){
 
   function resetFilters(){
     if (nearActive) deactivateNear();
-    activeCat = 'all';
+    activeCats = [];
     activeChannel = 'all';
     searchQuery = '';
     document.getElementById('searchInput').value = '';
-    document.querySelectorAll('.chip[data-cat]').forEach(function(c){
-      c.classList.toggle('active', c.dataset.cat === 'all');
-    });
+    syncCatChips();
     channelDD.setOn(false);
     activeDelivery = 'all';
     onlyFavs = false;
@@ -4115,7 +4258,7 @@ function goToPlace(p){
     setRegion(kraj);
     showHint(t('townRegion')(p.name, kraj), true);
   } else {
-    showHint(t('nearPlace')(p.name, p.okres) + ' - ' + t('nearNote'), true);
+    showHint(t('nearPlace')(p.name, p.okres), true);
   }
 
   /* setRegion already framed the whole kraj. Only when the town sits in no
