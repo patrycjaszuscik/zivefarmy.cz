@@ -596,6 +596,10 @@
   .pin.faded .pin-tip{opacity:0 !important;}
   .pin.hovered .pin-outline{stroke:var(--surface);stroke-width:2.6;}
   .pin.hovered{filter:drop-shadow(0 4px 9px var(--shadow)) drop-shadow(0 1px 2px var(--shadow));}
+  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(1.32 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin:hover,
+  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.5 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.55 / var(--zoom-scale,1)));}
   .pin.selected{z-index:6;filter:drop-shadow(0 0 5px var(--accent)) drop-shadow(0 3px 6px var(--shadow));}
   .pin-badge{width:29px;height:36px;display:block;}
   .pin.selected .pin-badge .pin-outline{stroke:var(--text);stroke-width:3;}
