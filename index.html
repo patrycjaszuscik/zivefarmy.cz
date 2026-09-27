@@ -498,7 +498,7 @@
   }
   .map-stage{
     position:relative;
-    width:min(1100px, 100%);
+    width:100%;
     max-height:100%;
     aspect-ratio:900/532.92;
     transform-origin:0 0;
@@ -578,7 +578,8 @@
   .pins{position:absolute;inset:0;pointer-events:none;}
   .pin{
     position:absolute;
-    transform:translate(-50%,-100%);
+    transform-origin:50% 100%;
+    transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) / var(--zoom-scale,1)));
     pointer-events:auto;
     background:none;border:none;padding:0;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;
@@ -586,28 +587,33 @@
     transition:transform .15s ease, opacity .15s ease;
     z-index:1;
   }
-  .pin{transform-origin:50% 100%;transform:translate(-50%,-100%) scale(calc(1 / var(--zoom-scale,1)));}
-  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.16 / var(--zoom-scale,1)));z-index:5;}
+  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.16 / var(--zoom-scale,1)));z-index:5;}
   .pin:focus-visible{outline:none;}
   /* Farms outside the current filter leave the map entirely &#8212; a greyed-out
      layer underneath read as noise. */
   .pin.dim{display:none;}
-  .pin.hovered{z-index:5;transform:translate(-50%,-100%) scale(calc(1.2 / var(--zoom-scale,1)));}
+  .pin.hovered{z-index:5;transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.2 / var(--zoom-scale,1)));}
   .pin.faded{opacity:0.28;}
   .pin.faded .pin-tip{opacity:0 !important;}
   .pin.hovered .pin-outline{stroke:var(--surface);stroke-width:2.6;}
   .pin.hovered{filter:drop-shadow(0 4px 9px var(--shadow)) drop-shadow(0 1px 2px var(--shadow));}
-  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(1.32 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.32 / var(--zoom-scale,1)));}
   .pins.zoomed .pin:hover,
-  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.5 / var(--zoom-scale,1)));}
-  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.55 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.5 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.55 / var(--zoom-scale,1)));}
   @media (pointer:coarse){
     .pin{filter:none;}
     .pin.hovered,.pin:hover{filter:none;}
     .pin-badge .pin-outline{stroke-width:2.6;}
   }
   .pin.selected{z-index:6;filter:drop-shadow(0 0 5px var(--accent)) drop-shadow(0 3px 6px var(--shadow));}
-  .pin-badge{width:29px;height:36px;display:block;}
+  /* Sized directly rather than through the transform, which already
+     carries the zoom counter-scale. */
+  .pin-badge{
+    width:calc(29px * var(--pin-scale,1));
+    height:calc(36px * var(--pin-scale,1));
+    display:block;
+  }
   .pin.selected .pin-badge .pin-outline{stroke:var(--text);stroke-width:3;}
   .pin-tip{
     position:absolute;
@@ -2159,16 +2165,22 @@
                   "Milk, plain and flavoured buttermilk, whey, ky\u0161ka, yoghurt, tvaroh, butter and cheeses \u2014 fresh, aged, smoked, spiced and Greek-style.",
                   "There is no e-shop; you buy at the farm or from the self-service fridge."] } },
 
-    { id:"dora", cert:"bio",
+    { id:"dora", cert:"bio", eshop:"https://www.kozimleko.cz/vyrobky/",
       shops:{ scuk:"https://www.scuk.cz/biofarma-dora", rohlik:"https://www.rohlik.cz/hledat/znacka/biofarma-dora?q=Biofarma%20DoRa&companyId=1", kosik:"https://www.kosik.cz/b4502-biofarma-dora", sklizeno:"https://eshop.sklizeno.cz/mlecne-a-vejce-c146?producer=Biofarma%20DoRa" }, hours:{cs:"Prodej na farm\u011B: So 14:00\u201317:00 (v l\u00E9t\u011B do 18:00); automat 24/7", en:"Farm sales: Sat 14:00\u201317:00 (until 18:00 in summer); vending machine 24/7"}, offers:["automat"], website:"https://www.kozimleko.cz/", email:"objednavky.dora@gmail.com", phone:"+420 568 440 617", facebook:"https://www.facebook.com/biofarmadora/", name:"BIOFARMA DoRa",
       town:{cs:"Ratibo\u0159ice u Jarom\u011B\u0159ic nad Rokytnou", en:"Ratibo\u0159ice near Jarom\u011B\u0159ice nad Rokytnou"},
       region:{cs:"Kraj Vyso\u010Dina", en:"Vyso\u010Dina Region"},
       lat:49.09, lon:15.89, cats:["dairy"],
       instagram:"https://www.instagram.com/biofarmadora/",
-      story:{ cs:["Rodinn\u00E1 BIO farma na Vyso\u010Din\u011B zam\u011B\u0159en\u00E1 na kozy.",
-                  "Koz\u00ED ml\u00E9ko a koz\u00ED s\u00FDry."],
-              en:["A family organic farm in Vyso\u010Dina focused on goats.",
-                  "Goat milk and goat cheeses."] } },
+      story:{ cs:["Nejv\u011Bt\u0161\u00ED ekologick\u00FD chov koz v \u010Cesku \u2014 asi tis\u00EDc zv\u00ED\u0159at plemene koza b\u00EDl\u00E1 kr\u00E1tkosrst\u00E1, z toho 620 dojnic.",
+                  "Krmivo si p\u011Bstuj\u00ED sami na vlastn\u00EDch certifikovan\u00FDch BIO pozemc\u00EDch: sen\u00E1\u017E, seno, sl\u00E1ma, oves, p\u0161enice, je\u010Dmen.",
+                  "Ml\u00E9ko te\u010De z doj\u00EDrny nerezov\u00FDm potrub\u00EDm rovnou do faremn\u00ED ml\u00E9k\u00E1rny, kde se hned chlad\u00ED a \u0161etrn\u011B zpracov\u00E1v\u00E1.",
+                  "Za u\u017Eitkovost zv\u00ED\u0159at z\u00EDskali t\u0159ikr\u00E1t po sob\u011B zlatou medaili v nejp\u0159\u00EDsn\u011Bj\u0161\u00ED kontrole u\u017Eitkovosti metodou AC.",
+                  "Koz\u00ED ml\u00E9ko, koz\u00ED s\u00FDry a kysan\u00E9 v\u00FDrobky."],
+              en:["The largest organic goat herd in Czechia \u2014 around a thousand White Shorthaired goats, 620 of them milking.",
+                  "They grow the feed themselves on their own certified organic land: silage, hay, straw, oats, wheat and barley.",
+                  "Milk runs from the parlour through steel pipes straight into the farm dairy, chilled and gently processed on the spot.",
+                  "Three consecutive gold medals for herd productivity under the strictest AC control method.",
+                  "Goat milk, goat cheeses and cultured products."] } },
 
     { id:"slunecna", cert:"bio", eshop:"https://biofarma-slunecna.cz/cenik/", offers:["bistro"], email:"info@biofarma-slunecna.cz", phone:"+420 604 331 278", facebook:"https://www.facebook.com/slunecna", instagram:"https://www.instagram.com/biofarmaslunecna/", name:"Biofarma Slune\u010Dn\u00E1",
       town:{cs:"\u017Delnava, \u0160umava", en:"\u017Delnava, \u0160umava"},
@@ -2312,7 +2324,7 @@
                   "In season they open the orchard for plum self-picking \u2014 usually by prior arrangement, even for just a crate or two.",
                   "Dates and what is ripe go up on their Instagram, which is also the quickest way to reach them."] } },
 
-    { id:"zaoral", cert:"bio", tags:["A2 ml\u00E9ko","A2","jogurt","tvaroh"], email:"statekzaoral@gmail.com", phone:"+420 603 978 004", name:"Statek Zaoral",
+    { id:"zaoral", cert:"bio", tags:["A2 ml\u00E9ko","A2","jogurt","tvaroh"], email:"alenazao@volny.cz", phone:"+420 603 701 675", name:"Statek Zaoral",
       town:{cs:"\u010Cabov\u00E1, Moravsk\u00FD Beroun", en:"\u010Cabov\u00E1, Moravsk\u00FD Beroun"},
       region:{cs:"Olomouck\u00FD kraj", en:"Olomouc Region"},
       lat:49.79, lon:17.44, cats:["dairy"],
@@ -2322,13 +2334,15 @@
           "Statek Petra Zaorala v \u010Cabov\u00E9 u Moravsk\u00E9ho Berouna hospoda\u0159\u00EDc\u00ED ekologicky, s d\u016Frazem na to, \u010D\u00EDm se kr\u00E1vy krm\u00ED.",
           "Chov\u00E1 normandsk\u00FD skot \u2014 ka\u017Ed\u00E1 kr\u00E1va m\u00E1 sv\u00E9 jm\u00E9no a doj\u00ED se sama v automatick\u00E9m dojic\u00EDm syst\u00E9mu, kolikr\u00E1t za den pot\u0159ebuje.",
           "Ml\u00E9ko plnotu\u010Dn\u00E9 v BIO kvalit\u011B, k tomu jogurty, tvaroh, smetana a s\u00FDry.",
-          "Specialitou je ml\u00E9ko A2, vhodn\u00E9 pro lidi, kter\u00FDm b\u011B\u017En\u00E9 ml\u00E9ko ned\u011Bl\u00E1 dob\u0159e. Od roku 2026 pokr\u00FDv\u00E1 \u010D\u00E1st spot\u0159eby energie fotovoltaika na st\u0159e\u0161e krav\u00EDna."
+          "Specialitou je ml\u00E9ko A2, vhodn\u00E9 pro lidi, kter\u00FDm b\u011B\u017En\u00E9 ml\u00E9ko ned\u011Bl\u00E1 dob\u0159e. Od roku 2026 pokr\u00FDv\u00E1 \u010D\u00E1st spot\u0159eby energie fotovoltaika na st\u0159e\u0161e krav\u00EDna.",
+          "Produkty m\u00E1 na starosti Alena Zaoralov\u00E1 \u2014 +420 603 701 675, alenazao@volny.cz; obecn\u00FD kontakt na statek je +420 603 978 004, statekzaoral@gmail.com."
         ],
         en:[
           "Petr Zaoral's farm at \u010Cabov\u00E1 near Moravsk\u00FD Beroun, run organically with close attention to what the cows are fed.",
           "The herd is Normande cattle \u2014 every cow has a name and milks herself in an automated system, as often as she needs.",
           "Full-fat organic milk, plus yoghurt, tvaroh, cream and cheeses.",
-          "Their speciality is A2 milk, for people who don't get on with ordinary dairy. Since 2026 rooftop solar on the cowshed covers part of the farm's energy."
+          "Their speciality is A2 milk, for people who don't get on with ordinary dairy. Since 2026 rooftop solar on the cowshed covers part of the farm's energy.",
+          "Alena Zaoralov\u00E1 handles the products \u2014 +420 603 701 675, alenazao@volny.cz; the farm's general line is +420 603 978 004, statekzaoral@gmail.com."
         ]
       } },
 
@@ -3200,6 +3214,15 @@
       p.classList.toggle('tip-below', p.getBoundingClientRect().top - top < 42);
     });
   }
+  /* 1100px of stage is the size the pins were drawn for; anything wider
+     or narrower moves them with it, within limits that keep them tappable. */
+  function updatePinScale(){
+    var w = mapStage.getBoundingClientRect().width;
+    if (!w) return;
+    var k = Math.max(0.85, Math.min(w / 1100, 1.25));
+    pinsLayer.style.setProperty('--pin-scale', k.toFixed(3));
+  }
+  window.addEventListener('resize', function(){ updatePinScale(); updateTipSides(); });
   window.addEventListener('resize', updateTipSides);
 
   function focusPin(id, on){
@@ -3537,7 +3560,7 @@ function matches(f){
   }
 
   function drawNearRing(){
-    if (!userLoc){ nearRing.hidden = true; return; }
+    if (!userLoc){ setSvgHidden(nearRing, true); return; }
     var x = (userLoc.lon - PROJ.minlon) * PROJ.cosLat * PROJ.scale + PROJ.margin;
     var y = (PROJ.maxlat - userLoc.lat) * PROJ.scale + PROJ.margin;
     var km = nearRadiusKm();
@@ -3549,7 +3572,7 @@ function matches(f){
     document.getElementById('nearEllipse').setAttribute('ry', (dLat * PROJ.scale).toFixed(1));
     document.getElementById('nearDot').setAttribute('cx', x.toFixed(1));
     document.getElementById('nearDot').setAttribute('cy', y.toFixed(1));
-    nearRing.hidden = !nearActive;
+    setSvgHidden(nearRing, !nearActive);
   }
 
   function setUserLocation(loc, quiet){
@@ -3580,7 +3603,7 @@ function matches(f){
     nearChip.classList.remove('active');
     nearChip.setAttribute('aria-pressed', 'false');
     nearDDHost.hidden = true;
-    nearRing.hidden = true;
+    setSvgHidden(nearRing, true);
     renderFarmLists();
   }
 
@@ -3632,6 +3655,7 @@ function matches(f){
     mapStage.style.setProperty('--zoom-scale', view.s.toFixed(3));
     setZoomedDetail(view.s > 1.35);
     updateMapControls();
+    updatePinScale();
     updateTipSides();
     setTimeout(updateTipSides, 520);
   }
@@ -3763,6 +3787,14 @@ function focusLabels(kraj){
   });
 }
 
+  /* `el.hidden` is an HTMLElement property. On an SVG node it silently
+     becomes a JS expando and the hidden="" attribute stays put, so
+     [hidden]{display:none} keeps winning. Toggle the attribute instead. */
+  function setSvgHidden(el, on){
+    if (on) el.setAttribute('hidden', '');
+    else el.removeAttribute('hidden');
+  }
+
   function setRegion(name){
     activeRegion = name;
     regionsLayer.querySelectorAll('path.region').forEach(function(p){
@@ -3772,7 +3804,7 @@ function focusLabels(kraj){
     var outline = document.getElementById('regionOutline');
     var chosen = name === 'all' ? null : regionsLayer.querySelector('path[data-region="'+name+'"]');
     outline.setAttribute('d', chosen ? chosen.getAttribute('d') : '');
-    outline.hidden = !chosen;
+    setSvgHidden(outline, !chosen);
     focusLabels(name);
     renderRegionOptions();
     applyFilters();
@@ -4362,6 +4394,7 @@ searchEl.addEventListener('keydown', function(e){
   renderDeliveryOptions();
   renderRegionOptions();
   renderFarmLists();
+  updatePinScale();
 
 /* ---- Recommend a farm ----------------------------------------------------
    The address tips are sent to. Joined at runtime rather than written out
