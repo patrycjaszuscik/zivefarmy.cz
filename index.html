@@ -15,7 +15,7 @@
 <meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#F6F0E1;
@@ -107,7 +107,7 @@
     -webkit-font-smoothing:antialiased;
   }
   h1,h2,h3{
-    font-family:"Fraunces","Iowan Old Style",Georgia,serif;
+    font-family:"Lora","Iowan Old Style",Georgia,serif;
     font-weight:600;
     text-wrap:balance;
     margin:0;
@@ -494,7 +494,7 @@
   .map-inner{
     position:absolute;inset:0;
     display:flex;align-items:center;justify-content:center;
-    padding:30px 22px 58px;
+    padding:14px 16px 42px;
   }
   .map-stage{
     position:relative;
@@ -530,6 +530,11 @@
     stroke-linejoin:round;pointer-events:none;
     vector-effect:non-scaling-stroke;
   }
+  /* Dragging across the map previews each kraj under the cursor. Last of
+     the region fill rules so it beats .selected and .has-selection. */
+  .map-stage path.region.drag-target{fill:var(--pasture-fill-active);}
+  .map-stage.region-dragging,
+  .map-stage.region-dragging path.region{cursor:grabbing;}
   .cities{pointer-events:none;}
   .cities circle{
     fill:var(--text-soft);opacity:0.55;
@@ -563,7 +568,7 @@
      that stays readable over the deep green of a selected region and over the
      pale pasture around it, in either theme. */
   .cities.zoomed text{
-    font-size:max(6.5px, calc(16px / var(--zoom-scale,1)));
+    font-size:max(4.5px, calc(16px / var(--zoom-scale,1)));
     fill:#24503A;
     stroke:var(--surface);
     stroke-width:max(1.7px, calc(3.4px / var(--zoom-scale,1)));
@@ -581,7 +586,7 @@
   .pin{
     position:absolute;
     transform-origin:50% 100%;
-    transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) / var(--zoom-scale,1)));
+    transform:translate(-50%,-100%) scale(calc(1 / var(--zoom-scale,1)));
     pointer-events:auto;
     background:none;border:none;padding:0;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;
@@ -589,20 +594,20 @@
     transition:transform .15s ease, opacity .15s ease;
     z-index:1;
   }
-  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.16 / var(--zoom-scale,1)));z-index:5;}
+  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.16 / var(--zoom-scale,1)));z-index:5;}
   .pin:focus-visible{outline:none;}
   /* Farms outside the current filter leave the map entirely &#8212; a greyed-out
      layer underneath read as noise. */
   .pin.dim{display:none;}
-  .pin.hovered{z-index:5;transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.2 / var(--zoom-scale,1)));}
+  .pin.hovered{z-index:5;transform:translate(-50%,-100%) scale(calc(1.2 / var(--zoom-scale,1)));}
   .pin.faded{opacity:0.28;}
   .pin.faded .pin-tip{opacity:0 !important;}
   .pin.hovered .pin-outline{stroke:var(--surface);stroke-width:2.6;}
   .pin.hovered{filter:drop-shadow(0 4px 9px var(--shadow)) drop-shadow(0 1px 2px var(--shadow));}
-  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.55 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(1.17 / var(--zoom-scale,1)));}
   .pins.zoomed .pin:hover,
-  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.76 / var(--zoom-scale,1)));}
-  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.82 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.33 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.37 / var(--zoom-scale,1)));}
   @media (pointer:coarse){
     .pin{filter:none;}
     .pin.hovered,.pin:hover{filter:none;}
@@ -612,8 +617,8 @@
   /* Sized directly rather than through the transform, which already
      carries the zoom counter-scale. */
   .pin-badge{
-    width:calc(23px * var(--pin-scale,1));
-    height:calc(28.5px * var(--pin-scale,1));
+    width:calc(27px * var(--pin-scale,1));
+    height:calc(33.5px * var(--pin-scale,1));
     display:block;
   }
   .pin.selected .pin-badge .pin-outline{stroke:var(--text);stroke-width:3;}
@@ -2005,7 +2010,7 @@
               en:["A family farm in Vl\u010Dnov, part of the regenerative growers' network.",
                   "Fresh milk, dairy products and beef."] } },
 
-    { id:"dolinek", cert:"bio", tags:["koz\u00ED ml\u00E9ko","kef\u00EDr","jehn\u011B\u010D\u00ED","vejce"], delivery:["pickup"], hours:{cs:"Samoobslu\u017En\u00E9 lednice p\u0159ed farmou 24/7", en:"Self-service fridges at the farm gate, 24/7"}, offers:["automat"], email:"biofarmadolinek@gmail.com", phone:"+420 774 429 405", eshop:"https://biomleko.eu/eshop/", facebook:"https://www.facebook.com/biofarmadolinek", instagram:"https://www.instagram.com/kozibiofarma/", name:"Biofarma Dol\u00EDnek",
+    { id:"dolinek", cert:"bio", tags:["koz\u00ED ml\u00E9ko","kef\u00EDr","jehn\u011B\u010D\u00ED","vejce"], delivery:["pickup"], hours:{cs:"Samoobslu\u017En\u00E9 lednice p\u0159ed farmou 24/7", en:"Self-service fridges at the farm gate, 24/7"}, offers:["automat"], email:"biofarmadolinek@gmail.com", phone:"+420 774 429 405", shipNote:{cs:"Objedn\u00E1vku z e-shopu zaplat\u00EDte p\u0159edem; o jej\u00EDm stavu a term\u00EDnu vyzvednut\u00ED v\u00E1s farma informuje e-mailem. Ve smluven\u00FD den najdete ozna\u010Denou ta\u0161ku v samoobslu\u017En\u00E9 lednici p\u0159ed farmou \u2014 ta\u0161ka v n\u00ED \u010Dek\u00E1 jen jeden den.",en:"E-shop orders are paid up front; the farm e-mails you the status and the pickup date. On the agreed day your marked bag waits in the self-service fridge in front of the farm \u2014 it stays there for one day only."}, eshop:"https://biomleko.eu/eshop/", facebook:"https://www.facebook.com/biofarmadolinek", instagram:"https://www.instagram.com/kozibiofarma/", name:"Biofarma Dol\u00EDnek",
       town:{cs:"Odolena Voda \u2013 Dol\u00EDnek", en:"Odolena Voda \u2013 Dol\u00EDnek"},
       region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
       lat:50.232, lon:14.410, cats:["dairy","eggs","meat"],
@@ -2025,15 +2030,33 @@
               en:["An organic farm in the Vla\u0161im area with a wide range of poultry.",
                   "Chicken, turkey, duck, goose, eggs, milk, vegetables and fruit."] } },
 
-    { id:"farmakosik", cert:"bio", shops:{ scuk:"https://www.scuk.cz/farma-kosik" }, email:"info@farmakosik.cz", name:"Biofarma Ko\u0161\u00EDk",
-      town:{cs:"Ko\u0161\u00EDk, okres Nymburk", en:"Ko\u0161\u00EDk, Nymburk District"},
+    { id:"farmakosik", cert:"bio", shops:{ scuk:"https://www.scuk.cz/farma-kosik" },
+      website:"http://www.farmakosik.cz/cz/produkty/", eshop:"https://www.e-farmakosik.cz/",
+      facebook:"https://www.facebook.com/farma.Kosik",
+      email:"info@farmakosik.cz", phone:"+420 325 514 850",
+      delivery:["pickup"], offers:["bistro"],
+      hours:{cs:"Prodej a informace o aktu\u00E1ln\u00ED nab\u00EDdce na penzionu Tuchom; p\u0159\u00EDmo na farm\u011B je nov\u011B s\u00FDr\u00E1rna s obch\u016Fdkem",
+             en:"Sales and current availability at the Tuchom guesthouse; a new creamery with a shop has opened at the farm"},
+      sellers:[{ name:"V\u00FDdejna e-shopu, Ra\u0161\u00EDnovo n\u00E1b\u0159e\u017E\u00ED 78, Praha (u Tan\u010D\u00EDc\u00EDho domu)" }],
+      name:"Biofarma Ko\u0161\u00EDk",
+      town:{cs:"Tuchom 1, Ko\u0161\u00EDk (Nymbursko)", en:"Tuchom 1, Ko\u0161\u00EDk (Nymburk area)"},
       region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
-      lat:50.24, lon:15.17, cats:["meat","eggs","veggies"],
-      website:"http://farmakosik.cz/",
-      story:{ cs:["BIO farma na Nymbursku s hospod\u00E1\u0159sk\u00FDmi zv\u00ED\u0159aty i rostlinnou v\u00FDrobou.",
-                  "Maso, dr\u016Fbe\u017E, zelenina, ovoce a bylinky."],
-              en:["An organic farm in the Nymburk district with both livestock and crops.",
-                  "Meat, poultry, vegetables, fruit and herbs."] } },
+      lat:50.24, lon:15.17, cats:["meat","dairy","eggs","veggies"],
+      tags:["ov\u010D\u00ED s\u00FDr","brynza","\u017Ein\u010Dica","o\u0161tiepok","mangalica","p\u0159e\u0161t\u00EDk","jehn\u011B\u010D\u00ED","sheep cheese","lamb"],
+      story:{ cs:["Farma v \u00FAdol\u00ED asi 70 kilometr\u016F od Prahy, kterou jej\u00ED hospod\u00E1\u0159i popisuj\u00ED jako ostr\u016Fvek slovensk\u00FDch produkt\u016F ve st\u0159edn\u00EDch \u010Cech\u00E1ch.",
+                  "Za\u010Dalo to v roce 2006 s patn\u00E1cti romanovsk\u00FDmi ovcemi, kter\u00E9 sp\u00E1saly zarostl\u00E1 pole kolem chaloupky v Ko\u0161\u00EDku; po dvoulet\u00E9m p\u0159echodn\u00E9m obdob\u00ED farma v roce 2009 z\u00EDskala zna\u010Dku BIO.",
+                  "Prim hraje chov romanovsk\u00FDch a v\u00FDchodofri\u0161sk\u00FDch ovc\u00ED; p\u0159ibyly k nim kozy, prasata mangalica a p\u0159e\u0161t\u00EDk a kr\u00E1vy Jersey.",
+                  "Ov\u010D\u00ED s\u00FDry jsou sezonn\u00ED \u2014 od Velikonoc do Michala: hrudka, tvrd\u00FD s\u00FDr ement\u00E1lsk\u00E9ho typu, uzen\u00FD o\u0161tiepok, brynza a \u017Ein\u010Dica.",
+                  "Vedle ml\u00E9\u010Dn\u00FDch v\u00FDrobk\u016F nab\u00EDzej\u00ED jehn\u011B\u010D\u00ED a k\u016Fzle\u010D\u00ED maso, mlad\u00E9 vep\u0159ov\u00E9, klob\u00E1sky, uzenou slaninu, vejce, marmel\u00E1dy, nakl\u00E1danou zeleninu a chutney; podle sezony ovoce, zeleninu a brambory.",
+                  "Objedn\u00E1vky z e-shopu jde vyzvednout i v Praze na Ra\u0161\u00EDnov\u011B n\u00E1b\u0159e\u017E\u00ED 78, kousek od Tan\u010D\u00EDc\u00EDho domu.",
+                  "V restauraci penzionu Tuchom va\u0159\u00ED jehn\u011B\u010D\u00ED na mnoho zp\u016Fsob\u016F, slovenskou kapustnicu i brynzov\u00E9 halu\u0161ky."],
+              en:["A farm in a valley some 70 kilometres from Prague, which its keepers describe as an island of Slovak products in Central Bohemia.",
+                  "It began in 2006 with fifteen Romanov sheep grazing the overgrown fields around the family cottage in Ko\u0161\u00EDk; after a two-year conversion period the farm earned organic certification in 2009.",
+                  "Romanov and East Friesian sheep lead the way, joined since by goats, Mangalica and P\u0159e\u0161tice pigs and Jersey cows.",
+                  "The sheep cheeses are seasonal \u2014 from Easter to Michaelmas: fresh hrudka, a hard Emmental-style cheese, smoked o\u0161tiepok, bryndza and \u017Ein\u010Dica.",
+                  "Alongside the dairy they sell lamb and kid, young pork, sausages, smoked bacon, eggs, jams, pickled vegetables and chutneys, plus seasonal fruit, vegetables and potatoes.",
+                  "E-shop orders can also be collected in Prague at Ra\u0161\u00EDnovo n\u00E1b\u0159e\u017E\u00ED 78, just along from the Dancing House.",
+                  "The restaurant at the Tuchom guesthouse cooks lamb many ways, along with Slovak kapustnica and bryndza halu\u0161ky."] } },
 
     { id:"lukava", cert:"bio", offers:["kpz","bedynky"], eshop:"https://www.lukava.net/nase-produkce/", email:"martin@lukava.net", phone:"+420 731 116 551", facebook:"https://www.facebook.com/farmalukava", instagram:"https://www.instagram.com/farmalukava/", saleLabel:{cs:"Prodej ze dvora", en:"Farm-gate sale"}, name:"Farma Lukava",
       town:{cs:"Jind\u0159ichovice pod Smrkem", en:"Jind\u0159ichovice pod Smrkem"},
@@ -2152,7 +2175,7 @@
               en:["An organic dairy farm in the Beskydy mountains.",
                   "Cow's milk, yoghurt, cheese, tvaroh, ky\u0161ka and farm ice cream."] } },
 
-    { id:"horutovi", cert:"bio", hours:{cs:"Farm\u00E1\u0159sk\u00E1 prodejna Po\u2013P\u00E1 9:00\u201315:00, So 9:00\u201312:00, jindy po domluv\u011B; samoobslu\u017En\u00E1 lednice s ml\u00E9kem 24/7", en:"Farm shop Mon\u2013Fri 9:00\u201315:00, Sat 9:00\u201312:00, otherwise by arrangement; self-service milk fridge 24/7"}, offers:["automat"], phone:"+420 737 955 007", email:"biofarmahorutovi@seznam.cz", name:"Biofarma Horutovi",
+    { id:"horutovi", cert:"bio", hours:{cs:"Farm\u00E1\u0159sk\u00E1 prodejna Po\u2013P\u00E1 9:00\u201315:00, So 9:00\u201312:00, jindy po domluv\u011B; samoobslu\u017En\u00E1 lednice 24/7; ml\u00E9\u010Dn\u00FD automat denn\u011B 8:00\u201318:00, v ned\u011Bli mimo provoz", en:"Farm shop Mon\u2013Fri 9:00\u201315:00, Sat 9:00\u201312:00, otherwise by arrangement; self-service fridge 24/7; milk vending machine daily 8:00\u201318:00, closed Sundays"}, offers:["automat"], phone:"+420 737 955 007", email:"biofarmahorutovi@seznam.cz", instagram:"https://www.instagram.com/bio_farma_horutovi/", name:"Biofarma Horutovi",
       town:{cs:"Sn\u011B\u017En\u00E1 249, Ro\u017Enov pod Radho\u0161t\u011Bm", en:"Sn\u011B\u017En\u00E1 249, Ro\u017Enov pod Radho\u0161t\u011Bm"},
       region:{cs:"Zl\u00EDnsk\u00FD kraj", en:"Zl\u00EDn Region"},
       lat:49.46, lon:18.14, cats:["dairy"],
@@ -2160,11 +2183,17 @@
                   "Rodinn\u00E9 hospod\u00E1\u0159stv\u00ED na zhruba 60 hektarech luk a pastvin v podh\u016F\u0159\u00ED Beskyd.",
                   "Ml\u00E9ko zpracov\u00E1vaj\u00ED ve vlastn\u00ED BIO miniml\u00E9k\u00E1rn\u011B p\u0159\u00EDmo na farm\u011B.",
                   "Ml\u00E9ko, podm\u00E1sl\u00ED ochucen\u00E9 i klasick\u00E9, syrov\u00E1tka, ky\u0161ka, jogurty, tvaroh, m\u00E1slo a s\u00FDry \u2014 \u010Derstv\u00E9, zraj\u00EDc\u00ED, uzen\u00E9, ko\u0159en\u011Bn\u00E9 i \u0159eck\u00E9.",
+                  "Vedle samoobslu\u017En\u00E9 lednice stoj\u00ED automat na \u010Derstv\u00E9 ml\u00E9ko, v provozu denn\u011B od 8:00 do 18:00; v ned\u011Bli je odstaven\u00FD kv\u016Fli pravideln\u00E9mu \u010Di\u0161t\u011Bn\u00ED.",
+                  "Automat nevrac\u00ED hotovost \u2014 na\u010Depuje p\u0159esn\u011B za vlo\u017Eenou \u010D\u00E1stku. Lahve jsou u n\u011Bj k dispozici, farma ale doporu\u010Duje p\u0159in\u00E9st si vlastn\u00ED sklen\u011Bnou.",
+                  "Plat\u00ED se hotov\u011B do p\u0159ipraven\u00E9 pokladni\u010Dky, nebo bezhotovostn\u011B naskenov\u00E1n\u00EDm QR k\u00F3du.",
                   "Vlastn\u00ED e-shop nemaj\u00ED; nakupuje se na farm\u011B nebo ze samoobslu\u017En\u00E9 lednice."],
               en:["An organic dairy farm in the Wallachia region.",
                   "A family holding on roughly 60 hectares of meadows and pasture in the Beskydy foothills.",
                   "The milk is processed in their own small organic dairy right on the farm.",
                   "Milk, plain and flavoured buttermilk, whey, ky\u0161ka, yoghurt, tvaroh, butter and cheeses \u2014 fresh, aged, smoked, spiced and Greek-style.",
+                  "Next to the self-service fridge stands a fresh-milk vending machine, running daily from 8:00 to 18:00; it is off on Sundays for its regular clean.",
+                  "The machine gives no change \u2014 it pours exactly what you pay for. Bottles are provided, though the farm suggests bringing your own glass one.",
+                  "Pay cash into the honesty box, or by scanning the QR code.",
                   "There is no e-shop; you buy at the farm or from the self-service fridge."] } },
 
     { id:"dora", cert:"bio", eshop:"https://www.kozimleko.cz/vyrobky/",
@@ -2194,7 +2223,7 @@
               en:["A mixed organic farm in the \u0160umava mountains.",
                   "Dairy, beef, sheep, goats, eggs and seasonal poultry."] } },
 
-    { id:"babiny", cert:"bio", website:"https://www.ekofarma-babiny.cz/", eshop:"https://www.ekofarma-babiny.cz/eshop_lang-1", shops:{ scuk:"https://www.scuk.cz/ekofarma-babiny" }, sellers:[{ name:"Farm\u00E1\u0159sk\u00E9 trhy Kula\u0165\u00E1k, Praha 6", url:"http://www.farmarske-trhy.cz/" }, { name:"Farm\u00E1\u0159sk\u00FD trh He\u0159ma\u0148\u00E1k, Praha 7", url:"https://www.farmarsketrziste.cz/trh/hermanak" }], hours:{cs:"V\u00FDdej na farm\u011B: Po\u2013P\u00E1 8:00\u201313:00", en:"Farm pickup: Mon\u2013Fri 8:00\u201313:00"}, email:"info@ekofarma-babiny.cz", phone:"+420 606 611 919", facebook:"https://www.facebook.com/EkofarmaBabiny/", name:"Ekofarma Babiny",
+    { id:"babiny", cert:"bio", website:"https://www.ekofarma-babiny.cz/", eshop:"https://www.ekofarma-babiny.cz/eshop_lang-1", shops:{ scuk:"https://www.scuk.cz/ekofarma-babiny", kosik:"https://www.kosik.cz/b7572-ekofarma-babiny" }, sellers:[{ name:"Farm\u00E1\u0159sk\u00E9 trhy Kula\u0165\u00E1k, Praha 6", url:"http://www.farmarske-trhy.cz/" }, { name:"Farm\u00E1\u0159sk\u00FD trh He\u0159ma\u0148\u00E1k, Praha 7", url:"https://www.farmarsketrziste.cz/trh/hermanak" }], hours:{cs:"V\u00FDdej na farm\u011B: Po\u2013P\u00E1 8:00\u201313:00", en:"Farm pickup: Mon\u2013Fri 8:00\u201313:00"}, email:"info@ekofarma-babiny.cz", phone:"+420 606 611 919", facebook:"https://www.facebook.com/EkofarmaBabiny/", name:"Ekofarma Babiny",
       town:{cs:"Babiny II, \u00DAstecko", en:"Babiny II, \u00DAst\u00ED nad Labem area"},
       region:{cs:"\u00DAsteck\u00FD kraj", en:"\u00DAst\u00ED nad Labem Region"},
       lat:50.62, lon:14.20, cats:["meat","veggies"],
@@ -2440,19 +2469,23 @@
 
 { id:"soutok", cert:"bio", eshop:"https://www.zesoutoku.cz/",
   shops:{ scuk:"https://www.scuk.cz/svobodny-statek-na-soutoku" },
-  email:"info@svobodny-statek.cz", phone:"+420 731 171 893",
+  facebook:"https://www.facebook.com/svobodnystateknasoutoku",
+  instagram:"https://www.instagram.com/zesoutoku.cz/",
+  email:"info@zesoutoku.cz", phone:"+420 776 177 202",
   name:"Svobodn\u00FD statek na soutoku",
   town:{cs:"\u010Cesk\u00E9 Kopisty 5, Terez\u00EDn", en:"\u010Cesk\u00E9 Kopisty 5, Terez\u00EDn"},
   region:{cs:"\u00DAsteck\u00FD kraj", en:"\u00DAst\u00ED nad Labem Region"},
   lat:50.5280, lon:14.1700, cats:["veggies"],
   story:{ cs:["Biodynamick\u00FD statek na soutoku Labe a Oh\u0159e, z\u00E1rove\u0148 soci\u00E1ln\u00ED podnik.",
               "BIO zelenina, byliny a ovoce, k tomu vlastn\u00ED zpracovan\u00E9 v\u00FDrobky.",
+              "V e-shopu zeSoutoku.cz najdete i su\u0161en\u00E9 byliny, \u010Daje a ko\u0159en\u00ED z vlastn\u00ED produkce.",
               "Nakoup\u00EDte v jejich celost\u00E1tn\u00EDm e-shopu zesoutoku.cz nebo p\u0159es Scuk.",
-              "Jejich vlastn\u00ED prezenta\u010Dn\u00ED web m\u011Bl p\u0159i posledn\u00ED kontrole pro\u0161l\u00FD certifik\u00E1t, proto tu odkazujeme rovnou na e-shop."],
+              "Jejich star\u0161\u00ED prezenta\u010Dn\u00ED web svobodny-statek.cz je moment\u00E1ln\u011B nedostupn\u00FD \u2014 aktuality d\u00E1vaj\u00ED na Facebook a Instagram."],
           en:["A biodynamic farm at the confluence of the Elbe and Oh\u0159e, run also as a social enterprise.",
               "Organic vegetables, herbs and fruit, plus their own processed products.",
+              "The zeSoutoku.cz shop also carries their own dried herbs, teas and spices.",
               "You can buy through their nationwide shop zesoutoku.cz or on Scuk.",
-              "Their presentation site had an expired certificate when last checked, so the shop is linked directly instead."] } },
+              "Their older presentation site svobodny-statek.cz is currently unreachable \u2014 news goes to Facebook and Instagram instead."] } },
 
 { id:"holany", cert:"bio", website:"https://www.farmaholany.cz/",
   email:"info@farmaholany.cz", phone:"+420 603 589 541",
@@ -2569,7 +2602,7 @@
               "Alongside that: lamb and mutton, potatoes, beetroot, pumpkins and dried herbs.",
               "All of the farm's products are stated to be organically certified."] } },
 
-{ id:"rudimov", cert:"bio", website:"https://www.farmarudimov.cz/", eshop:"https://shop.masozluky.cz/",
+{ id:"rudimov", shops:{ kosik:"https://www.kosik.cz/b20231-masozluky" }, cert:"bio", website:"https://www.farmarudimov.cz/", eshop:"https://shop.masozluky.cz/",
   facebook:"https://www.facebook.com/masozluky/", instagram:"https://www.instagram.com/masozluky.cz/",
   email:"obchod@masozluky.cz", phone:"+420 608 441 550",
   delivery:["praha","brno"],
@@ -2651,49 +2684,171 @@
 /* ---- Farms reached through Scuk and the wider organic list. Producer pages
    were probed directly (a wrong slug 404s there), websites fetched. ---- */
 { id:"adrspach", cert:"bio", shops:{ scuk:"https://www.scuk.cz/ekofarma-adrspach" },
+  website:"https://www.ekofarmaadrspach.cz/", eshop:"https://www.premiovehovezi.cz/",
+  facebook:"https://www.facebook.com/people/Ekofarma-Adr%C5%A1pach/100075800423966/",
+  email:"farma@ekofarmaadr.cz", phone:"+420 608 523 074",
+  delivery:["pickup"],
+  hours:{cs:"Prodejna Horn\u00ED Adr\u0161pach 26, \u00DAt\u2013P\u00E1 7:00\u201315:30", en:"Farm shop at Horn\u00ED Adr\u0161pach 26, Tue\u2013Fri 7:00\u201315:30"},
   name:"Ekofarma Adr\u0161pach",
-  town:{cs:"Adr\u0161pach, Broumovsko", en:"Adr\u0161pach, Broumov area"},
+  town:{cs:"Horn\u00ED Adr\u0161pach 26, Broumovsko", en:"Horn\u00ED Adr\u0161pach 26, Broumov area"},
   region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
   lat:50.6244, lon:16.0835, cats:["meat"],
-  story:{ cs:["BIO farma v Adr\u0161pachu s chovem masn\u00E9ho plemene Charolais.",
-              "Skot se pase od jara a\u017E do zimy na ekologick\u00FDch pastvin\u00E1ch, krmivo si vyp\u011Bstuj\u00ED sami.",
+  tags:["hov\u011Bz\u00ED","charolais","vyzr\u00E1l\u00E9 hov\u011Bz\u00ED","beef"],
+  story:{ cs:["BIO farma v podh\u016F\u0159\u00ED Krkono\u0161, v srdci CHKO Broumovsko, na dohled p\u00EDskovcov\u00FDch skal.",
+              "Chovaj\u00ED 120 kus\u016F z\u00E1kladn\u00EDho st\u00E1da masn\u00E9ho plemene Charolais podle pravidel ekologick\u00E9ho zem\u011Bd\u011Blstv\u00ED.",
+              "Skot se pase od jara a\u017E do zimy na vlastn\u00EDch pastvin\u00E1ch; seno a sen\u00E1\u017E poch\u00E1zej\u00ED z jejich luk, bez pr\u016Fmyslov\u00FDch krmiv a chemie.",
               "Telata z\u016Fst\u00E1vaj\u00ED u matek osm a\u017E deset m\u011Bs\u00EDc\u016F.",
-              "Prod\u00E1vaj\u00ED p\u0159es Scuk; vlastn\u00ED e-shop nemaj\u00ED."],
-          en:["An organic farm at Adr\u0161pach raising Charolais beef cattle.",
-              "The herd grazes organic pasture from spring into winter, on feed the farm grows itself.",
+              "Hov\u011Bz\u00ED nech\u00E1vaj\u00ED zr\u00E1t suchou i mokrou cestou a prod\u00E1vaj\u00ED vakuov\u011B balen\u00E9, kr\u00E1jen\u00E9 rovnou na p\u00E1nev, gril i do hrnce.",
+              "Koup\u00EDte osobn\u011B v prodejn\u011B na farm\u011B, v jejich e-shopu premiovehovezi.cz, nebo si domluv\u00EDte bal\u00ED\u010Dek na m\u00EDru \u010Di jednotliv\u00E9 \u0159ezy e-mailem a telefonem.",
+              "Prodejna m\u00E1 vlastn\u00ED kontakt: +420 775 734 578, obchod@premiovehovezi.cz.",
+              "Farma je sou\u010D\u00E1st\u00ED skupiny p\u011Bti lok\u00E1ln\u00EDch ekofarem po cel\u00E9 \u010Cesk\u00E9 republice."],
+          en:["An organic farm in the Krkono\u0161e foothills, in the heart of the Broumovsko protected landscape, within sight of the sandstone rocks.",
+              "They keep a base herd of 120 Charolais beef cattle under organic farming rules.",
+              "The herd grazes their own pasture from spring into winter; hay and silage come from their meadows, with no industrial feed or chemicals.",
               "Calves stay with their mothers for eight to ten months.",
-              "They sell through Scuk; there is no e-shop of their own."] } },
+              "The beef is both dry- and wet-aged, sold vacuum-packed and cut ready for the pan, the grill or the pot.",
+              "Buy in person at the farm shop, from their e-shop premiovehovezi.cz, or arrange a custom package or individual cuts by e-mail or phone.",
+              "The shop has its own contact: +420 775 734 578, obchod@premiovehovezi.cz.",
+              "The farm is part of a group of five local organic farms across Czechia."] } },
 
-{ id:"poctiva", cert:"bio", shops:{ scuk:"https://www.scuk.cz/poctiva-farma-2" },
+{ id:"souckova",
+  website:"https://www.farmahanasouckova.cz/",
+  instagram:"https://www.instagram.com/hs_semice/",
+  email:"info@farmahanasouckova.cz", phone:"+420 723 530 049",
+  offers:["bedynky","kpz"], delivery:["pickup"],
+  hours:{cs:"N\u00E1kup ze dvora po objedn\u00E1vce min. 24 hodin p\u0159edem \u2014 \u00FAter\u00FD 14:00\u201317:00 nebo sobota 9:00\u201311:00",
+         en:"Farm-gate collection on orders placed at least 24 hours ahead \u2014 Tuesday 14:00\u201317:00 or Saturday 9:00\u201311:00"},
+  sellers:[{ name:"Farm\u00E1\u0159sk\u00E9 trhy Malostransk\u00E9 n\u00E1m\u011Bst\u00ED, Praha \u2014 \u010Dt v sez\u00F3n\u011B" },
+           { name:"KPZ bed\u00FDnky \u2014 Bubenka a Etapa, Praha, po" },
+           { name:"Z\u00E1voz Turnov \u2014 so 7:00\u201312:00" }],
+  name:"Farma Hana Sou\u010Dkov\u00E1",
+  town:{cs:"Semice 41, Polab\u00ED", en:"Semice 41, Elbe lowlands"},
+  region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
+  lat:50.1643, lon:14.8716, cats:["veggies"],
+  tags:["zelenina","bylinky","jedl\u00E9 kv\u011Bty","brambory","bed\u00FDnky","KPZ","vegetables","herbs"],
+  story:{ cs:["Farma Hany Sahulov\u00E9 Sou\u010Dkov\u00E9 v polabsk\u00FDch Semic\u00EDch, kde vyrostla a kde te\u010F hospoda\u0159\u00ED spolu se sv\u00FDmi rodi\u010Di Hanou a Pepou.",
+              "Za\u010D\u00EDnala zhruba na p\u016Fl hektaru; dnes obd\u011Bl\u00E1v\u00E1 t\u00E9m\u011B\u0159 45 hektar\u016F.",
+              "P\u011Bstuj\u00ED p\u0159es 55 druh\u016F rostlin \u2014 od proslul\u00FDch brambor p\u0159es mrkev, zel\u00ED, p\u00F3rek a d\u00FDn\u011B a\u017E po romanesco, \u010Derstv\u00E9 bylinky a jedl\u00E9 kv\u011Bty.",
+              "Aktu\u00E1ln\u00ED sklize\u0148 vypisuj\u00ED na webu ka\u017Ed\u00FD t\u00FDden; objedn\u00E1v\u00E1 se e-mailem nejm\u00E9n\u011B 24 hodin p\u0159edem.",
+              "Ka\u017Ed\u00FD \u010Dtvrtek v sez\u00F3n\u011B stoj\u00ED jejich samoobslu\u017En\u00FD st\u00E1nek na farm\u00E1\u0159sk\u00E9m trhu na Malostransk\u00E9m n\u00E1m\u011Bst\u00ED \u2014 zbo\u017E\u00ED si zv\u00E1\u017E\u00EDte sami a zaplat\u00EDte na\u010Dten\u00EDm QR k\u00F3du.",
+              "V pond\u011Bl\u00ED rozv\u00E1\u017Eej\u00ED KPZ bed\u00FDnky do pra\u017Esk\u00E9 Bubenky a Etapy, v sobotu zav\u00E1\u017E\u00ED do Turnova.",
+              "Dod\u00E1vaj\u00ED tak\u00E9 restaurac\u00EDm, bistr\u016Fm, hotel\u016Fm a obchod\u016Fm."],
+          en:["Hana Sahulov\u00E1 Sou\u010Dkov\u00E1's farm at Semice in the Elbe lowlands, where she grew up and now farms alongside her parents Hana and Pepa.",
+              "She started on about half a hectare; today she works almost 45.",
+              "They grow more than 55 plant species \u2014 from their well-known potatoes through carrots, cabbage, leek and squash to romanesco, fresh herbs and edible flowers.",
+              "The current harvest is posted on the site each week; orders go by e-mail at least 24 hours ahead.",
+              "Every Thursday in season their self-service stall stands at the Malostransk\u00E9 n\u00E1m\u011Bst\u00ED farmers' market \u2014 you weigh your own goods and pay by scanning a QR code.",
+              "On Mondays they deliver CSA boxes to Bubenka and Etapa in Prague, and on Saturdays they drive to Turnov.",
+              "They also supply restaurants, bistros, hotels and shops."] } },
+
+{ id:"biokosar", cert:"bio",
+  website:"https://www.biokosar.cz/", eshop:"https://www.biokosar.cz/eshop-3/",
+  facebook:"https://www.facebook.com/Biovavrinec",
+  email:"obchod@biovavrinec.cz", phone:"+420 777 571 777",
+  sellers:[{ name:"Farm\u00E1\u0159sk\u00E9 trhy N\u00E1plavka, Praha \u2014 so" },
+           { name:"Farm\u00E1\u0159sk\u00FD trh He\u0159ma\u0148\u00E1k, Praha 7 \u2014 so" },
+           { name:"Trhy \u0158\u00ED\u010Dany \u2014 so" },
+           { name:"Farm\u00E1\u0159sk\u00E9 trhy Kula\u0165\u00E1k, Praha 6 \u2014 so" },
+           { name:"Trhy Kl\u00E1novice \u2014 so" }],
+  name:"BioKosa\u0159 (d\u0159\u00EDve BioVav\u0159inec)",
+  town:{cs:"Nov\u00FD Kn\u00EDn, Dob\u0159\u00ED\u0161sko", en:"Nov\u00FD Kn\u00EDn, Dob\u0159\u00ED\u0161 area"},
+  region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
+  lat:49.7881, lon:14.2937, cats:["dairy","meat"],
+  tags:["ov\u010D\u00ED","suffolk","jehn\u011B\u010D\u00ED","jogurt","tvaroh","s\u00FDry","lamb","sheep"],
+  story:{ cs:["Rodinn\u00E1 farma Kosa\u0159ov\u00FDch z Nov\u00E9ho Kn\u00EDna, kde v ekologick\u00E9m re\u017Eimu chovaj\u00ED plemenn\u00E9 ovce suffolk a k\u0159\u00ED\u017Een\u00E9 ovce na maso.",
+              "K ml\u00E9k\u00E1rn\u011B se dostali oklikou: pravideln\u011B kupovali s\u00FDr sv. Barbory od ml\u00E9k\u00E1rny BioVav\u0159inec, a kdy\u017E se dozv\u011Bd\u011Bli, \u017Ee kon\u010D\u00ED, p\u0159evzali ji.",
+              "Vyr\u00E1b\u011Bj\u00ED v\u00FDhradn\u011B z BIO kravsk\u00E9ho ml\u00E9ka \u2014 farm\u00E1\u0159sk\u00E9 a smetanov\u00E9 jogurty, tvaroh, smetany, probiotick\u00FD n\u00E1poj, \u017Eerv\u00E9, cottage, kef\u00EDr, tvarohov\u00E9 dezerty a s\u00FDry od \u010Derstv\u00FDch p\u0159es pa\u0159en\u00E9 po polotvrd\u00E9.",
+              "Bez konzervant\u016F, zahu\u0161\u0165ovadel, barviv, su\u0161en\u00E9ho ml\u00E9ka a stabiliz\u00E1tor\u016F: jen ml\u00E9ko, mikrobi\u00E1ln\u00ED kultury a sy\u0159idlo.",
+              "Vedle ml\u00E9\u010Dn\u00FDch v\u00FDrobk\u016F nab\u00EDzej\u00ED BIO jehn\u011B\u010D\u00ED maso a jehn\u011B\u010D\u00ED i ov\u010D\u00ED uzeniny.",
+              "Cel\u00FD sortiment maj\u00ED ka\u017Edou sobotu na pra\u017Esk\u00FDch trz\u00EDch; prod\u00E1vaj\u00ED tak\u00E9 p\u0159es Rohl\u00EDk, Scuk, Delmart, Sklizeno a dal\u0161\u00ED farm\u00E1\u0159sk\u00E9 obch\u016Fdky."],
+          en:["The Kosa\u0159 family farm at Nov\u00FD Kn\u00EDn, where they keep pedigree Suffolk sheep and crossbred sheep for meat under organic rules.",
+              "They came to dairying sideways: they were regular buyers of the BioVav\u0159inec dairy's sv. Barbora cheese, and when they heard it was closing, they took it over.",
+              "Everything is made from organic cow's milk \u2014 farmhouse and cream yoghurts, tvaroh, creams, a probiotic drink, \u017Eerv\u00E9, cottage, kefir, curd desserts and cheeses from fresh through scalded to semi-hard.",
+              "No preservatives, thickeners, colourings, milk powder or stabilisers: just milk, microbial cultures and rennet.",
+              "Alongside the dairy they sell organic lamb and lamb and mutton charcuterie.",
+              "The full range is at Prague markets every Saturday; they also sell through Rohl\u00EDk, Scuk, Delmart, Sklizeno and other farm shops."] } },
+
+{ id:"poctiva", cert:"bio", shops:{ scuk:"https://www.scuk.cz/poctivafarma" },
   name:"Poctiv\u00E1 farma",
-  town:{cs:"Oub\u011Bnice u Dob\u0159\u00ED\u0161e", en:"Oub\u011Bnice near Dob\u0159\u00ED\u0161"},
+  town:{cs:"Chaloupky-Oub\u011Bnice, Dob\u0159\u00ED\u0161sko", en:"Chaloupky-Oub\u011Bnice, Dob\u0159\u00ED\u0161 area"},
   region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
   lat:49.7177, lon:14.1599, cats:["meat"],
-  story:{ cs:["BIO hov\u011Bz\u00ED a jehn\u011B\u010D\u00ED z farmy na Dob\u0159\u00ED\u0161sku, kde zv\u00ED\u0159ata \u017Eij\u00ED na pastv\u011B ve dne i v noci.",
-              "Na jedno zv\u00ED\u0159e tu p\u0159ipad\u00E1 jeden a\u017E dva hektary a p\u0159ipou\u0161t\u00ED se p\u0159irozen\u011B.",
+  tags:["hov\u011Bz\u00ED","jehn\u011B\u010D\u00ED","zv\u011B\u0159ina","jelen\u00ED","dan\u010D\u00ED","pstruh","venison","lamb"],
+  story:{ cs:["Farmu zalo\u017Eil v roce 2005 Martin Kozohorsk\u00FD s rodinou v osad\u011B Chaloupky-Oub\u011Bnice na Dob\u0159\u00ED\u0161sku \u2014 p\u016Fvodn\u011B jako farmu jelen\u00ED.",
+              "Maj\u00ED prostornou oboru s loukami, p\u00EDskovcov\u00FDmi skalami a lesem, kde chovaj\u00ED divokou zv\u011B\u0159 i masn\u00FD skot.",
+              "Zv\u00ED\u0159ata jsou na pastv\u011B ve dne i v noci, na jedno p\u0159ipad\u00E1 jeden a\u017E dva hektary a p\u0159ipou\u0161t\u00ED se p\u0159irozen\u011B.",
               "Krmivo je bez GMO a farma si zaji\u0161\u0165uje vlastn\u00ED por\u00E1\u017Eku.",
-              "Nakoup\u00EDte p\u0159es Scuk."],
-          en:["Organic beef and lamb from a farm near Dob\u0159\u00ED\u0161, where the animals are out on pasture day and night.",
-              "One to two hectares per animal, with natural mating.",
+              "BIO certifikaci m\u00E1 hov\u011Bz\u00ED a jehn\u011B\u010D\u00ED. Zv\u011B\u0159ina ji nem\u00E1 \u2014 divokou zv\u011B\u0159 ze z\u00E1kona nelze chovat v ekologick\u00E9m re\u017Eimu, p\u00E9\u010De je ale stejn\u00E1.",
+              "Na Scuku nab\u00EDzej\u00ED kolem devades\u00E1ti polo\u017Eek: BIO hov\u011Bz\u00ED od mlet\u00E9ho po sv\u00ED\u010Dkovou, T-bone a Rib Eye, BIO jehn\u011B\u010D\u00ED, zv\u011B\u0159inu (jelen\u00ED, dan\u010D\u00ED, srn\u010D\u00ED, divo\u010D\u00E1k) i \u010Derstv\u00E9 ryby \u2014 pstruha duhov\u00E9ho a lososovit\u00E9ho a sume\u010Dka africk\u00E9ho.",
+              "Pozor, existuje i jin\u00E1 Poctiv\u00E1 farma ve Verm\u011B\u0159ovic\u00EDch na Orlicko\u00FAstecku; s touto nem\u00E1 nic spole\u010Dn\u00E9ho."],
+          en:["Martin Kozohorsk\u00FD and his family founded the farm in 2005 at Chaloupky-Oub\u011Bnice near Dob\u0159\u00ED\u0161 \u2014 originally as a deer farm.",
+              "They have a spacious enclosure of meadows, sandstone outcrops and woodland, holding both wild game and beef cattle.",
+              "The animals are on pasture day and night, at one to two hectares each, with natural mating.",
               "Feed is GMO-free and the farm does its own slaughter.",
-              "Available through Scuk."] } },
+              "The beef and lamb are organically certified. The venison is not \u2014 game cannot legally be kept under organic rules \u2014 though the animals are cared for the same way.",
+              "Scuk lists around ninety items: organic beef from mince to fillet, T-bone and Rib Eye, organic lamb, venison (red, fallow, roe and wild boar) and fresh fish \u2014 rainbow and salmon trout, and African catfish.",
+              "Note there is a different Poctiv\u00E1 farma at Verm\u011B\u0159ovice in the \u00DAst\u00ED nad Orlic\u00ED area; the two are unrelated."] } },
+
+{ id:"poctivavermerovice",
+  website:"https://poctiva-farma.webnode.cz/",
+  facebook:"http://www.facebook.com/poctiva.farma.54",
+  instagram:"https://www.instagram.com/poctivafarma/",
+  email:"poctivafarma@email.cz", phone:"+420 735 538 530",
+  offers:["bedynky"],
+  name:"Poctiv\u00E1 farma Verm\u011B\u0159ovice",
+  town:{cs:"Verm\u011B\u0159ovice 4, Orlicko\u00FAstecko", en:"Verm\u011B\u0159ovice 4, \u00DAst\u00ED nad Orlic\u00ED area"},
+  region:{cs:"Pardubick\u00FD kraj", en:"Pardubice Region"},
+  lat:50.0056, lon:16.5627, cats:["veggies"],
+  tags:["bed\u00FDnky","zelenina","ovoce","vermikompost","veg boxes"],
+  story:{ cs:["P\u011Bstitel\u00E9 zeleniny a ovoce ve Verm\u011B\u0159ovic\u00EDch na Orlicko\u00FAstecku \u2014 jin\u00E1 farma ne\u017E stejnojmenn\u00E1 Poctiv\u00E1 farma na Dob\u0159\u00ED\u0161sku.",
+              "Prod\u00E1vaj\u00ED bed\u00FDnky: 3 kg zeleniny a bylinek za 300 K\u010D, 6 kg za 500 K\u010D a 10 kg ovoce se zeleninou za 700 K\u010D; obsah se m\u011Bn\u00ED ka\u017Ed\u00FD t\u00FDden.",
+              "Zav\u00E1\u017Eej\u00ED do Letohradu, Jablonn\u00E9ho nad Orlic\u00ED, Neko\u0159e, Jamn\u00E9ho nad Orlic\u00ED, Mistrovic, Doln\u00ED a Horn\u00ED \u010Cermn\u00E9, Doln\u00ED Dobrou\u010De, Lan\u0161krouna a Lukavice.",
+              "Doprava dom\u016F stoj\u00ED 40 K\u010D, p\u0159i objedn\u00E1vce nad 500 K\u010D je zdarma.",
+              "Vedle p\u011Bstov\u00E1n\u00ED se v\u011Bnuj\u00ED i vermikompostov\u00E1n\u00ED a prodeji vermikompost\u00E9r\u016F.",
+              "Upozorn\u011Bn\u00ED: jejich web i blog se naposledy ve\u0159ejn\u011B aktualizovaly v roce 2020, aktu\u00E1ln\u00ED nab\u00EDdku je proto lep\u0161\u00ED si p\u0159edem ov\u011B\u0159it telefonicky."],
+          en:["Vegetable and fruit growers at Verm\u011B\u0159ovice in the \u00DAst\u00ED nad Orlic\u00ED area \u2014 a different farm from the Poctiv\u00E1 farma near Dob\u0159\u00ED\u0161.",
+              "They sell boxes: 3 kg of vegetables and herbs for 300 CZK, 6 kg for 500 CZK, and a 10 kg fruit-and-vegetable mix for 700 CZK, with contents changing weekly.",
+              "They deliver to Letohrad, Jablonn\u00E9 nad Orlic\u00ED, Neko\u0159, Jamn\u00E9 nad Orlic\u00ED, Mistrovice, Doln\u00ED and Horn\u00ED \u010Cermn\u00E1, Doln\u00ED Dobrou\u010D, Lan\u0161kroun and Lukavice.",
+              "Home delivery costs 40 CZK and is free on orders over 500 CZK.",
+              "Alongside growing they also do vermicomposting and sell wormery bins.",
+              "Note: their site and blog were last updated publicly in 2020, so it is worth phoning ahead to check what they currently offer."] } },
 
 { id:"trnenyujezd", cert:"bio", shops:{ scuk:"https://www.scuk.cz/bio-farma-trneny-ujezd" },
-  name:"BIO Farma Trn\u011Bn\u00FD \u00DAjezd",
-  town:{cs:"Mo\u0159ina, Berounsko", en:"Mo\u0159ina, Beroun area"},
+  website:"https://holovsky.eu/", facebook:"https://www.facebook.com/www.holovsky.eu/",
+  email:"farma@holovsky.eu", phone:"+420 774 776 655",
+  delivery:["pickup"],
+  hours:{cs:"Objedn\u00E1vky masa a ostatn\u00EDch produkt\u016F telefonicky nebo e-mailem; vyzvednut\u00ED na farm\u011B nebo na n\u011Bkter\u00E9m z trh\u016F",
+         en:"Meat and other orders by phone or e-mail; collection at the farm or at one of the markets"},
+  sellers:[{ name:"Ark\u00E1dy Pankr\u00E1c, Praha 4 \u2014 st 8\u201318", url:"https://www.farmari-trhy.cz/" },
+           { name:"Trhy na Barrandov\u011B, Tilleho n\u00E1m. \u2014 \u010Dt 8\u201318, lich\u00E9 t\u00FDdny", url:"https://www.facebook.com/trhynabarrandove/" },
+           { name:"And\u011Blsk\u00E9 trhy, Praha 5 \u2014 p\u00E1 7\u201319", url:"https://www.farmari-trhy.cz/" },
+           { name:"Trhy na Ji\u0159\u00E1ku, Praha 3 \u2014 so 8\u201314", url:"https://trhyjirak.cz/" },
+           { name:"Dob\u0159ichovice a \u0158evnice \u2014 so dopoledne, st\u0159\u00EDdav\u011B", url:"http://www.dobrichovicketrhy.cz/" }],
+  name:"Farma Holovsk\u00FD",
+  town:{cs:"Trn\u011Bn\u00FD \u00DAjezd, Karl\u0161tejn", en:"Trn\u011Bn\u00FD \u00DAjezd, Karl\u0161tejn"},
   region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
   lat:49.9529, lon:14.2087, cats:["meat","eggs"],
-  tags:["vep\u0159ov\u00E9","p\u0159e\u0161tick\u00E9","pork"],
-  story:{ cs:["BIO farma Radima Holovsk\u00E9ho hospoda\u0159\u00EDc\u00ED na 220 hektarech, z toho zhruba polovina jsou louky.",
-              "Trval\u00E9 travn\u00ED porosty vyu\u017E\u00EDvaj\u00ED hlavn\u011B jako pastvu pro skot, ovce, prasata i dr\u016Fbe\u017E.",
-              "Vedle hov\u011Bz\u00EDho nab\u00EDzej\u00ED i vep\u0159ov\u00E9, v\u010Detn\u011B p\u0159e\u0161tick\u00E9ho.",
-              "Na Scuku maj\u00ED des\u00EDtky certifikovan\u00FDch BIO polo\u017Eek."],
-          en:["Radim Holovsk\u00FD's organic farm works 220 hectares, roughly half of it grassland.",
-              "The permanent grassland is used mainly as pasture for cattle, sheep, pigs and poultry.",
-              "Alongside beef they sell pork, including the P\u0159e\u0161tice breed.",
-              "Dozens of certified organic items are listed on Scuk."] } },
+  tags:["vep\u0159ov\u00E9","p\u0159e\u0161tick\u00E9","pork","hov\u011Bz\u00ED","jehn\u011B\u010D\u00ED"],
+  story:{ cs:["Rodinn\u00E1 ekologick\u00E1 farma Radima Holovsk\u00E9ho ml. v Trn\u011Bn\u00E9m \u00DAjezd\u011B u Karl\u0161tejna, z\u010D\u00E1sti v CHKO \u010Cesk\u00FD kras, nedaleko lom\u016F Velk\u00E1 a Mal\u00E1 Amerika.",
+              "Hospoda\u0159\u00ED na 220 hektarech \u2014 zhruba p\u016Fl na p\u016Fl orn\u00E1 p\u016Fda a travn\u00ED porosty.",
+              "Chovaj\u00ED masn\u00E1 plemena skotu, ovce, prasata a dr\u016Fbe\u017E; trval\u00E9 travn\u00ED porosty slou\u017E\u00ED hlavn\u011B jako pastviny.",
+              "Na orn\u00E9 p\u016Fd\u011B p\u011Bstuj\u00ED p\u0161enici, oves, je\u010Dmen, kuku\u0159ici a brambory, \u010D\u00EDm\u017E si zaji\u0161\u0165uj\u00ED v\u011Bt\u0161inu krmiv.",
+              "Cel\u00E1 farma je od dubna 2011 v re\u017Eimu ekologick\u00E9ho zem\u011Bd\u011Blstv\u00ED, certifikuje KEZ o.p.s. \u2014 prvn\u00ED certifik\u00E1t v roce 2013, ka\u017Edoro\u010Dn\u011B obnovovan\u00FD.",
+              "Farmu sm\u011B\u0159uj\u00ED k regenerativn\u00EDmu hospoda\u0159en\u00ED: bez chemick\u00FDch hnojiv a post\u0159ik\u016F, s p\u0159echodem na bezorebn\u00E9 zpracov\u00E1n\u00ED p\u016Fdy.",
+              "Rodina hospoda\u0159\u00ED v Trn\u011Bn\u00E9m \u00DAjezd\u011B od po\u010D\u00E1tku 20. stolet\u00ED; majetek j\u00ED byl v 50. letech zabaven a vr\u00E1cen a\u017E v roce 1990.",
+              "Objedn\u00E1vky masa a ostatn\u00EDch produkt\u016F vy\u0159izuje Anna Holovsk\u00E1 na \u010D\u00EDsle +420 602 951 288.",
+              "V pl\u00E1nu maj\u00ED kr\u00E1mek pro prodej p\u0159\u00EDmo ve dvo\u0159e farmy."],
+          en:["Radim Holovsk\u00FD jr.'s family organic farm at Trn\u011Bn\u00FD \u00DAjezd near Karl\u0161tejn, partly inside the \u010Cesk\u00FD kras protected landscape area, close to the Velk\u00E1 and Mal\u00E1 Amerika quarries.",
+              "They work 220 hectares, split roughly half arable and half grassland.",
+              "They keep beef cattle breeds, sheep, pigs and poultry; the permanent grassland serves mainly as pasture.",
+              "Wheat, oats, barley, maize and potatoes on the arable land cover most of their own feed.",
+              "The whole farm has been in the organic regime since April 2011, certified by KEZ o.p.s. \u2014 first certificate in 2013, renewed every year.",
+              "They are moving the farm toward regenerative practice: no chemical fertilisers or sprays, shifting to no-till cultivation.",
+              "The family has farmed at Trn\u011Bn\u00FD \u00DAjezd since the early 20th century; the property was seized in the 1950s and only returned in 1990.",
+              "Meat and other orders are handled by Anna Holovsk\u00E1 on +420 602 951 288.",
+              "A farm shop in the yard is planned."] } },
 
-{ id:"kopretina", cert:"bio", shops:{ scuk:"https://www.scuk.cz/bio-farma-kopretina" },
+{ id:"kopretina", email:"farmakopretina@gmail.com", phone:"+420 777 225 118", cert:"bio", shops:{ scuk:"https://www.scuk.cz/bio-farma-kopretina" },
   name:"BIO Farma Kopretina",
   town:{cs:"Kobylnice", en:"Kobylnice"},
   region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
@@ -2723,7 +2878,7 @@
               "Alongside the standard range they run a certified organic line, clearly kept separate.",
               "Buy in the shop online, at their store in Dob\u0159ejovice, or have it delivered around Prague \u2014 free over 800 CZK."] } },
 
-{ id:"kares", cert:"bio", shops:{ scuk:"https://www.scuk.cz/ovocnarska-farma-kares" },
+{ id:"kares", website:"https://www.karesovoovoce.cz/", email:"petrkares@gmail.com", phone:"+420 777 711 870", cert:"bio", shops:{ scuk:"https://www.scuk.cz/ovocnarska-farma-kares" },
   name:"Ovocn\u00E1\u0159sk\u00E1 biofarma Kare\u0161",
   town:{cs:"Ostrom\u011B\u0159, Ji\u010D\u00EDnsko", en:"Ostrom\u011B\u0159, Ji\u010D\u00EDn area"},
   region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
@@ -2770,7 +2925,7 @@
               "Their site states: \"We use no chemicals, neither on the fields nor in the feed.\"",
               "Milk, yoghurt, cheese and other dairy."] } },
 
-{ id:"nasefarma", cert:"bio", website:"https://www.nasefarma.cz/", eshop:"https://eshop.nasefarma.cz/",
+{ id:"nasefarma", facebook:"https://www.facebook.com/restauracenasefarma/", cert:"bio", website:"https://www.nasefarma.cz/", eshop:"https://eshop.nasefarma.cz/",
   instagram:"https://www.instagram.com/nase_farma_biomasa/",
   email:"objednavky@sohors.cz", phone:"+420 731 534 562",
   delivery:["cr","praha"],
@@ -2788,7 +2943,7 @@
               "Their own organic abattoir runs at Besednice.",
               "The shop delivers nationwide, free over 3,000 CZK, with pickup in Prague at Karlovo n\u00E1m\u011Bst\u00ED and in \u010Cesk\u00E9 Bud\u011Bjovice."] } },
 
-{ id:"detan", instagram:"https://www.instagram.com/ekofarma_detan/",
+{ id:"detan", email:"perdix.sro@seznam.cz", instagram:"https://www.instagram.com/ekofarma_detan/",
   phone:"+420 608 178 581",
   hours:{cs:"Prodej po domluv\u011B \u2014 nejrychleji telefonicky nebo p\u0159es Instagram", en:"Sales by arrangement \u2014 quickest by phone or Instagram"},
   name:"Ekofarma D\u011Bta\u0148",
@@ -2843,7 +2998,7 @@
               "Poultry is processed in their own certified facility.",
               "Individual poultry batches and their dates are published on the site as they come; beef is by order."] } },
 
-{ id:"cidlina", cert:"bio", website:"https://statekcidlina.cz/", eshop:"https://statekcidlina.cz/",
+{ id:"cidlina", facebook:"https://www.facebook.com/statekcidlina", cert:"bio", website:"https://statekcidlina.cz/", eshop:"https://statekcidlina.cz/",
   instagram:"https://www.instagram.com/statek_cidlina/",
   email:"statek@statekcidlina.cz", phone:"+420 774 419 690",
   delivery:["cr"],
@@ -2900,7 +3055,7 @@
 /* ---- Pasture-egg farms with mobile coops, plus the remaining organic list.
    Every one of these moves its hens onto fresh grass rather than keeping
    them in a fixed house, which is what the "vejce z pastvy" search finds. ---- */
-{ id:"kyselovic", website:"https://kyselovichospodarstvi.cz/",
+{ id:"kyselovic", facebook:"https://www.facebook.com/kyselovic.hospodarstvi", website:"https://kyselovichospodarstvi.cz/",
   instagram:"https://www.instagram.com/kyselovic_hospodarstvi/",
   email:"angus@kyselovichospodarstvi.cz", phone:"+420 725 714 021",
   offers:["automat"],
@@ -2914,12 +3069,12 @@
               "K tomu vejce a ku\u0159ata z pastvy, hov\u011Bz\u00ED l\u016Fj a dal\u0161\u00ED speciality.",
               "Vejce si vezmete kdykoli ze samoobslu\u017En\u00E9 Vejcovnice, otev\u0159en\u00E9 24/7.",
               "Hov\u011Bz\u00ED se bour\u00E1 zhruba jednou m\u011Bs\u00ED\u010Dn\u011B na p\u0159edobjedn\u00E1vku; po domluv\u011B dovezou do \u010Cer\u010Dan a Bene\u0161ova.",
-              "Sami popisuj\u00ED chov jako ekologick\u00FD, form\u00E1ln\u00ED BIO certifikaci jsme ale neov\u011B\u0159ili."],
+              "Sami popisuj\u00ED chov jako ekologick\u00FD."],
           en:["A pasture-based holding with dry-aged Aberdeen Angus beef.",
               "Alongside it: pasture eggs and chickens, beef tallow and other specialities.",
               "Eggs can be collected any time from the self-service hut, open around the clock.",
               "Beef is cut roughly monthly against pre-orders; delivery to \u010Cer\u010Dany and Bene\u0161ov by arrangement.",
-              "They describe their farming as ecological, though we did not verify formal organic certification."] } },
+              "They describe their farming as ecological."] } },
 
 { id:"kvetinova", cert:"bio", website:"https://www.kvetinovafarma.com/", eshop:"https://www.kvetinovafarma.com/",
   facebook:"https://www.facebook.com/kvetinovafarmavjavorovealeji",
@@ -2941,7 +3096,7 @@
               "The shop carries organic microgreens, herbs, teas and pestos, shipped by PPL or Czech Post.",
               "They run workshops at the farm and seasonal flower self-picking."] } },
 
-{ id:"jesenickygrunt", website:"https://www.jesenickygrunt.cz/",
+{ id:"jesenickygrunt", facebook:"https://www.facebook.com/share/1EpPhuTNpJ/", website:"https://www.jesenickygrunt.cz/",
   instagram:"https://www.instagram.com/jesenicky_grunt/",
   email:"jesenicky.grunt@gmail.com", phone:"+420 603 181 451",
   offers:["automat"],
@@ -2995,11 +3150,11 @@
   story:{ cs:["Vejce od slepic ze dvou robotick\u00FDch sol\u00E1rn\u00EDch mobiln\u00EDch kurn\u00EDk\u016F, kter\u00E9 se opakovan\u011B st\u011Bhuj\u00ED na \u010Derstvou pastvu.",
               "Vejce si vyzvednete z automatu v Dolanech, kter\u00FD jede nep\u0159etr\u017Eit\u011B, nebo z druh\u00E9ho automatu v Olomouci.",
               "Potk\u00E1te je i na Olomouck\u00E9 tr\u017Enici ve st\u0159edu a v sobotu a na vybran\u00FDch trz\u00EDch ve \u0160ternberku.",
-              "BIO certifikaci jsme u nich neov\u011B\u0159ili \u2014 chov je ale pastevn\u00ED."],
+              "Chov je pastevn\u00ED."],
           en:["Eggs from hens in two robotic, solar-powered mobile coops that are moved repeatedly onto fresh pasture.",
               "Collect from the vending machine in Dolany, running around the clock, or the second one in Olomouc.",
               "They also stand at the Olomouc market hall on Wednesdays and Saturdays and selected \u0160ternberk markets.",
-              "We did not verify organic certification \u2014 the hens are, however, pasture-raised."] } },
+              "The hens are pasture-raised."] } },
 
 { id:"kolby", website:"https://www.vejcekolby.cz/",
   email:"vejce@kolby.cz", phone:"+420 732 476 996",
@@ -3016,23 +3171,7 @@
               "The hens follow fresh grass; eggs are ordered directly from the farm.",
               "Their own site states explicitly that the eggs are not organically certified."] } },
 
-{ id:"polacek", email:"polackova@oldrichpolacek.cz",
-  tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","pasture eggs"],
-  hours:{cs:"Prodej vajec p\u0159\u00EDmo na farm\u011B", en:"Eggs sold at the farm"},
-  name:"Pol\u00E1\u010Dek Farma Hole",
-  town:{cs:"Hole 11, Velk\u00E9 P\u0159\u00EDlepy", en:"Hole 11, Velk\u00E9 P\u0159\u00EDlepy"},
-  region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
-  lat:50.1606, lon:14.3146, cats:["eggs"],
-  story:{ cs:["Farma severoz\u00E1padn\u011B od Prahy, kter\u00E1 od roku 2022 chov\u00E1 270 slepic v sol\u00E1rn\u00EDm mobiln\u00EDm kurn\u00EDku.",
-              "Slepice tr\u00E1v\u00ED den na velk\u00E9m venkovn\u00EDm v\u00FDb\u011Bhu.",
-              "Vejce se prod\u00E1vaj\u00ED p\u0159\u00EDmo na farm\u011B; e-shop nemaj\u00ED.",
-              "BIO certifikaci jsme neov\u011B\u0159ili."],
-          en:["A farm north-west of Prague that has kept 270 hens in a solar-powered mobile coop since 2022.",
-              "The birds spend the day on a large outdoor run.",
-              "Eggs are sold at the farm; there is no e-shop.",
-              "We did not verify organic certification."] } },
-
-{ id:"ujiraku", email:"statekujiraku@seznam.cz", phone:"+420 703 351 705",
+{ id:"ujiraku", website:"https://www.statekujiraku.cz/", facebook:"https://www.facebook.com/kozifarmanajablonce/", email:"statekujiraku@seznam.cz", phone:"+420 703 351 705",
   tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","syrov\u00E9 ml\u00E9ko","pasture eggs"],
   hours:{cs:"Prodej ze dvora denn\u011B kolem 17:00\u201319:00", en:"Farm-gate sales daily around 17:00\u201319:00"},
   name:"Statek u Jir\u00E1k\u016F",
@@ -3041,14 +3180,12 @@
   lat:50.0470, lon:14.3670, cats:["eggs","dairy"],
   story:{ cs:["Statek p\u0159\u00EDmo v Praze, v Jinonic\u00EDch, se slepicemi v mobiln\u00EDm kurn\u00EDku a venkovn\u00EDm v\u00FDb\u011Bhem.",
               "Prodej vajec rozjeli v kv\u011Btnu 2026; kupuje se ze dvora, obvykle mezi p\u00E1tou a sedmou ve\u010Der.",
-              "K tomu syrov\u00E9 kravsk\u00E9, koz\u00ED a ov\u010D\u00ED ml\u00E9ko.",
-              "BIO certifikaci jsme neov\u011B\u0159ili."],
+              "K tomu syrov\u00E9 kravsk\u00E9, koz\u00ED a ov\u010D\u00ED ml\u00E9ko."],
           en:["A farm inside Prague, in Jinonice, with hens in a mobile coop and an outdoor run.",
               "Egg sales started in May 2026; you buy at the gate, usually between five and seven in the evening.",
-              "They also sell raw cow, goat and sheep milk.",
-              "We did not verify organic certification."] } },
+              "They also sell raw cow, goat and sheep milk."] } },
 
-{ id:"podkunkou", email:"farma@farmapodkunkou.cz", phone:"+420 731 815 147",
+{ id:"podkunkou", facebook:"https://www.facebook.com/farmapodkunkou.cz", email:"farma@farmapodkunkou.cz", phone:"+420 731 815 147",
   tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","pasture eggs"],
   hours:{cs:"Prodej p\u0159\u00EDmo na farm\u011B", en:"Sold at the farm"},
   name:"Farma pod Ku\u0148kou",
@@ -3057,12 +3194,10 @@
   lat:50.0729, lon:15.8026, cats:["eggs"],
   story:{ cs:["Asi t\u0159i sta slepic na louce pod Kun\u011Btickou horou.",
               "Mobiln\u00ED kurn\u00EDk se ka\u017Ed\u00FD t\u00FDden posouv\u00E1 na \u010Derstvou tr\u00E1vu, krmivo je bez GMO.",
-              "Vejce se prod\u00E1vaj\u00ED p\u0159\u00EDmo na farm\u011B; maj\u00ED i profil na Scuku, kde ale nemus\u00ED b\u00FDt v\u017Edy skladem.",
-              "BIO certifikaci jsme neov\u011B\u0159ili."],
+              "Vejce se prod\u00E1vaj\u00ED p\u0159\u00EDmo na farm\u011B; maj\u00ED i profil na Scuku, kde ale nemus\u00ED b\u00FDt v\u017Edy skladem."],
           en:["About three hundred hens on a meadow below Kun\u011Btick\u00E1 hora.",
               "The mobile coop moves to fresh grass every week, and the feed is GMO-free.",
-              "Eggs are sold at the farm; they also have a Scuk profile, though stock there varies.",
-              "We did not verify organic certification."] } },
+              "Eggs are sold at the farm; they also have a Scuk profile, though stock there varies."] } },
 
 { id:"hute", website:"https://www.farmahute.cz/",
   email:"kaiser@farmahute.cz", phone:"+420 723 404 558",
@@ -3075,12 +3210,10 @@
   lat:49.6019, lon:13.8658, cats:["eggs"],
   story:{ cs:["Farma pod T\u0159em\u0161\u00EDnem s vejci od slepic z voln\u00E9ho v\u00FDb\u011Bhu na zelen\u00E9 pastv\u011B.",
               "Provozuj\u00ED i projekt mobiln\u00EDho kurn\u00EDku.",
-              "Vejce jsou k dispozici nep\u0159etr\u017Eit\u011B z vaj\u00ED\u010Dkomat\u016F \u2014 v P\u0159\u00EDbrami v ulici K Podles\u00ED a u ZD B\u011Bl\u010Dice.",
-              "BIO certifikaci jsme neov\u011B\u0159ili."],
+              "Vejce jsou k dispozici nep\u0159etr\u017Eit\u011B z vaj\u00ED\u010Dkomat\u016F \u2014 v P\u0159\u00EDbrami v ulici K Podles\u00ED a u ZD B\u011Bl\u010Dice."],
           en:["A farm below T\u0159em\u0161\u00EDn with eggs from free-range hens on green pasture.",
               "They also run a mobile-coop project.",
-              "Eggs are available around the clock from vending machines \u2014 in P\u0159\u00EDbram on K Podles\u00ED and at ZD B\u011Bl\u010Dice.",
-              "We did not verify organic certification."] } }
+              "Eggs are available around the clock from vending machines \u2014 in P\u0159\u00EDbram on K Podles\u00ED and at ZD B\u011Bl\u010Dice."] } }
 
   ];
   FARMS = FARMS.concat(MORE_FARMS);
@@ -3234,9 +3367,9 @@
 
   function updatePinScale(){
     fitStage();
-    var w = mapStage.getBoundingClientRect().width;
+    var w = mapStage.offsetWidth;
     if (!w) return;
-    var k = Math.max(0.85, Math.min(w / 1100, 1.25));
+    var k = Math.max(0.90, Math.min(w / 1100, 1.25));
     pinsLayer.style.setProperty('--pin-scale', k.toFixed(3));
   }
   window.addEventListener('resize', function(){ updatePinScale(); updateTipSides(); });
@@ -3887,6 +4020,75 @@ function focusLabels(kraj){
     var name = path.getAttribute('data-region');
     setRegion(activeRegion === name ? 'all' : name);
   });
+
+  /* Drag across the map to try regions on: whichever kraj is under the
+     cursor previews as you go, and the one you release over is selected.
+     Saves zooming back out to the whole country just to reach a neighbour.
+     A plain click is untouched -- the preview only starts once the cursor
+     has actually left the region it began in. */
+  (function(){
+    var dragFrom = null, dragOver = null, dragging = false;
+
+    function regionAt(x, y){
+      var el = document.elementFromPoint(x, y);
+      var p = el && el.closest ? el.closest('path.region') : null;
+      return (p && regionsLayer.contains(p)) ? p : null;
+    }
+
+    function clearPreview(){
+      regionsLayer.querySelectorAll('path.region.drag-target').forEach(function(p){
+        p.classList.remove('drag-target');
+      });
+    }
+
+    function restoreOutline(){
+      var outline = document.getElementById('regionOutline');
+      var cur = activeRegion === 'all' ? null :
+        regionsLayer.querySelector('path[data-region="' + activeRegion + '"]');
+      outline.setAttribute('d', cur ? cur.getAttribute('d') : '');
+      setSvgHidden(outline, !cur);
+    }
+
+    function preview(p){
+      dragOver = p;
+      clearPreview();
+      if (!p){ restoreOutline(); return; }
+      p.classList.add('drag-target');
+      var outline = document.getElementById('regionOutline');
+      outline.setAttribute('d', p.getAttribute('d'));
+      setSvgHidden(outline, false);
+    }
+
+    regionsLayer.addEventListener('mousedown', function(e){
+      if (e.button !== 0 || pickingLocation) return;
+      dragFrom = regionAt(e.clientX, e.clientY);
+      dragOver = null;
+      dragging = false;
+    });
+
+    window.addEventListener('mousemove', function(e){
+      if (!dragFrom) return;
+      var p = regionAt(e.clientX, e.clientY);
+      if (!dragging){
+        if (!p || p === dragFrom) return;
+        dragging = true;
+        mapStage.classList.add('region-dragging');
+      }
+      if (p !== dragOver) preview(p);
+    });
+
+    window.addEventListener('mouseup', function(){
+      if (dragging){
+        var target = dragOver;
+        mapStage.classList.remove('region-dragging');
+        clearPreview();
+        var name = target && target.getAttribute('data-region');
+        if (name && name !== activeRegion) setRegion(name);
+        else restoreOutline();
+      }
+      dragFrom = null; dragOver = null; dragging = false;
+    });
+  })();
 
   /* ---- Drawer ---- */
   var drawer = document.getElementById('drawer');
