@@ -498,8 +498,10 @@
   }
   .map-stage{
     position:relative;
+    /* Width is set by fitStage() so the box always matches the
+       artwork; aspect-ratio derives the height from it. */
     width:100%;
-    max-height:100%;
+    max-width:100%;
     aspect-ratio:900/532.92;
     transform-origin:0 0;
     transition:transform .5s cubic-bezier(.4,0,.2,1);
@@ -597,10 +599,10 @@
   .pin.faded .pin-tip{opacity:0 !important;}
   .pin.hovered .pin-outline{stroke:var(--surface);stroke-width:2.6;}
   .pin.hovered{filter:drop-shadow(0 4px 9px var(--shadow)) drop-shadow(0 1px 2px var(--shadow));}
-  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.32 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.55 / var(--zoom-scale,1)));}
   .pins.zoomed .pin:hover,
-  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.5 / var(--zoom-scale,1)));}
-  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.55 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.76 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(var(--pin-scale,1) * 1.82 / var(--zoom-scale,1)));}
   @media (pointer:coarse){
     .pin{filter:none;}
     .pin.hovered,.pin:hover{filter:none;}
@@ -610,8 +612,8 @@
   /* Sized directly rather than through the transform, which already
      carries the zoom counter-scale. */
   .pin-badge{
-    width:calc(29px * var(--pin-scale,1));
-    height:calc(36px * var(--pin-scale,1));
+    width:calc(23px * var(--pin-scale,1));
+    height:calc(28.5px * var(--pin-scale,1));
     display:block;
   }
   .pin.selected .pin-badge .pin-outline{stroke:var(--text);stroke-width:3;}
@@ -3216,7 +3218,22 @@
   }
   /* 1100px of stage is the size the pins were drawn for; anything wider
      or narrower moves them with it, within limits that keep them tappable. */
+  /* The SVG letterboxes its viewBox inside the stage box (xMidYMid meet),
+     while the pin layer maps its percentages to the stage box itself. Let
+     the two disagree and every pin drifts off the country, so size the
+     stage to the largest 900:532.92 rectangle that fits the frame -- then
+     box and artwork are the same rectangle and the pins land true. */
+  function fitStage(){
+    var inner = mapStage.parentElement;
+    var cs = getComputedStyle(inner);
+    var w = inner.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var h = inner.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    if (!(w > 0) || !(h > 0)) return;
+    mapStage.style.width = Math.min(w, h * VB_W / VB_H).toFixed(1) + 'px';
+  }
+
   function updatePinScale(){
+    fitStage();
     var w = mapStage.getBoundingClientRect().width;
     if (!w) return;
     var k = Math.max(0.85, Math.min(w / 1100, 1.25));
