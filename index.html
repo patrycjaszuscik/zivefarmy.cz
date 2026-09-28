@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Živé farmy</title>
-<meta name="description" content="Mapa bio a regenerativních farem v Česku — 89 farem, u kterých se dá nakoupit maso, mléko a sýry, vejce a drůbež, zelenina i med.">
+<meta name="description" content="Mapa bio a regenerativních farem v Česku — 91 farem, u kterých se dá nakoupit maso, mléko a sýry, vejce a drůbež, zelenina i med.">
 <link rel="canonical" href="https://zivefarmy.cz/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8C%BE</text></svg>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zivefarmy.cz/">
 <meta property="og:title" content="Živé farmy">
-<meta property="og:description" content="Mapa bio a regenerativních farem v Česku — 89 farem, u kterých se dá nakoupit maso, mléko a sýry, vejce a drůbež, zelenina i med.">
+<meta property="og:description" content="Mapa bio a regenerativních farem v Česku — 91 farem, u kterých se dá nakoupit maso, mléko a sýry, vejce a drůbež, zelenina i med.">
 <meta property="og:locale" content="cs_CZ">
 <meta name="twitter:card" content="summary">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1295,6 +1295,15 @@
 </section>
 
 <script>
+/* GoatCounter loads only on the deployed site, so this is a no-op in the
+   artifact and in any local copy. Counts are anonymous and cookieless. */
+function trackEvent(path, title){
+  try{
+    if (window.goatcounter && typeof window.goatcounter.count === 'function'){
+      window.goatcounter.count({ path: path, title: title || path, event: true });
+    }
+  }catch(e){}
+}
 (function(){
   "use strict";
 
@@ -3790,6 +3799,7 @@ function matches(f){
     var chip = e.target.closest('.chip[data-cat]');
     if (!chip) return;
     var cat = chip.dataset.cat;
+    trackEvent('filtr/' + cat);
     if (cat === 'all'){
       activeCats = [];
     } else {
@@ -4062,6 +4072,7 @@ function focusLabels(kraj){
   }
 
   function setRegion(name){
+    if (name !== activeRegion && name !== 'all') trackEvent('kraj/' + name);
     activeRegion = name;
     regionsLayer.querySelectorAll('path.region').forEach(function(p){
       p.classList.toggle('selected', p.getAttribute('data-region') === name);
@@ -4260,6 +4271,7 @@ function focusLabels(kraj){
   function openFarm(id){
     var f = FARMS.filter(function(x){ return x.id === id; })[0];
     if (!f) return;
+    trackEvent('farma/' + f.id, f.name);
     currentId = id;
 
     document.querySelectorAll('.pin').forEach(function(p){ p.classList.toggle('selected', p.dataset.id === id); });
@@ -4603,7 +4615,14 @@ function showSuggestions(q){
   }
   placeHits = placeHits.slice(0, 6);
 
-  if (!farmHits.length && !placeHits.length){ hideSuggestions(); return; }
+  /* A search that finds nothing says which places the map is still missing.
+     Debounced so a half-typed word doesn't get counted as a miss. */
+  clearTimeout(window._missTimer);
+  if (!farmHits.length && !placeHits.length){
+    var missed = q.trim();
+    window._missTimer = setTimeout(function(){ trackEvent('hledani-bez-vysledku', missed); }, 1200);
+    hideSuggestions(); return;
+  }
 
   var html = '';
   if (farmHits.length){
@@ -4816,6 +4835,8 @@ recLabels();
 </script>
 
 </body></html>
+
+<script data-goatcounter="https://zivefarmy.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </body>
 </html>
