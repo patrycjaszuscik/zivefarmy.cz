@@ -30,6 +30,7 @@
     --pasture-fill-active:#BCD3A2;
     --pasture-fill-muted:#EAF0DF;
     --pasture-stroke:#96AC76;
+    --river:#6E9BBF;
     --accent:#B2552A;
     --pin-fill:#B2552A;
     --accent-ink:#FFFFFF;
@@ -59,6 +60,7 @@
       --pasture-fill-active:#4E6B3E;
       --pasture-fill-muted:#333B27;
       --pasture-stroke:#7C8B5980;
+      --river:#5F8FB4;
       --accent:#D97B45;
       --pin-fill:#D97B45;
       --accent-ink:#241505;
@@ -85,6 +87,7 @@
     --pasture-fill-active:#4E6B3E;
     --pasture-fill-muted:#333B27;
     --pasture-stroke:#7C8B5980;
+    --river:#5F8FB4;
     --accent:#D97B45;
     --pin-fill:#D97B45;
     --accent-ink:#241505;
@@ -525,6 +528,22 @@
     stroke:var(--accent);
   }
   /* Drawn above every region so no neighbour can paint over it. */
+  /* Main rivers, drawn from OpenStreetMap ways and clipped to the border so
+     they stop at the frontier rather than trailing off into the surround.
+     A non-scaling stroke keeps them a hairline at every zoom. */
+  .rivers{pointer-events:none;}
+  .rivers path{
+    fill:none;
+    stroke:var(--river);
+    stroke-width:0.85;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:0.40;
+    vector-effect:non-scaling-stroke;
+  }
+  /* Labe, Vltava, Morava and Odra carry the country's drainage, so they read
+     first; the rest sit back as context. */
+  .rivers path[data-major="1"]{stroke-width:1.3;opacity:0.55;}
   .region-outline{
     fill:none;stroke:var(--accent);stroke-width:2.2;
     stroke-linejoin:round;pointer-events:none;
@@ -535,6 +554,37 @@
   .map-stage path.region.drag-target{fill:var(--pasture-fill-active);}
   .map-stage.region-dragging,
   .map-stage.region-dragging path.region{cursor:grabbing;}
+  /* Town names live in HTML, not in the SVG. Inside the zoomed stage the
+     browser rasterises SVG text at its pre-transform size and then magnifies
+     that bitmap, so at 4x a 6px glyph turns to mush. An HTML span that is
+     counter-scaled instead keeps a constant size on screen and is redrawn
+     sharp at every zoom. */
+  .city-labels{position:absolute;inset:0;pointer-events:none;z-index:1;}
+  .city-labels span{
+    position:absolute;
+    transform-origin:0 0;
+    transform:scale(calc(1 / var(--zoom-scale,1))) translate(7px,-50%);
+    white-space:nowrap;
+    font-family:"Work Sans",sans-serif;
+    font-weight:650;
+    font-size:12px;
+    letter-spacing:0.01em;
+    color:#2F5D45;
+    text-shadow:
+      0 1px 2px var(--surface), 0 -1px 2px var(--surface),
+      1px 0 2px var(--surface), -1px 0 2px var(--surface),
+      0 0 3px var(--surface);
+  }
+  .city-labels span.to-left{
+    transform:scale(calc(1 / var(--zoom-scale,1))) translate(calc(-100% - 7px),-50%);
+  }
+  .city-labels span.capital{font-weight:800;font-size:13.5px;color:#24503A;}
+  .city-labels span.town{opacity:0;transition:none;font-size:11px;font-weight:600;}
+  .city-labels.zoomed span.town{opacity:1;transition:opacity .25s ease;}
+  .city-labels span.town.off-focus{display:none;}
+  .city-labels.zoomed span{font-size:13px;color:#24503A;}
+  .city-labels.zoomed span.capital{font-size:15px;}
+  .city-labels.zoomed span.town{font-size:11.5px;}
   .cities{pointer-events:none;}
   .cities circle{
     fill:var(--text-soft);opacity:0.55;
@@ -557,7 +607,8 @@
   .cities .capital circle{fill:var(--text);opacity:0.9;}
   .cities .capital text{font-weight:800;font-size:calc(13.5px / var(--zoom-scale,1));}
   /* District towns only earn their space once you are zoomed in. */
-  .cities .town{opacity:0;transition:opacity .25s ease;pointer-events:none;}
+  .cities .town{opacity:0;transition:none;pointer-events:none;}
+  .cities.zoomed .town{transition:opacity .25s ease;}
   .cities.zoomed .town{opacity:1;}
   .cities .town.off-focus{display:none;}
   .cities .town circle{fill:var(--text-soft);opacity:0.65;}
@@ -604,10 +655,14 @@
   .pin.faded .pin-tip{opacity:0 !important;}
   .pin.hovered .pin-outline{stroke:var(--surface);stroke-width:2.6;}
   .pin.hovered{filter:drop-shadow(0 4px 9px var(--shadow)) drop-shadow(0 1px 2px var(--shadow));}
-  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(1.17 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(1.34 / var(--zoom-scale,1)));}
+  /* Inside a selected kraj the pin is scaled up and the name rides along
+     with it, which made the label shout. Trim it back. */
+  .pins.zoomed .pin-tip{font-size:0.62rem;padding:4px 8px;border-radius:8px;}
+
   .pins.zoomed .pin:hover,
-  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.33 / var(--zoom-scale,1)));}
-  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.37 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.52 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.57 / var(--zoom-scale,1)));}
   @media (pointer:coarse){
     .pin{filter:none;}
     .pin.hovered,.pin:hover{filter:none;}
@@ -1177,7 +1232,6 @@
         <span id="txtListHeading">Farmy na map&#283;</span>
         <span class="sort-row" id="sortRow">
           <button type="button" class="sort-btn active" data-sort="name">A&#8211;Z</button>
-          <button type="button" class="sort-btn" data-sort="region" id="sortRegionBtn">Kraj</button>
         </span>
         <span class="sidebar-count" id="sidebarCount"></span>
       </div>
@@ -1191,6 +1245,7 @@
         <div class="map-stage" id="mapStage">
           <svg viewBox="0 0 900 532.92" role="img" aria-label="Mapa &#268;esk&#233; republiky podle kraj&#367;">
             <g class="regions" id="regionsLayer"></g>
+            <g class="rivers" id="riversLayer" aria-hidden="true"></g>
             <path class="region-outline" id="regionOutline" d="" hidden></path>
             <g class="cities" id="citiesLayer" aria-hidden="true"></g>
             <g class="near-ring" id="nearRing" aria-hidden="true" hidden>
@@ -1198,6 +1253,7 @@
               <circle id="nearDot" cx="0" cy="0" r="4"></circle>
             </g>
           </svg>
+          <div class="city-labels" id="cityLabels" aria-hidden="true"></div>
           <div class="pins" id="pinsLayer"></div>
         </div>
       </div>
@@ -1569,6 +1625,51 @@
   });
   regionsLayer.appendChild(frag);
 
+  /* ---- Main rivers (OpenStreetMap, ODbL), projected like everything else ---- */
+  var RIVERS = [
+    ["Labe","M457.7 75.1C459.2 76.2 465.7 78.9 466.6 81.8C467.5 84.8 463.2 90.8 463.1 92.9C462.9 94.9 464.6 91.7 465.5 94.2C466.5 96.6 468.3 104.7 468.7 107.8C469.0 110.9 465.1 110.4 467.6 112.8C470.1 115.3 480.8 120.0 483.7 122.5C486.6 125.0 485.2 126.4 485.0 127.8C484.7 129.2 482.4 129.6 482.2 131.0C482.0 132.4 482.0 134.6 483.7 136.3C485.4 137.9 490.6 139.6 492.4 141.1C494.2 142.5 493.5 144.5 494.4 145.1C495.4 145.7 497.0 143.9 498.1 144.7C499.1 145.4 499.7 148.8 500.5 149.6C501.4 150.3 502.1 148.4 503.2 149.1C504.2 149.8 506.8 152.7 507.1 153.9C507.4 155.0 504.9 155.1 505.0 156.1C505.1 157.1 508.1 158.7 507.8 159.9C507.4 161.1 504.1 161.1 502.7 163.2C501.2 165.3 500.3 170.7 499.0 172.5C497.8 174.3 495.9 173.1 495.1 173.8C494.3 174.4 494.3 174.5 494.3 176.6C494.3 178.7 495.3 182.7 494.9 186.4C494.5 190.2 491.9 196.4 491.6 199.0C491.4 201.7 493.7 200.9 493.6 202.1C493.6 203.3 490.7 204.6 491.2 206.4C491.8 208.2 496.5 211.3 497.0 213.0C497.4 214.6 495.7 215.1 493.9 216.3C492.2 217.5 490.0 219.7 486.6 220.1C483.2 220.5 476.4 218.5 473.5 218.7C470.6 218.9 471.6 221.6 469.2 221.5C466.8 221.4 461.5 218.5 459.0 218.3C456.6 218.0 456.5 220.0 454.6 220.0C452.6 220.0 449.0 218.2 447.3 218.3C445.5 218.4 445.4 220.6 443.9 220.6C442.3 220.6 440.0 218.0 438.0 218.4C436.0 218.9 434.8 222.1 431.9 223.1C428.9 224.1 423.4 225.0 420.2 224.5C416.9 224.0 414.2 223.5 412.5 220.1C410.8 216.6 412.1 208.4 409.8 203.8C407.5 199.3 401.0 194.6 398.7 192.6C396.3 190.5 397.8 190.8 395.6 191.4C393.4 192.0 389.7 195.9 385.4 196.0C381.2 196.2 374.6 192.4 370.0 192.2C365.4 192.0 360.6 194.6 357.7 194.9C354.8 195.2 354.6 194.9 352.5 193.9C350.4 192.8 346.7 190.5 345.3 188.9C343.8 187.3 345.7 185.7 343.8 184.4C341.9 183.1 335.7 182.4 333.9 181.4C332.2 180.3 333.7 178.8 333.0 178.2C332.4 177.6 330.6 177.7 330.1 177.7M270.0 125.9C270.5 125.9 272.9 126.4 272.7 126.2C272.5 126.1 269.2 125.8 268.8 125.2C268.5 124.5 270.9 123.1 270.7 122.2C270.5 121.3 268.4 121.5 267.7 119.8C267.0 118.1 266.0 113.6 266.6 112.0C267.2 110.4 270.4 111.2 271.3 110.2C272.3 109.3 272.6 107.4 272.3 106.4C271.9 105.3 270.0 105.4 269.3 104.1C268.6 102.8 266.6 100.2 268.1 98.7C269.6 97.1 275.9 94.9 278.3 94.6C280.8 94.2 281.2 97.0 282.8 96.4C284.4 95.9 287.6 93.9 288.1 91.3C288.5 88.7 285.0 84.3 285.8 80.9C286.5 77.5 291.9 74.2 292.6 70.9C293.4 67.6 290.1 63.9 290.1 60.9C290.0 57.9 291.9 54.4 292.2 53.1M329.6 176.3C329.5 175.5 329.8 172.9 328.9 171.7C327.9 170.5 324.4 170.8 323.8 169.1C323.2 167.5 325.7 164.1 325.1 161.8C324.5 159.5 320.9 157.1 320.2 155.2C319.5 153.2 322.3 152.1 320.8 150.2C319.4 148.2 313.8 145.8 311.6 143.3C309.4 140.9 309.1 136.8 307.8 135.4C306.6 134.0 306.2 133.5 304.3 134.9C302.3 136.3 298.2 142.6 296.3 143.6C294.4 144.7 294.1 144.4 293.0 141.4C292.0 138.4 292.1 128.5 290.0 125.5C288.0 122.5 283.6 123.2 280.7 123.4C277.8 123.5 274.0 125.8 272.7 126.2",1],
+    ["Vltava","M249.0 452.5C249.8 453.0 252.5 453.6 253.7 455.8C254.9 457.9 254.4 462.9 256.1 465.2C257.8 467.5 262.3 467.9 264.0 469.5C265.6 471.0 265.0 473.4 266.0 474.4C267.1 475.4 269.3 473.8 270.3 475.6C271.3 477.3 269.8 482.2 271.9 484.8C274.1 487.5 280.9 489.6 283.1 491.6C285.3 493.6 283.3 495.9 285.0 496.8C286.8 497.7 292.2 496.5 293.8 497.0C295.3 497.5 293.8 499.8 294.5 499.9C295.2 500.0 297.4 498.6 298.0 497.7C298.6 496.9 297.1 494.5 297.9 494.9C298.7 495.2 300.9 499.6 302.9 500.1C304.9 500.5 308.7 500.1 309.7 497.7C310.7 495.3 310.3 490.8 308.7 485.7C307.2 480.7 301.5 471.6 300.5 467.4C299.6 463.3 302.0 461.9 303.1 460.9C304.2 459.8 305.6 462.0 306.9 461.2C308.1 460.3 310.3 457.0 310.6 455.9C310.8 454.8 308.4 455.2 308.3 454.7C308.2 454.2 310.0 453.1 310.1 452.8C310.1 452.6 309.0 454.1 308.6 453.2C308.2 452.3 307.3 448.7 307.6 447.7C307.8 446.6 310.0 447.4 310.1 447.1C310.2 446.7 307.0 445.9 308.0 445.6C309.0 445.2 314.9 445.4 316.1 444.7C317.3 444.0 314.6 442.6 315.5 441.2C316.4 439.7 320.6 438.9 321.6 435.9C322.5 433.0 321.8 426.3 321.4 423.4C320.9 420.5 319.2 420.3 318.8 418.6C318.4 416.8 318.5 414.1 318.8 413.1C319.2 412.1 320.3 413.6 320.9 412.7C321.5 411.8 322.3 411.4 322.3 407.7C322.2 404.0 321.4 394.5 320.7 390.3C320.1 386.2 320.7 385.1 318.4 382.7C316.0 380.3 309.0 378.9 306.6 375.9C304.3 372.9 305.8 367.8 304.3 364.8C302.9 361.8 300.3 361.9 298.1 357.8C295.9 353.8 293.0 343.7 291.2 340.5C289.4 337.3 288.0 339.6 287.3 338.5C286.7 337.4 287.9 335.1 287.4 333.9C286.8 332.8 284.2 332.8 284.0 331.6C283.8 330.3 286.2 327.8 286.4 326.3C286.6 324.8 285.7 322.9 285.3 322.4C284.8 321.8 283.9 323.5 283.5 323.1C283.1 322.6 282.6 320.4 282.9 319.7C283.1 319.0 285.1 320.1 285.0 319.0C285.0 318.0 282.2 316.3 282.6 313.5C283.1 310.6 286.6 303.4 287.8 301.9C289.1 300.4 288.7 304.8 289.9 304.4C291.1 304.0 294.3 301.3 295.0 299.5C295.8 297.7 293.3 295.5 294.4 293.7C295.5 291.8 300.9 289.7 301.6 288.5C302.4 287.4 298.6 287.2 298.9 286.7C299.2 286.2 302.7 286.1 303.2 285.5C303.7 284.9 301.0 283.4 302.0 282.9C302.9 282.4 307.6 283.4 308.6 282.6C309.6 281.9 307.4 278.8 308.1 278.3C308.8 277.8 311.3 280.1 312.8 279.6C314.3 279.2 316.8 276.7 317.1 275.6C317.4 274.6 314.9 274.6 314.6 273.4C314.2 272.3 314.3 269.6 314.8 268.7C315.3 267.8 317.5 268.6 317.7 268.0C317.9 267.4 316.2 266.0 316.1 265.1C316.0 264.2 316.4 262.9 317.0 262.5C317.5 262.1 318.8 263.5 319.4 262.8C319.9 262.1 321.1 259.2 320.0 258.1C319.0 257.0 314.7 257.5 313.3 256.3C312.0 255.0 312.0 251.8 312.1 250.6C312.2 249.3 314.2 250.5 313.8 248.8C313.4 247.2 309.7 242.5 309.6 240.9C309.4 239.2 312.0 244.0 312.9 238.9C313.9 233.8 313.7 215.5 315.1 210.1C316.4 204.8 321.4 207.6 321.1 206.7C320.8 205.8 314.6 206.9 313.3 204.8C312.1 202.8 314.7 196.2 313.7 194.5C312.7 192.7 308.1 195.2 307.5 194.4C307.0 193.5 311.4 192.2 310.3 189.4C309.3 186.5 302.1 180.1 301.1 177.1C300.2 174.2 303.9 173.4 304.5 171.6C305.1 169.9 301.7 167.7 304.6 166.5C307.4 165.3 318.6 165.7 321.7 164.5C324.7 163.4 322.7 160.3 322.9 159.4",1],
+    ["Morava","M620.3 209.8C622.5 209.9 630.8 209.8 633.3 210.3C635.8 210.8 636.5 208.7 635.5 212.7C634.4 216.8 626.9 229.5 626.8 234.7C626.7 240.0 633.7 241.2 634.9 244.2C636.0 247.2 633.4 249.0 633.4 252.8C633.5 256.7 634.4 264.7 635.3 267.5C636.1 270.2 637.0 266.8 638.4 269.4C639.8 271.9 640.2 279.9 643.9 282.9C647.5 285.9 655.7 285.5 660.3 287.6C664.9 289.6 668.8 292.9 671.4 295.2C674.1 297.5 674.9 297.8 676.0 301.4C677.2 305.1 678.4 313.3 678.5 317.1C678.7 320.8 676.3 321.5 676.9 323.9C677.6 326.3 681.1 328.0 682.4 331.3C683.7 334.6 684.9 341.0 684.9 343.8C684.8 346.5 682.4 346.0 682.1 347.7C681.8 349.4 679.5 349.8 683.1 353.9C686.6 358.0 698.9 366.6 703.3 372.4C707.7 378.2 709.1 383.5 709.5 388.9C709.8 394.3 705.9 401.6 705.4 404.7C705.0 407.8 708.3 406.1 706.8 407.4C705.4 408.8 699.0 411.3 696.8 412.9C694.7 414.5 694.1 415.2 693.8 417.1C693.4 419.0 695.0 422.3 694.6 424.4C694.3 426.5 691.9 428.1 691.5 429.7C691.1 431.3 693.0 432.5 692.1 434.0C691.2 435.4 687.8 437.7 685.9 438.3C683.9 439.0 681.6 437.2 680.3 438.1C678.9 439.0 679.4 442.5 677.9 443.8C676.5 445.1 674.2 444.1 671.8 446.0C669.3 447.9 665.7 453.2 663.4 455.2C661.1 457.2 659.3 455.9 657.9 457.9C656.5 459.8 656.5 464.6 655.1 466.8C653.7 469.0 651.3 468.4 649.4 470.9C647.4 473.5 645.7 477.0 643.5 481.9C641.4 486.7 637.4 497.1 636.2 500.2",1],
+    ["Odra","M715.7 288.6C717.2 286.6 720.6 277.7 724.4 276.8C728.3 275.9 734.1 279.6 738.7 283.2C743.3 286.7 748.3 294.7 752.1 298.1C755.9 301.4 759.1 304.0 761.7 303.4C764.3 302.8 762.0 299.1 767.5 294.6C773.1 290.0 789.6 280.9 794.8 276.2C800.0 271.5 798.1 269.4 798.9 266.5C799.6 263.6 798.7 260.7 799.1 258.9C799.5 257.1 799.6 256.7 801.3 255.5C802.9 254.4 807.0 254.4 809.0 252.1C810.9 249.9 811.9 243.8 813.0 241.8C814.1 239.9 817.9 245.2 815.5 240.6C813.1 236.0 801.3 219.4 798.8 214.3C796.2 209.2 800.3 211.0 800.2 210.0C800.1 209.0 798.0 210.2 798.1 208.1C798.2 206.0 800.0 199.6 800.9 197.5C801.9 195.4 803.8 197.4 803.8 195.4C803.8 193.4 800.7 187.7 800.8 185.7C801.0 183.8 804.4 185.1 804.8 183.6C805.2 182.0 804.5 178.3 803.3 176.5C802.1 174.7 798.6 173.9 797.8 173.0C797.1 172.1 799.3 172.3 798.8 171.0C798.2 169.7 795.1 166.2 794.4 165.2",1],
+    ["Oh\u0159e","M38.3 209.2C38.7 209.0 39.8 207.7 40.7 207.9C41.7 208.0 41.6 209.7 43.9 210.4C46.2 211.1 52.1 212.2 54.5 212.2C56.9 212.2 57.4 211.5 58.3 210.2C59.3 208.9 58.6 205.2 60.4 204.6C62.2 204.0 67.5 206.7 69.3 206.7C71.0 206.7 70.0 204.7 70.9 204.5C71.7 204.4 72.9 206.7 74.2 205.7C75.5 204.8 77.4 199.7 78.7 198.9C79.9 198.2 80.8 201.4 81.9 201.4C83.0 201.5 84.4 200.7 85.3 199.3C86.2 197.9 86.2 194.5 87.3 193.1C88.4 191.6 89.9 190.9 91.9 190.7C94.0 190.4 98.1 191.9 99.8 191.7C101.5 191.5 101.4 189.6 102.1 189.6C102.9 189.5 103.6 191.7 104.3 191.6C105.0 191.5 105.4 189.3 106.1 189.2C106.9 189.2 107.8 191.2 108.9 191.2C110.0 191.3 112.4 190.3 112.8 189.5C113.1 188.8 110.7 187.7 111.2 186.5C111.6 185.2 111.7 183.1 115.6 182.0C119.4 180.9 130.9 180.8 134.2 179.9C137.6 178.9 135.8 177.6 135.6 176.4C135.4 175.2 132.8 173.4 133.1 172.4C133.4 171.4 136.4 172.2 137.5 170.6C138.5 169.0 137.6 165.4 139.4 162.9C141.3 160.3 146.1 156.2 148.4 155.1C150.7 154.0 151.8 156.7 153.3 156.3C154.9 155.8 155.2 152.9 157.6 152.4C160.0 151.8 165.1 152.2 167.7 153.0C170.3 153.8 172.1 156.7 173.2 156.9C174.3 157.1 173.2 153.8 174.4 154.1C175.7 154.3 178.8 158.1 180.8 158.5C182.8 158.8 185.1 155.9 186.5 155.9C188.0 155.9 188.8 158.5 189.4 158.4C190.0 158.3 189.4 155.8 190.0 155.3C190.7 154.7 191.9 154.5 193.6 155.2C195.2 155.8 198.5 157.6 200.0 159.0C201.4 160.4 200.7 163.1 202.4 163.5C204.1 163.8 208.4 160.6 210.1 160.9C211.9 161.1 212.1 164.9 212.9 165.1C213.6 165.3 213.3 162.7 214.8 162.1C216.3 161.6 220.7 162.3 221.9 161.7C223.1 161.0 221.6 158.7 222.0 158.4C222.4 158.0 223.4 160.1 224.2 159.7C225.0 159.4 225.8 156.9 226.7 156.5C227.6 156.1 229.2 157.7 229.8 157.3C230.4 156.9 228.9 154.2 230.2 154.2C231.5 154.2 234.8 157.6 237.6 157.4C240.4 157.1 244.8 153.1 246.9 152.7C249.0 152.3 249.3 155.3 250.0 155.0C250.8 154.7 250.9 151.0 251.6 150.7C252.3 150.4 253.7 153.6 254.1 153.3C254.6 153.0 253.5 149.3 254.5 148.9C255.5 148.6 256.3 151.7 260.1 151.4C264.0 151.1 273.6 148.8 277.5 147.2C281.4 145.5 282.8 143.8 283.4 141.5C284.1 139.3 281.6 135.9 281.5 133.7C281.4 131.5 283.3 130.0 283.0 128.3C282.7 126.6 280.2 124.4 279.7 123.6",0],
+    ["S\u00E1zava","M504.7 301.5C505.3 303.7 509.1 312.5 508.4 314.3C507.6 316.1 502.2 312.3 500.4 312.5C498.5 312.8 498.7 315.0 497.4 315.6C496.1 316.2 494.2 316.7 492.5 316.1C490.8 315.6 489.2 313.0 487.3 312.3C485.4 311.7 483.0 313.2 481.2 312.3C479.5 311.3 477.6 307.3 476.9 306.7C476.2 306.0 478.4 308.7 477.0 308.3C475.6 307.9 470.3 304.4 468.5 304.1C466.6 303.9 467.9 307.2 466.0 306.9C464.1 306.5 458.8 302.7 457.1 302.2C455.4 301.7 458.1 305.4 455.8 303.8C453.5 302.3 446.3 294.4 443.2 293.1C440.0 291.7 439.0 295.7 436.9 295.8C434.8 296.0 432.1 295.1 430.8 294.0C429.5 292.9 429.9 289.7 429.2 289.1C428.5 288.5 428.2 290.9 426.9 290.4C425.6 289.8 423.7 286.6 421.6 285.7C419.5 284.9 415.3 285.5 414.2 285.1C413.1 284.6 415.3 283.3 415.1 283.0C414.8 282.8 413.2 284.0 412.6 283.5C412.0 282.9 411.9 279.9 411.5 279.6C411.1 279.3 411.1 281.7 410.0 281.6C409.0 281.4 406.2 278.9 405.1 278.7C403.9 278.5 403.9 280.8 403.2 280.5C402.5 280.2 401.5 277.1 400.8 277.0C400.0 276.9 399.6 279.4 398.6 279.6C397.6 279.8 396.1 279.4 394.8 278.3C393.6 277.2 391.2 274.2 391.0 272.9C390.7 271.6 394.0 271.1 393.3 270.3C392.7 269.6 388.4 268.4 386.9 268.3C385.4 268.2 385.3 270.2 384.2 269.8C383.2 269.4 380.9 266.8 380.6 265.8C380.3 264.8 382.4 264.4 382.4 263.8C382.4 263.3 380.5 263.3 380.3 262.7C380.1 262.0 380.6 260.4 381.4 259.7C382.1 258.9 385.0 258.7 384.8 258.3C384.7 258.0 381.0 258.1 380.4 257.6C379.8 257.2 381.4 255.6 381.3 255.6C381.1 255.5 380.0 258.1 379.4 257.3C378.9 256.6 378.7 251.7 378.1 251.1C377.4 250.4 376.1 253.5 375.6 253.5C375.0 253.5 375.1 251.3 374.6 251.2C374.1 251.0 373.6 252.7 372.5 252.5C371.5 252.3 369.6 249.9 368.3 250.0C366.9 250.2 366.5 253.4 364.5 253.5C362.4 253.6 358.6 249.8 356.1 250.8C353.6 251.7 351.2 258.3 349.5 259.1C347.8 259.8 347.6 255.9 345.7 255.5C343.8 255.0 339.3 255.5 338.1 256.5C336.8 257.4 339.4 261.3 338.2 261.1C337.1 261.0 332.7 256.5 330.9 255.7C329.2 254.9 328.5 256.6 327.5 256.2C326.5 255.8 325.8 253.4 324.8 253.2C323.8 253.1 322.5 255.3 321.6 255.1C320.8 255.0 320.8 252.7 319.8 252.2C318.7 251.8 316.4 252.9 315.2 252.5C314.0 252.1 313.1 250.4 312.7 250.0",0],
+    ["Berounka","M232.8 233.2C233.3 233.2 234.9 234.1 235.4 233.4C235.9 232.7 234.8 230.2 235.6 229.1C236.4 228.0 239.4 227.8 240.4 226.9C241.4 226.0 240.8 224.0 241.5 223.6C242.3 223.2 243.9 224.9 244.7 224.6C245.4 224.3 245.5 221.8 246.0 221.8C246.6 221.8 247.4 225.3 248.1 224.7C248.8 224.0 249.6 218.6 250.3 217.9C251.1 217.2 252.5 219.8 252.6 220.6C252.8 221.4 248.1 221.1 251.1 222.7C254.2 224.2 267.4 228.1 270.8 230.0C274.3 231.9 270.8 233.0 272.0 234.2C273.1 235.4 276.5 236.0 277.9 237.2C279.2 238.4 278.8 240.9 280.1 241.5C281.3 242.1 284.3 240.4 285.4 240.8C286.4 241.1 285.3 243.1 286.4 243.7C287.5 244.3 289.0 245.1 292.0 244.4C295.1 243.8 302.8 241.5 304.8 239.9C306.9 238.3 302.8 236.8 304.3 234.9C305.8 233.0 312.1 229.7 313.6 228.7M185.2 276.3C185.4 275.9 185.6 274.2 186.2 273.9C186.8 273.6 188.1 274.9 188.7 274.2C189.3 273.5 189.2 270.0 189.8 269.7C190.4 269.4 191.5 272.7 192.2 272.4C193.0 272.1 192.9 269.2 194.1 267.7C195.4 266.3 198.5 264.2 199.9 263.7C201.3 263.1 202.2 264.8 202.6 264.5C203.0 264.1 202.8 262.0 202.5 261.5C202.1 261.1 200.8 263.6 200.6 261.6C200.5 259.7 200.6 252.6 201.5 250.0C202.3 247.3 205.3 246.8 205.5 245.9C205.8 245.0 202.7 245.4 202.9 244.7C203.1 244.0 205.6 241.8 206.8 241.6C208.0 241.4 208.9 243.5 209.9 243.6C210.8 243.8 212.4 243.3 212.5 242.3C212.5 241.4 209.5 238.2 210.3 238.0C211.1 237.8 215.7 241.5 217.4 241.1C219.1 240.8 218.7 237.1 220.4 236.0C222.1 234.8 226.4 234.5 227.6 234.2",0],
+    ["Dyje","M576.2 462.7C576.8 460.9 578.2 455.1 579.6 452.2C581.1 449.3 580.9 446.4 584.7 445.3C588.5 444.2 597.7 443.3 602.4 445.4C607.0 447.6 609.3 455.9 612.6 458.5C615.9 461.0 619.6 459.4 622.3 461.0C625.1 462.6 627.9 464.7 629.1 467.9C630.3 471.2 629.4 478.4 629.5 480.5M511.6 460.2C512.0 460.4 513.8 462.4 514.1 461.9C514.5 461.3 512.7 458.3 513.9 456.9C515.1 455.5 519.6 453.3 521.3 453.4C523.1 453.5 523.0 457.4 524.5 457.6C526.0 457.9 528.3 454.7 530.5 454.9C532.7 455.1 536.7 457.6 538.0 458.8C539.3 459.9 537.1 460.1 538.3 461.7C539.6 463.3 541.9 465.7 545.4 468.2C549.0 470.7 557.2 475.5 559.6 477.0M470.5 446.9C471.7 446.4 476.9 444.5 477.9 443.6C479.0 442.8 476.6 441.9 476.9 441.8C477.2 441.7 478.8 443.3 479.7 443.2C480.6 443.0 482.5 441.6 482.6 441.1C482.6 440.6 480.4 440.8 479.8 440.1C479.2 439.4 478.2 436.9 479.0 436.8C479.8 436.8 482.9 439.7 484.4 439.7C485.8 439.6 486.6 436.8 487.7 436.5C488.8 436.2 490.4 437.2 491.0 437.9C491.5 438.7 490.5 440.2 491.0 441.2C491.5 442.1 493.8 442.7 494.1 443.4C494.3 444.1 492.0 444.6 492.5 445.5C493.0 446.5 496.3 448.6 497.0 449.2",0],
+    ["Jizera","M436.7 67.2C436.7 68.4 435.5 72.3 436.5 74.6C437.5 76.9 441.9 79.4 442.8 81.1C443.8 82.8 441.3 82.6 442.2 84.9C443.0 87.2 447.2 92.4 447.9 94.8C448.6 97.3 446.3 97.9 446.4 99.3C446.5 100.8 449.1 102.3 448.6 103.6C448.0 105.0 444.4 106.9 443.0 107.4C441.7 107.9 441.4 106.0 440.5 106.6C439.7 107.1 439.3 109.9 438.0 110.6C436.8 111.3 435.0 111.9 433.3 110.6C431.6 109.4 430.5 105.1 427.8 103.1C425.0 101.2 419.7 98.4 416.9 99.0C414.2 99.5 411.8 105.0 411.3 106.5C410.9 107.9 414.4 107.2 414.2 107.7C414.1 108.2 411.5 108.3 410.4 109.4C409.4 110.4 409.1 113.4 407.9 114.1C406.6 114.8 404.2 113.0 402.9 113.5C401.6 114.0 401.2 116.7 400.2 117.0C399.2 117.3 398.1 115.0 397.1 115.4C396.0 115.8 395.4 119.2 393.9 119.4C392.5 119.7 389.7 117.0 388.2 117.0C386.8 116.9 385.9 117.9 385.1 119.4C384.3 120.8 383.4 124.4 383.3 125.7C383.3 127.0 385.3 126.4 384.9 127.2C384.6 127.9 381.9 128.8 381.3 130.1C380.6 131.4 382.1 133.6 381.2 135.0C380.2 136.3 376.3 136.2 375.6 138.0C374.8 139.9 377.1 144.3 376.9 146.1C376.6 147.9 374.9 145.1 373.8 148.9C372.7 152.8 372.6 164.7 370.2 169.2C367.8 173.7 361.1 174.2 359.6 176.0C358.1 177.7 361.4 178.7 361.1 179.6C360.9 180.4 358.7 179.4 358.1 181.2C357.5 182.9 358.3 188.0 357.5 190.1C356.7 192.2 354.0 193.3 353.4 193.9",0],
+    ["Otava","M198.1 403.1C198.6 402.0 200.8 398.4 201.0 396.6C201.3 394.7 199.5 393.0 199.6 392.0C199.6 390.9 202.0 391.3 201.6 390.4C201.2 389.6 197.0 389.1 197.1 387.0C197.2 384.9 200.1 380.4 202.3 378.0C204.4 375.5 207.8 373.4 210.1 372.2C212.5 371.1 214.3 372.9 216.4 371.1C218.4 369.3 217.3 360.8 222.5 361.4C227.7 361.9 241.3 372.7 247.5 374.3C253.8 376.0 257.2 371.3 260.0 371.4C262.7 371.4 262.9 374.3 264.1 374.6C265.4 374.9 266.4 373.1 267.3 373.1C268.2 373.2 267.9 375.2 269.5 374.9C271.1 374.6 275.5 372.9 276.7 371.2C277.8 369.4 275.7 365.8 276.4 364.6C277.2 363.5 280.0 364.8 281.0 364.3C282.1 363.8 282.4 364.3 282.5 361.7C282.5 359.0 280.7 350.7 281.3 348.4C281.9 346.1 285.6 348.1 286.1 347.8C286.6 347.4 283.9 347.1 284.2 346.2C284.5 345.2 287.2 343.5 287.7 342.1C288.2 340.8 287.3 338.7 287.2 338.0",0],
+    ["Svratka","M516.0 288.4C517.1 287.9 520.7 284.3 522.7 285.0C524.8 285.8 526.1 292.2 528.0 292.8C530.0 293.4 533.1 288.9 534.4 288.6C535.6 288.4 534.5 290.9 535.7 291.3C536.8 291.7 539.7 290.7 541.4 291.2C543.0 291.7 544.8 292.1 545.5 294.1C546.1 296.1 544.7 301.3 545.2 303.1C545.6 305.0 547.8 304.3 548.1 305.2C548.5 306.1 545.4 306.7 547.4 308.6C549.5 310.5 558.0 314.8 560.4 316.7C562.7 318.6 561.9 318.3 561.6 320.0C561.3 321.7 558.7 325.0 558.6 327.0C558.5 329.0 561.1 330.7 561.2 332.0C561.3 333.2 559.2 332.9 559.2 334.4C559.2 335.8 560.5 339.4 561.3 340.6C562.0 341.9 563.7 341.1 564.0 341.9C564.3 342.8 561.9 343.4 563.0 346.0C564.1 348.6 569.5 354.2 570.4 357.6C571.4 360.9 568.0 363.7 568.7 365.8C569.4 367.9 573.7 369.1 574.7 370.4C575.7 371.7 574.1 373.2 574.5 373.7C574.9 374.3 575.3 372.3 577.3 373.7C579.4 375.0 584.8 379.2 586.8 381.7C588.9 384.2 588.4 387.5 589.6 388.6C590.8 389.8 593.0 388.2 594.0 388.7C595.1 389.1 595.7 387.0 595.8 391.5C595.9 395.9 593.5 410.1 594.5 415.6C595.5 421.1 600.6 421.8 601.8 424.2C602.9 426.6 602.5 428.4 601.2 430.2C599.9 432.1 595.0 433.0 594.0 435.4C592.9 437.8 594.8 443.1 594.9 444.7",0],
+    ["Be\u010Dva","M765.0 332.2C764.7 331.3 765.8 329.0 763.1 326.9C760.3 324.8 752.1 320.5 748.5 319.7C744.8 318.9 743.3 322.6 741.2 322.2C739.2 321.8 740.9 316.8 736.0 317.2C731.2 317.6 717.3 322.3 712.1 324.5C707.0 326.6 706.3 328.6 705.2 330.0C704.0 331.5 706.3 332.1 705.2 333.2C704.2 334.3 701.4 336.3 698.7 336.7C695.9 337.1 691.0 334.6 688.6 335.5C686.2 336.5 685.2 341.2 684.5 342.4",0]
+  ];
+  (function renderRivers(){
+    var NS = 'http://www.w3.org/2000/svg';
+    var layer = document.getElementById('riversLayer');
+    var svg = layer.ownerSVGElement;
+    /* Clip to the union of the kraje: rivers run on past the border in the
+       source data, and a line wandering off into the surround reads as a
+       mistake. */
+    var defs = document.createElementNS(NS, 'defs');
+    var cp = document.createElementNS(NS, 'clipPath');
+    cp.setAttribute('id', 'czBorder');
+    regionsLayer.querySelectorAll('path.region').forEach(function(p){
+      var c = document.createElementNS(NS, 'path');
+      c.setAttribute('d', p.getAttribute('d'));
+      cp.appendChild(c);
+    });
+    defs.appendChild(cp);
+    svg.insertBefore(defs, svg.firstChild);
+    layer.setAttribute('clip-path', 'url(#czBorder)');
+
+    var frag = document.createDocumentFragment();
+    RIVERS.forEach(function(r){
+      var p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', r[1]);
+      p.setAttribute('data-river', r[0]);
+      if (r[2]) p.setAttribute('data-major', '1');
+      frag.appendChild(p);
+    });
+    layer.appendChild(frag);
+  })();
+
   /* ---- Key cities, for orientation (regional capitals) ---- */
   var CITIES = [
     { name:"Praha", x:318.2, y:213.0, capital:true, kraj:"Hlavn\u00ED m\u011Bsto Praha" },
@@ -1608,6 +1709,18 @@
     ["Fr\u00FDdek-M\u00EDstek",49.683,18.350,"Moravskoslezsk\u00FD kraj"],["Nov\u00FD Ji\u010D\u00EDn",49.594,18.010,"Moravskoslezsk\u00FD kraj"]
   ];
   var citiesLayer = document.getElementById('citiesLayer');
+  var cityLabels = document.getElementById('cityLabels');
+  var labelFrag = document.createDocumentFragment();
+  function addCityLabel(x, y, text, cls, toLeft, kraj){
+    var el = document.createElement('span');
+    el.textContent = text;
+    if (cls) el.className = cls;
+    if (toLeft) el.classList.add('to-left');
+    if (kraj) el.setAttribute('data-kraj', kraj);
+    el.style.left = (x / 900 * 100).toFixed(3) + '%';
+    el.style.top  = (y / 532.92 * 100).toFixed(3) + '%';
+    labelFrag.appendChild(el);
+  }
   var cityFrag = document.createDocumentFragment();
   CITIES.forEach(function(c){
     var g = document.createElementNS('http://www.w3.org/2000/svg','g');
@@ -1617,16 +1730,12 @@
     dot.setAttribute('cx', c.x);
     dot.setAttribute('cy', c.y);
     dot.setAttribute('r', c.capital ? 3.4 : 2.4);
-    var label = document.createElementNS('http://www.w3.org/2000/svg','text');
-    label.setAttribute('x', c.x + (c.dx || 6));
-    label.setAttribute('y', c.y + (c.dy || 3.6));
-    if (c.anchor) label.setAttribute('text-anchor', c.anchor);
-    label.textContent = c.name;
+    addCityLabel(c.x, c.y, c.name, c.capital ? 'capital' : '', c.anchor === 'end', c.kraj);
     g.appendChild(dot);
-    g.appendChild(label);
     cityFrag.appendChild(g);
   });
   citiesLayer.appendChild(cityFrag);
+  cityLabels.appendChild(labelFrag);
 
   /* ---- Farm data ---- */
   var VB_W = 900, VB_H = 532.92;
@@ -2861,7 +2970,7 @@
               "Eggs, vegetables and fruit \u2014 all covered by the same organic certificate.",
               "They sell through Scuk."] } },
 
-{ id:"zlouky", cert:"bio", website:"https://www.zlouky.cz/", eshop:"https://www.zlouky.cz/",
+{ id:"zlouky", facebook:"https://www.facebook.com/zlouky", instagram:"https://www.instagram.com/zlouky/", cert:"bio", website:"https://www.zlouky.cz/", eshop:"https://www.zlouky.cz/",
   email:"info@zlouky.cz", phone:"+420 602 685 038",
   delivery:["praha"],
   offers:["automat"],
@@ -3137,7 +3246,7 @@
               "Beef is ordered straight from the farm in 5 and 10 kg packs or as individual cuts.",
               "Eggs go to Brno on Mondays and the Ti\u0161nov area on Thursdays; farm pickup by arrangement."] } },
 
-{ id:"vecozhane", website:"https://www.vecozhane.cz/",
+{ id:"vecozhane", facebook:"https://www.facebook.com/profile.php?id=61578411337437", instagram:"https://www.instagram.com/vecozhane/", website:"https://www.vecozhane.cz/",
   email:"chci@vecozhane.cz", phone:"+420 604 199 302",
   offers:["automat"],
   tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","pasture eggs"],
@@ -3156,7 +3265,7 @@
               "They also stand at the Olomouc market hall on Wednesdays and Saturdays and selected \u0160ternberk markets.",
               "The hens are pasture-raised."] } },
 
-{ id:"kolby", website:"https://www.vejcekolby.cz/",
+{ id:"kolby", facebook:"https://www.facebook.com/vejcekolby", instagram:"https://www.instagram.com/vejcekolby/", website:"https://www.vejcekolby.cz/",
   email:"vejce@kolby.cz", phone:"+420 732 476 996",
   tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","pasture eggs"],
   hours:{cs:"Objedn\u00E1vky a odb\u011Br p\u0159\u00EDmo u farmy", en:"Orders and collection direct from the farm"},
@@ -3185,7 +3294,7 @@
               "Egg sales started in May 2026; you buy at the gate, usually between five and seven in the evening.",
               "They also sell raw cow, goat and sheep milk."] } },
 
-{ id:"podkunkou", facebook:"https://www.facebook.com/farmapodkunkou.cz", email:"farma@farmapodkunkou.cz", phone:"+420 731 815 147",
+{ id:"podkunkou", instagram:"https://www.instagram.com/farma_pod_kunkou/", facebook:"https://www.facebook.com/farmapodkunkou.cz", email:"farma@farmapodkunkou.cz", phone:"+420 731 815 147",
   tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","pasture eggs"],
   hours:{cs:"Prodej p\u0159\u00EDmo na farm\u011B", en:"Sold at the farm"},
   name:"Farma pod Ku\u0148kou",
@@ -3229,6 +3338,7 @@
   /* District towns, projected the same way as the farms. */
   (function renderTowns(){
     var frag = document.createDocumentFragment();
+    var townLabels = document.createDocumentFragment();
     TOWNS.forEach(function(t2){
       var x = (t2[2] - PROJ.minlon) * PROJ.cosLat * PROJ.scale + PROJ.margin;
       var y = (PROJ.maxlat - t2[1]) * PROJ.scale + PROJ.margin;
@@ -3239,15 +3349,18 @@
       dot.setAttribute('cx', x.toFixed(1));
       dot.setAttribute('cy', y.toFixed(1));
       dot.setAttribute('r', 1.7);
-      var label = document.createElementNS('http://www.w3.org/2000/svg','text');
-      label.setAttribute('x', (x + 4).toFixed(1));
-      label.setAttribute('y', (y + 3).toFixed(1));
-      label.textContent = t2[0];
+      var el = document.createElement('span');
+      el.textContent = t2[0];
+      el.className = 'town';
+      if (t2[3]) el.setAttribute('data-kraj', t2[3]);
+      el.style.left = (x / VB_W * 100).toFixed(3) + '%';
+      el.style.top  = (y / VB_H * 100).toFixed(3) + '%';
+      townLabels.appendChild(el);
       g.appendChild(dot);
-      g.appendChild(label);
       frag.appendChild(g);
     });
     citiesLayer.appendChild(frag);
+    cityLabels.appendChild(townLabels);
   })();
 
   /* Farms in the same town would otherwise stack into one unclickable pin, so
@@ -3927,14 +4040,17 @@ function matches(f){
   function setZoomedDetail(on){
     pinsLayer.classList.toggle('zoomed', on);
     citiesLayer.classList.toggle('zoomed', on);
+    cityLabels.classList.toggle('zoomed', on);
   }
 
 /* Zoomed into one region, only that region shows its district towns; the
    regions around it keep just their capital, so the edges stay readable. */
 function focusLabels(kraj){
-  citiesLayer.querySelectorAll('.town').forEach(function(g){
-    g.classList.toggle('off-focus', kraj !== 'all' && g.getAttribute('data-kraj') !== kraj);
-  });
+  var off = function(el){
+    el.classList.toggle('off-focus', kraj !== 'all' && el.getAttribute('data-kraj') !== kraj);
+  };
+  citiesLayer.querySelectorAll('.town').forEach(off);
+  cityLabels.querySelectorAll('.town').forEach(off);
 }
 
   /* `el.hidden` is an HTMLElement property. On an SVG node it silently
@@ -4001,7 +4117,13 @@ function focusLabels(kraj){
     if (activeRegion !== 'all' || view.s > 1) resetFilters();
   });
 
+  /* Set by the drag handler below: a real drag ends with a click, and that
+     click used to land on the region the drag had just chosen and toggle it
+     straight back off. */
+  var dragJustEnded = false;
+
   regionsLayer.addEventListener('click', function(e){
+    if (dragJustEnded){ dragJustEnded = false; return; }
     var path = e.target.closest('path.region');
     if (!path) return;
 
@@ -4059,21 +4181,41 @@ function focusLabels(kraj){
       setSvgHidden(outline, false);
     }
 
+    /* What makes it a drag is that the pointer travelled, not that it
+       happened to cross a border: a real drag ends with a click whose
+       target can still be the region it started in, and that click used
+       to toggle the selection straight back off. */
+    var startX = 0, startY = 0, killClick = false;
+    var DRAG_SLOP = 5;
+
+    /* A drag ends with a click on whatever is under the pointer, which
+       would re-toggle the region the drag just chose. Swallow that one
+       click in the capture phase so the selecting handler never runs. */
+    regionsLayer.addEventListener('click', function(e){
+      if (!killClick) return;
+      killClick = false;
+      e.stopPropagation();
+      e.preventDefault();
+    }, true);
+
     regionsLayer.addEventListener('mousedown', function(e){
+      killClick = false;
       if (e.button !== 0 || pickingLocation) return;
       dragFrom = regionAt(e.clientX, e.clientY);
+      startX = e.clientX; startY = e.clientY;
       dragOver = null;
       dragging = false;
     });
 
     window.addEventListener('mousemove', function(e){
       if (!dragFrom) return;
-      var p = regionAt(e.clientX, e.clientY);
       if (!dragging){
-        if (!p || p === dragFrom) return;
+        var dx = e.clientX - startX, dy = e.clientY - startY;
+        if (dx * dx + dy * dy < DRAG_SLOP * DRAG_SLOP) return;
         dragging = true;
         mapStage.classList.add('region-dragging');
       }
+      var p = regionAt(e.clientX, e.clientY);
       if (p !== dragOver) preview(p);
     });
 
@@ -4083,6 +4225,8 @@ function focusLabels(kraj){
         mapStage.classList.remove('region-dragging');
         clearPreview();
         var name = target && target.getAttribute('data-region');
+        killClick = true;
+        dragJustEnded = true;
         if (name && name !== activeRegion) setRegion(name);
         else restoreOutline();
       }
