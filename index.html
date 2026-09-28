@@ -559,11 +559,16 @@
      that bitmap, so at 4x a 6px glyph turns to mush. An HTML span that is
      counter-scaled instead keeps a constant size on screen and is redrawn
      sharp at every zoom. */
-  .city-labels{position:absolute;inset:0;pointer-events:none;z-index:1;}
+  /* The overlay sits OUTSIDE .map-stage on purpose. Safari rasterises a
+     CSS-transformed subtree and then scales that bitmap, so anything inside
+     the zoomed stage goes soft; Chrome re-renders it as vectors, which is why
+     this only showed up in Safari. Out here the labels are ordinary page text
+     at a fixed size, and JS puts them where the map currently is. */
+  .city-labels{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;}
   .city-labels span{
     position:absolute;
+    left:0; top:0;
     transform-origin:0 0;
-    transform:scale(calc(1 / var(--zoom-scale,1))) translate(7px,-50%);
     white-space:nowrap;
     font-family:"Work Sans",sans-serif;
     font-weight:650;
@@ -574,9 +579,6 @@
       0 1px 2px var(--surface), 0 -1px 2px var(--surface),
       1px 0 2px var(--surface), -1px 0 2px var(--surface),
       0 0 3px var(--surface);
-  }
-  .city-labels span.to-left{
-    transform:scale(calc(1 / var(--zoom-scale,1))) translate(calc(-100% - 7px),-50%);
   }
   .city-labels span.capital{font-weight:800;font-size:13.5px;color:#24503A;}
   .city-labels span.town{opacity:0;transition:none;font-size:11px;font-weight:600;}
@@ -1253,9 +1255,9 @@
               <circle id="nearDot" cx="0" cy="0" r="4"></circle>
             </g>
           </svg>
-          <div class="city-labels" id="cityLabels" aria-hidden="true"></div>
           <div class="pins" id="pinsLayer"></div>
         </div>
+        <div class="city-labels" id="cityLabels" aria-hidden="true"></div>
       </div>
       <div class="map-caption" id="mapCaption">10 farem</div>
       <div class="map-zoom" role="group" aria-label="Zoom">
@@ -1726,8 +1728,8 @@ function trackEvent(path, title){
     if (cls) el.className = cls;
     if (toLeft) el.classList.add('to-left');
     if (kraj) el.setAttribute('data-kraj', kraj);
-    el.style.left = (x / 900 * 100).toFixed(3) + '%';
-    el.style.top  = (y / 532.92 * 100).toFixed(3) + '%';
+    el.dataset.x = x;
+    el.dataset.y = y;
     labelFrag.appendChild(el);
   }
   var cityFrag = document.createDocumentFragment();
@@ -2759,7 +2761,7 @@ function trackEvent(path, title){
               "The shop delivers nationwide, free over 2,500 CZK.",
               "At weekends the Hosp\u016Fdka na Jur\u00E9m is open, with a playground and woodland park."] } },
 
-{ id:"javornikstitna", cert:"bio", website:"https://www.javornikstitna.cz/",
+{ id:"javornikstitna", eshop:"https://www.eshop-ekofarmajavornik.cz/", cert:"bio", website:"https://www.javornikstitna.cz/",
   phone:"+420 577 002 312",
   name:"JAVORN\u00CDK-CZ (\u0160t\u00EDtn\u00E1 nad Vl\u00E1\u0159\u00ED)",
   town:{cs:"\u0160t\u00EDtn\u00E1 nad Vl\u00E1\u0159\u00ED 414", en:"\u0160t\u00EDtn\u00E1 nad Vl\u00E1\u0159\u00ED 414"},
@@ -3362,8 +3364,8 @@ function trackEvent(path, title){
       el.textContent = t2[0];
       el.className = 'town';
       if (t2[3]) el.setAttribute('data-kraj', t2[3]);
-      el.style.left = (x / VB_W * 100).toFixed(3) + '%';
-      el.style.top  = (y / VB_H * 100).toFixed(3) + '%';
+      el.dataset.x = x.toFixed(2);
+      el.dataset.y = y.toFixed(2);
       townLabels.appendChild(el);
       g.appendChild(dot);
       frag.appendChild(g);
@@ -3493,8 +3495,9 @@ function trackEvent(path, title){
     if (!w) return;
     var k = Math.max(0.90, Math.min(w / 1100, 1.25));
     pinsLayer.style.setProperty('--pin-scale', k.toFixed(3));
+    positionCityLabels();
   }
-  window.addEventListener('resize', function(){ updatePinScale(); updateTipSides(); });
+  window.addEventListener('resize', function(){ updatePinScale(); updateTipSides(); positionCityLabels(); });
   window.addEventListener('resize', updateTipSides);
 
   function focusPin(id, on){
@@ -3915,6 +3918,41 @@ function matches(f){
 
   var view = { s:1, fx:0.5, fy:0.5 };
 
+  /* Map point -> screen point. The stage's own rect already carries the zoom
+     and pan, so one linear mapping covers every view. */
+  var cityLabelEls = null;
+  function positionCityLabels(){
+    var inner = mapStage.parentElement;
+    if (!cityLabelEls || !cityLabelEls.length){
+      cityLabelEls = [].slice.call(cityLabels.children);
+      if (!cityLabelEls.length) return;
+    }
+    var sr = mapStage.getBoundingClientRect();
+    var ir = inner.getBoundingClientRect();
+    if (!sr.width || !sr.height) return;
+    var ox = sr.left - ir.left, oy = sr.top - ir.top;
+    for (var i = 0; i < cityLabelEls.length; i++){
+      var el = cityLabelEls[i];
+      var x = ox + (+el.dataset.x / VB_W) * sr.width;
+      var y = oy + (+el.dataset.y / VB_H) * sr.height;
+      el.style.transform = el.classList.contains('to-left')
+        ? 'translate(' + (x - 7).toFixed(1) + 'px,' + y.toFixed(1) + 'px) translate(-100%,-50%)'
+        : 'translate(' + (x + 7).toFixed(1) + 'px,' + y.toFixed(1) + 'px) translateY(-50%)';
+    }
+  }
+
+  /* The stage eases over ~0.5s, so follow it frame by frame rather than
+     snapping the labels to the destination. */
+  var labelFollow = 0;
+  function followCityLabels(ms){
+    cancelAnimationFrame(labelFollow);
+    var until = performance.now() + (ms || 560);
+    (function step(){
+      positionCityLabels();
+      if (performance.now() < until) labelFollow = requestAnimationFrame(step);
+    })();
+  }
+
   function applyView(){
     if (view.s <= 1.001){
       view.s = 1; view.fx = 0.5; view.fy = 0.5;
@@ -3930,6 +3968,7 @@ function matches(f){
     updateMapControls();
     updatePinScale();
     updateTipSides();
+    followCityLabels();
     setTimeout(updateTipSides, 520);
   }
 
@@ -4026,6 +4065,9 @@ function matches(f){
                      ((0.5 - view.fy * view.s) * 100).toFixed(2) + '%)' +
       ' scale(' + view.s.toFixed(3) + ')';
     mapStage.style.setProperty('--zoom-scale', view.s.toFixed(3));
+    /* Pinch and pan repaint every frame and skip the CSS transition, so the
+       labels are placed here rather than through the follow loop. */
+    positionCityLabels();
   }
 })();
 
