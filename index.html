@@ -1330,9 +1330,17 @@
       transition:transform .22s cubic-bezier(.32,.72,0,1);
     }
     .filters.open{transform:translateY(0);}
+    /* The visible line is 4px tall; the thing you can actually grab is the
+       full-width band around it. */
     .filters-grab{
-      display:block;flex:1 0 100%;height:4px;width:38px;
-      margin:10px auto 4px;border-radius:2px;background:var(--border);
+      display:block;flex:1 0 100%;width:100%;height:26px;
+      position:relative;margin:0 0 2px;
+      touch-action:none;cursor:grab;
+    }
+    .filters-grab::before{
+      content:"";position:absolute;left:50%;top:11px;
+      width:38px;height:4px;margin-left:-19px;
+      border-radius:2px;background:var(--border);
     }
     /* Everything laid out, nothing scrolled sideways. */
     .filters-scroll{flex:1 1 100%;gap:7px;flex-wrap:wrap;overflow:visible;}
@@ -4074,12 +4082,46 @@ function matches(f){
       trigger.setAttribute('aria-expanded', 'false');
       focusIdx = -1;
     }
+    /* The menu used to be pinned under its trigger whatever the consequences.
+       Inside the filter sheet the triggers sit near the bottom of the screen,
+       so Kraj opened into the two visible lines below it and the other twelve
+       regions were off the bottom edge with no way to reach them. It now
+       takes whichever side has more room and never exceeds it. */
     function open(){
       menu.classList.add('open');
+      menu.style.maxHeight = '';
+      menu.style.width = '';
+      menu.style.maxWidth = '';
+
       var r = trigger.getBoundingClientRect();
+      var vv = window.visualViewport;
+      var viewTop = vv ? vv.offsetTop : 0;
+      var viewH = vv ? vv.height : window.innerHeight;
+      var GAP = 6, EDGE = 8;
+
+      /* A narrow menu floating under a full-width control reads as if it
+         belongs to something else, so match the trigger when it is wide. */
+      if (r.width >= 230){
+        menu.style.width = r.width + 'px';
+        menu.style.maxWidth = r.width + 'px';   /* beats the 320px design cap */
+      }
+
       var w = menu.offsetWidth;
-      menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - w - 8)) + 'px';
-      menu.style.top = (r.bottom + 6) + 'px';
+      menu.style.left = Math.max(EDGE, Math.min(r.left, window.innerWidth - w - EDGE)) + 'px';
+
+      var below = (viewTop + viewH) - r.bottom - GAP - EDGE;
+      var above = r.top - viewTop - GAP - EDGE;
+      var natural = menu.scrollHeight;
+      var downwards = natural <= below || below >= above;
+      var room = Math.max(140, Math.min(downwards ? below : above, 340));
+
+      menu.style.maxHeight = room + 'px';
+      if (downwards){
+        menu.style.top = (r.bottom + GAP) + 'px';
+      } else {
+        menu.style.top = (r.top - GAP - Math.min(natural, room)) + 'px';
+      }
+
       host.classList.add('open');
       trigger.setAttribute('aria-expanded', 'true');
       var sel = menu.querySelector('[aria-selected="true"]');
@@ -4129,6 +4171,7 @@ function matches(f){
     });
     window.addEventListener('resize', close);
     document.getElementById('filterBar').addEventListener('scroll', close);
+    document.getElementById('filtersPanel').addEventListener('scroll', close);
 
     return {
       set:function(opts, val){ options = opts; value = val; paint(); },
@@ -5077,8 +5120,50 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     if (filtersPanel.classList.contains('open')) closeFilters(); else openFilters();
   });
   document.getElementById('filtersDone').addEventListener('click', closeFilters);
-  /* The handle is a target, not decoration: tapping it puts the sheet away. */
-  document.querySelector('.filters-grab').addEventListener('click', closeFilters);
+
+  /* Swipe it away. Dragging the handle always works; dragging the body works
+     too, but only while the sheet is scrolled to its top - otherwise the
+     gesture is someone trying to scroll the filters, not dismiss them. */
+  (function filtersDrag(){
+    var grab = document.querySelector('.filters-grab');
+    var y0 = 0, dy = 0, dragging = false, moved = false;
+
+    function begin(e, fromHandle){
+      if (!phoneFilters() || !filtersPanel.classList.contains('open')) return;
+      if (e.touches.length !== 1) return;
+      if (!fromHandle && filtersPanel.scrollTop > 0) return;
+      dragging = true; moved = false; dy = 0;
+      y0 = e.touches[0].clientY;
+      filtersPanel.style.transition = 'none';
+    }
+    function move(e){
+      if (!dragging) return;
+      dy = e.touches[0].clientY - y0;
+      if (dy < 0) dy = 0;                /* it is already as open as it gets */
+      if (dy > 3){ moved = true; e.preventDefault(); }
+      filtersPanel.style.transform = 'translateY(' + dy.toFixed(1) + 'px)';
+    }
+    function end(){
+      if (!dragging) return;
+      dragging = false;
+      filtersPanel.style.transition = '';
+      filtersPanel.style.transform = '';
+      if (!moved) return;                /* a tap - the click handler has it */
+      if (dy > 70 || dy > filtersPanel.offsetHeight * 0.3) closeFilters();
+    }
+
+    grab.addEventListener('touchstart', function(e){ begin(e, true); }, { passive:true });
+    filtersPanel.addEventListener('touchstart', function(e){
+      if (e.target.closest('.filters-grab')) return;
+      begin(e, false);
+    }, { passive:true });
+    filtersPanel.addEventListener('touchmove', move, { passive:false });
+    filtersPanel.addEventListener('touchend', end);
+    filtersPanel.addEventListener('touchcancel', end);
+
+    /* A tap on the handle still closes it. */
+    grab.addEventListener('click', function(){ if (!moved) closeFilters(); moved = false; });
+  })();
   /* Leaving the phone breakpoint must not strand the panel off-screen. */
   window.addEventListener('resize', function(){
     if (!phoneFilters()) closeFilters();
