@@ -257,6 +257,11 @@
     opacity:0.75;
   }
   .filter-sep{width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 2px;}
+  /* Kraj sits outside the scrolling chip track: on a 1280px window the
+     track pushed it off-screen entirely, and out here its right edge lines
+     up with the search field directly above it. */
+  .filters > .dd{flex-shrink:0;margin-left:10px;}
+  .filter-sep-pin{margin-left:14px;}
   /* Filter dropdowns are built from the page's own parts rather than a native
      select, whose open list can't be styled to match. */
   .dd{position:relative;flex-shrink:0;}
@@ -333,9 +338,12 @@
 .chip-fav.active{background:var(--accent);border-color:transparent;color:#fff;}
 .chip-fav.active .dot.cat-icon{color:#fff;}
 
+/* Anchored to the field's RIGHT edge: the search sits at the end of the
+   header, so a panel hung from the left ran off the window and the town
+   beside each farm was cut in half. */
 .suggest{
-  position:absolute;top:calc(100% + 6px);left:0;z-index:45;
-  width:330px;max-width:80vw;max-height:340px;overflow-y:auto;
+  position:absolute;top:calc(100% + 6px);right:0;z-index:45;
+  width:360px;max-width:min(92vw, 360px);max-height:340px;overflow-y:auto;
   background:var(--surface);border:1px solid var(--border);
   border-radius:16px;box-shadow:0 12px 30px var(--shadow);padding:6px;
 }
@@ -355,7 +363,8 @@
 .suggest-item svg{width:15px;height:15px;flex-shrink:0;color:var(--text-soft);margin-top:2px;}
 .suggest-item .sub{
   font-size:0.76rem;color:var(--text-soft);
-  flex-shrink:0;max-width:45%;text-align:right;margin-top:1px;
+  flex-shrink:1;min-width:0;max-width:46%;text-align:right;margin-top:1px;
+  overflow-wrap:anywhere;
 }
 
 /* The farm-gate line is a statement of fact, not somewhere to click. */
@@ -697,86 +706,124 @@
   .pin.tip-below:hover .pin-tip,.pin.tip-below:focus-visible .pin-tip{transform:translateX(-50%) translateY(0);}
 
   /* ---- What is in season ----
-     The map frame already carries furniture in three corners (the farm count
-     bottom-left, zoom and reset bottom-right). This takes the fourth, so the
-     panel costs the map no height at all. It tucks itself away when you zoom
-     into a kraj, where that corner stops being empty. */
-  .season{
+     The map frame carries furniture in three corners already; this takes the
+     fourth. Only the trigger lives there - a corner card had to be narrow,
+     and a list of 30 names crammed into 280px is what made it a wall. The
+     panel itself opens centred, where it has room to breathe. */
+  .season-pill{
     position:absolute;left:18px;top:14px;z-index:3;
-    width:262px;max-width:calc(100% - 36px);
+    display:flex;align-items:center;gap:8px;
+    max-width:calc(100% - 36px);
+    padding:9px 14px;border-radius:999px;
     background:color-mix(in srgb, var(--surface) 94%, transparent);
     border:1px solid var(--border);
-    border-radius:var(--radius-md);
     box-shadow:0 2px 10px var(--shadow);
-    overflow:hidden;
+    font-family:inherit;color:var(--text);cursor:pointer;
   }
-  .season-head{
-    display:flex;align-items:center;gap:8px;width:100%;
-    padding:9px 11px;border:0;background:none;cursor:pointer;
-    font-family:inherit;color:var(--text);text-align:left;
-  }
-  .season-head:hover{background:var(--surface-2);}
+  .season-pill:hover{background:var(--surface-3);}
   .season-leaf{width:16px;height:16px;flex-shrink:0;color:var(--veg);}
   .season-month{font-size:0.88rem;font-weight:700;letter-spacing:-0.01em;}
   .season-kicker{
-    font-size:0.72rem;color:var(--text-soft);font-weight:500;
+    font-size:0.74rem;color:var(--text-soft);font-weight:500;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .season-chev{
-    width:14px;height:14px;margin-left:auto;flex-shrink:0;
-    color:var(--text-soft);transition:transform .18s ease;
+
+  .season-scrim{position:fixed;inset:0;background:var(--scrim);z-index:60;}
+  .season-modal{
+    position:fixed;z-index:61;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(720px, calc(100vw - 40px));
+    max-height:calc(100vh - 48px);
+    display:flex;flex-direction:column;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius-lg);box-shadow:0 18px 48px var(--shadow);
+    overflow:hidden;
   }
-  .season[data-open="0"] .season-chev{transform:rotate(-90deg);}
-  .season[data-open="0"] .season-body{display:none;}
-  .season-body{
-    padding:2px 11px 11px;
-    /* Kept short on purpose: the country fills most of the frame, so the
-       card earns only the corner it can have without covering pins. */
-    max-height:min(38vh,300px);overflow-y:auto;
+  .season-top{
+    display:flex;align-items:center;gap:11px;
+    padding:18px 20px 14px;border-bottom:1px solid var(--border);
   }
-  .season-group + .season-group{margin-top:13px;}
+  .season-top .season-leaf{width:22px;height:22px;}
+  .season-titles{flex:1;min-width:0;}
+  .season-titles h2{font-size:1.4rem;line-height:1.1;}
+  .season-titles p{margin:2px 0 0;font-size:0.82rem;color:var(--text-soft);}
+  .season-close{
+    background:none;border:0;cursor:pointer;font-size:1.6rem;line-height:1;
+    color:var(--text-soft);padding:0 2px;align-self:flex-start;
+  }
+  .season-close:hover{color:var(--text);}
+  .season-body{padding:18px 20px;overflow-y:auto;}
+
+  /* Each group takes one of the map's own category colours, so the eye sorts
+     vegetables from fruit from herbs before it reads a single word. */
+  .season-group{--sc:var(--veg);}
+  .season-group.fruit{--sc:var(--meat);}
+  .season-group.herbs{--sc:var(--dairy);}
+  .season-group + .season-group{margin-top:20px;}
   .season-group h4{
-    margin:0 0 4px;font-family:"Work Sans",sans-serif;
-    font-size:0.64rem;font-weight:700;letter-spacing:0.08em;
+    display:flex;align-items:center;gap:7px;
+    margin:0 0 9px;font-family:"Work Sans",sans-serif;
+    font-size:0.68rem;font-weight:700;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--sc);
+  }
+  .season-group h4::before{
+    content:"";width:8px;height:8px;border-radius:50%;
+    background:var(--sc);flex-shrink:0;
+  }
+  .season-chips{display:flex;flex-wrap:wrap;gap:6px 7px;}
+  .season-chip{
+    font-size:0.85rem;line-height:1.35;font-weight:600;
+    padding:6px 12px;border-radius:9px;
+    background:color-mix(in srgb, var(--sc) 20%, var(--surface));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--sc) 30%, transparent);
+    color:var(--sc);
+  }
+  /* Kept from this year's harvest, or grown under glass: the same colour, but
+     outlined rather than filled, so it is plainly the quieter kind. */
+  .season-chip.s,.season-chip.g{
+    background:transparent;font-weight:500;
+    color:color-mix(in srgb, var(--sc) 55%, var(--text-soft));
+    box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--sc) 30%, transparent);
+  }
+  .season-chip.g{border-radius:999px;}
+  .season-sub{
+    display:block;font-style:normal;margin:11px 0 6px;
+    font-size:0.66rem;font-weight:700;letter-spacing:0.07em;
     text-transform:uppercase;color:var(--text-soft);
   }
-  /* Twenty-odd items as bordered pills read as a wall. As running text they
-     read as a sentence, which is what a list of names wants to be. */
-  .season-line{margin:0;font-size:0.82rem;line-height:1.5;color:var(--text);}
-  .season-line + .season-line{margin-top:7px;}
-  /* Picked now, kept from this year's harvest, or grown under glass are not
-     the same thing - but the label only earns its place in a month that
-     actually mixes them. In October everything is fresh and it stays silent. */
-  .season-line em{
-    display:block;font-style:normal;
-    font-size:0.62rem;font-weight:700;letter-spacing:0.07em;
-    text-transform:uppercase;color:var(--text-soft);margin-bottom:1px;
+
+  /* Stacked and centred: the call to action first, then the month stepper
+     under it, then the caveat. Side by side the stepper read as an
+     afterthought pushed into a corner. */
+  .season-foot{
+    display:flex;flex-direction:column;align-items:center;gap:11px;
+    padding:15px 20px 16px;border-top:1px solid var(--border);
+    background:var(--surface-2);
   }
-  .season-line.s,.season-line.g{color:var(--text-soft);}
-  .season-note{margin:9px 0 0;font-size:0.68rem;line-height:1.45;color:var(--text-soft);}
-  .season-nav{
-    display:flex;align-items:center;justify-content:space-between;gap:6px;
-    margin-top:10px;padding-top:9px;border-top:1px solid var(--border);
+  .season-link{
+    width:100%;max-width:400px;padding:10px 16px;
+    border:1px solid var(--accent);border-radius:999px;
+    background:var(--surface);cursor:pointer;
+    font-family:inherit;font-size:0.86rem;font-weight:600;color:var(--accent);
+    text-align:center;
   }
+  .season-link:hover{background:var(--accent);color:var(--accent-ink);}
+  .season-nav{display:flex;align-items:center;justify-content:center;gap:6px;}
   .season-nav button{
-    border:0;background:none;padding:3px 4px;cursor:pointer;
-    font-family:inherit;font-size:0.72rem;font-weight:600;color:var(--accent);
+    border:1px solid var(--border);background:var(--surface);
+    padding:6px 13px;border-radius:999px;cursor:pointer;
+    font-family:inherit;font-size:0.8rem;font-weight:600;color:var(--text);
   }
-  .season-nav button:hover{text-decoration:underline;}
-  .season-nav button[disabled]{visibility:hidden;}
+  .season-nav button:hover{background:var(--surface-3);}
   .season-today{
-    border:0;background:none;padding:3px 4px;cursor:pointer;
-    font-family:inherit;font-size:0.68rem;color:var(--text-soft);
+    border-color:transparent !important;background:none !important;
+    color:var(--accent) !important;font-weight:600;
   }
   .season-today[hidden]{display:none;}
-  .season-link{
-    display:block;width:100%;margin-top:9px;padding:7px 9px;
-    border:1px solid var(--border);border-radius:var(--radius-sm);
-    background:var(--surface-2);cursor:pointer;
-    font-family:inherit;font-size:0.74rem;font-weight:600;
-    color:var(--accent);text-align:left;
+  .season-note{
+    margin:0;max-width:460px;text-align:center;
+    font-size:0.72rem;line-height:1.45;color:var(--text-soft);
   }
-  .season-link:hover{background:var(--surface-3);}
+
   .map-reset{
     position:absolute;right:18px;bottom:14px;
     display:inline-flex;align-items:center;gap:7px;
@@ -1249,17 +1296,32 @@
     .filters-scroll{gap:7px;}
     .chip{padding:0 14px;min-height:44px;font-size:0.88rem;}
     .dd-trigger{padding:0 13px;min-height:44px;}
+    /* Room is tight beside the chips, so the region name truncates rather
+       than squeezing the track to nothing. */
+    .filters > .dd{margin-left:7px;}
+    .filters > .dd .dd-trigger{max-width:124px;}
+    .filter-sep-pin{margin-left:9px;}
     .chip-clear{margin-left:14px;padding:0 13px;min-height:44px;}
     .chip-clear::before{right:calc(100% + 7px);}
 
     /* The sheet sits on the bottom of the frame, so the country centres in
        what is left rather than behind it. */
     .map-inner{padding:4px 6px calc(var(--peek) + 8px);}
-    /* Narrow enough to leave the country visible beside it; it opens on a
-       tap and starts tucked away. */
-    .season{left:10px;top:8px;width:min(66vw,232px);}
-    .season-head{padding:10px 11px;min-height:40px;}
-    .season-body{max-height:min(54vh,400px);}
+    /* The trigger shrinks to the month alone; the panel it opens comes up
+       from the bottom like every other sheet on a phone. */
+    .season-pill{left:10px;top:8px;padding:9px 13px;min-height:40px;gap:6px;}
+    .season-kicker{display:none;}
+    .season-modal{
+      left:0;top:auto;bottom:0;transform:none;
+      width:100%;max-width:100%;max-height:82vh;
+      border:0;border-top:1px solid var(--border);
+      border-radius:20px 20px 0 0;
+    }
+    .season-top{padding:14px 16px 12px;}
+    .season-titles h2{font-size:1.2rem;}
+    .season-body{padding:14px 16px;}
+    .season-foot{padding:12px 16px 16px;}
+    .season-link{max-width:none;}
     .map-caption{left:10px;bottom:10px;font-size:0.72rem;}
     .map-reset{right:12px;bottom:10px;padding:0 14px;min-height:44px;}
     .map-zoom{right:12px;bottom:62px;}
@@ -1365,7 +1427,30 @@
       <p class="tagline tagline-m" id="txtTaglineM">Mapa bio a regenerativn&#237;ch farem v &#268;esku</p>
   </header>
 
+  <div class="season-scrim" id="seasonScrim" hidden></div>
+  <div class="season-modal" id="seasonModal" role="dialog" aria-modal="true" aria-labelledby="seasonTitle" hidden>
+    <div class="season-top">
+      <svg class="season-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      <div class="season-titles">
+        <h2 id="seasonTitle"></h2>
+        <p id="seasonKickerM"></p>
+      </div>
+      <button type="button" class="season-close" id="seasonClose" aria-label="Zavrit">&#215;</button>
+    </div>
+    <div class="season-body" id="seasonGroups"></div>
+    <div class="season-foot">
+      <button type="button" class="season-link" id="seasonLink"></button>
+      <div class="season-nav">
+        <button type="button" id="seasonPrev"></button>
+        <button type="button" class="season-today" id="seasonToday" hidden></button>
+        <button type="button" id="seasonNext"></button>
+      </div>
+      <p class="season-note" id="seasonNote"></p>
+    </div>
+  </div>
+
   <div class="rec-scrim" id="recScrim" hidden></div>
+
   <div class="rec-panel" id="recPanel" role="dialog" aria-modal="true" aria-labelledby="recTitle" hidden>
     <div class="rec-head">
       <h2 id="recTitle"></h2>
@@ -1404,13 +1489,14 @@
         <svg class="icon dd-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
     </div>
+    </div>
+    <span class="filter-sep filter-sep-pin" aria-hidden="true"></span>
     <div class="dd" id="regionDD">
       <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false">
         <span class="dd-icon" data-icon="pin" aria-hidden="true"></span>
         <span class="dd-label">Kraj</span>
         <svg class="icon dd-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
-    </div>
     </div>
     <button class="chip chip-clear" id="clearFilters" hidden>
       <svg class="icon" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
@@ -1449,24 +1535,11 @@
         <div class="pins" id="pinsLayer"></div>
         <div class="city-labels" id="cityLabels" aria-hidden="true"></div>
       </div>
-      <aside class="season" id="season" data-open="1">
-        <button type="button" class="season-head" id="seasonToggle" aria-expanded="true" aria-controls="seasonBody">
-          <svg class="season-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
-          <span class="season-month" id="seasonMonth"></span>
-          <span class="season-kicker" id="seasonKicker"></span>
-          <svg class="season-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-        <div class="season-body" id="seasonBody">
-          <div id="seasonGroups"></div>
-          <p class="season-note" id="seasonNote"></p>
-          <button type="button" class="season-link" id="seasonLink"></button>
-          <div class="season-nav">
-            <button type="button" id="seasonPrev"></button>
-            <button type="button" class="season-today" id="seasonToday" hidden></button>
-            <button type="button" id="seasonNext"></button>
-          </div>
-        </div>
-      </aside>
+      <button type="button" class="season-pill" id="seasonOpen" aria-haspopup="dialog">
+        <svg class="season-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+        <span class="season-month" id="seasonMonth"></span>
+        <span class="season-kicker" id="seasonKicker"></span>
+      </button>
       <div class="map-caption" id="mapCaption">10 farem</div>
       <div class="map-zoom" role="group" aria-label="Zoom">
         <button type="button" id="zoomIn" aria-label="+">
@@ -4062,6 +4135,37 @@ function matches(f){
     applyFilters();
   });
 
+  document.getElementById('sortRow').addEventListener('click', function(e){
+    var b = e.target.closest('.sort-btn');
+    if (!b) return;
+    sortMode = b.dataset.sort;
+    this.querySelectorAll('.sort-btn').forEach(function(x){
+      x.classList.toggle('active', x.dataset.sort === sortMode);
+    });
+    renderFarmLists();
+  });
+
+  document.getElementById('searchInput').addEventListener('input', function(e){
+    searchQuery = e.target.value;
+    applyFilters();
+  });
+
+  /* On a phone the field is an icon until it is used; while it is in use it
+     takes the whole header row, because 62vw left the suggestions narrower
+     than their own text. applyFilters() owns the class once a query exists,
+     so this only has to cover plain focus and blur. */
+  (function searchRow(){
+    var topbar = document.querySelector('.topbar');
+    var inp = document.getElementById('searchInput');
+    function sync(){
+      topbar.classList.toggle('searching',
+        document.activeElement === inp || !!inp.value);
+    }
+    inp.addEventListener('focus', sync);
+    inp.addEventListener('blur', function(){ setTimeout(sync, 120); });
+    inp.addEventListener('input', sync);
+  })();
+
   /* ---- Region selection + map zoom ---- */
   var mapStage = document.getElementById('mapStage');
 
@@ -4142,7 +4246,6 @@ function matches(f){
     }
     mapStage.style.setProperty('--zoom-scale', view.s.toFixed(3));
     setZoomedDetail(view.s > 1.35);
-    if (view.s > 1.01) setSeasonOpen(false);
     updateMapControls();
     updatePinScale();
     updateTipSides();
@@ -5202,41 +5305,46 @@ var SEASON = {
     en:["January","February","March","April","May","June",
         "July","August","September","October","November","December"]
   };
-  var seasonEl = document.getElementById('season');
+  var seasonModal = document.getElementById('seasonModal');
+  var seasonScrim = document.getElementById('seasonScrim');
   var seasonNow = new Date().getMonth() + 1;
   var seasonShown = seasonNow;
 
   function seasonName(m){ return MONTH_NAMES[LANG][(m + 11) % 12]; }
 
-  /* One line per state, in the order they matter. Names run on as prose, so
-     only the first is capitalised - the rest are common nouns mid-sentence. */
+  /* Fresh first, then the quieter states. The "ze skladu" heading only earns
+     its place in a month that actually mixes them - in October everything is
+     picked now and the group stays a single clean block. */
   var STATE_LABEL = { f:'legFresh', s:'legStored', g:'legGlass' };
-  function seasonLines(list){
+  function seasonChips(list){
     var byState = { f:[], s:[], g:[] };
     list.forEach(function(e){ (byState[e[1]] || byState.f).push(SEASON_ITEMS[e[0]][LANG]); });
-    var mixed = ['f','s','g'].filter(function(k){ return byState[k].length; }).length > 1
-             || byState.s.length || byState.g.length;
+    var mixed = ['f','s','g'].filter(function(k){ return byState[k].length; }).length > 1;
     return ['f','s','g'].map(function(k){
       var names = byState[k];
       if (!names.length) return '';
-      var text = names.map(function(n, i){
-        return i === 0 ? n : n.charAt(0).toLowerCase() + n.slice(1);
-      }).join(', ');
-      return '<p class="season-line ' + k + '">' +
-             (mixed ? '<em>' + t(STATE_LABEL[k]) + '</em>' : '') + text + '</p>';
+      return (mixed ? '<em class="season-sub">' + t(STATE_LABEL[k]) + '</em>' : '') +
+        '<div class="season-chips">' + names.map(function(n){
+          return '<span class="season-chip ' + k + '">' + n + '</span>';
+        }).join('') + '</div>';
     }).join('');
   }
 
   function renderSeason(){
-    if (!seasonEl) return;
+    if (!seasonModal) return;
     var d = SEASON[seasonShown];
-    document.getElementById('seasonMonth').textContent = seasonName(seasonShown);
-    document.getElementById('seasonKicker').textContent =
+    /* The pill always names the real month; only the panel follows the
+       arrows, so the corner never lies about what is in season today. */
+    document.getElementById('seasonMonth').textContent = seasonName(seasonNow);
+    document.getElementById('seasonKicker').textContent = t('seasonKicker');
+    document.getElementById('seasonTitle').textContent = seasonName(seasonShown);
+    document.getElementById('seasonKickerM').textContent =
       seasonShown === seasonNow ? t('seasonKicker') : t('seasonOther');
     var groups = [['veg','seasonVeg'],['fruit','seasonFruit'],['herbs','seasonHerbs']];
     document.getElementById('seasonGroups').innerHTML = groups.map(function(g){
       if (!d[g[0]] || !d[g[0]].length) return '';
-      return '<div class="season-group"><h4>' + t(g[1]) + '</h4>' + seasonLines(d[g[0]]) + '</div>';
+      return '<div class="season-group ' + g[0] + '"><h4>' + t(g[1]) + '</h4>' +
+             seasonChips(d[g[0]]) + '</div>';
     }).join('');
     document.getElementById('seasonNote').textContent = t('seasonNote');
     var n = FARMS.filter(function(f){ return f.cats.indexOf('veggies') !== -1; }).length;
@@ -5248,16 +5356,25 @@ var SEASON = {
     today.textContent = t('seasonToday');
   }
 
-  function setSeasonOpen(on){
-    if (!seasonEl) return;
-    seasonEl.dataset.open = on ? '1' : '0';
-    document.getElementById('seasonToggle').setAttribute('aria-expanded', on ? 'true' : 'false');
-    try { localStorage.setItem('zf-season-open', on ? '1' : '0'); } catch(e){}
+  function openSeason(){
+    seasonShown = seasonNow;          /* always opens on the real month */
+    renderSeason();
+    seasonScrim.hidden = false;
+    seasonModal.hidden = false;
+    document.getElementById('seasonClose').focus();
+  }
+  function closeSeason(){
+    seasonModal.hidden = true;
+    seasonScrim.hidden = true;
+    document.getElementById('seasonOpen').focus();
   }
 
-  if (seasonEl){
-    document.getElementById('seasonToggle').addEventListener('click', function(){
-      setSeasonOpen(seasonEl.dataset.open !== '1');
+  if (seasonModal){
+    document.getElementById('seasonOpen').addEventListener('click', openSeason);
+    document.getElementById('seasonClose').addEventListener('click', closeSeason);
+    seasonScrim.addEventListener('click', closeSeason);
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && !seasonModal.hidden) closeSeason();
     });
     document.getElementById('seasonPrev').addEventListener('click', function(){
       seasonShown = seasonShown === 1 ? 12 : seasonShown - 1; renderSeason();
@@ -5274,12 +5391,8 @@ var SEASON = {
     document.getElementById('seasonLink').addEventListener('click', function(){
       var chip = document.querySelector('.chip[data-cat="veggies"]');
       if (chip && !chip.classList.contains('active')) chip.click();
-      if (window.matchMedia('(max-width:600px)').matches) setSeasonOpen(false);
+      closeSeason();
     });
-    var pref = null;
-    try { pref = localStorage.getItem('zf-season-open'); } catch(e){}
-    setSeasonOpen(pref !== null ? pref === '1'
-      : !window.matchMedia('(max-width:600px)').matches);
   }
 
   function applyStaticText(){
