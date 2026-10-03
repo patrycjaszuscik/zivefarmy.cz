@@ -1259,26 +1259,32 @@
     }
   }
 
+  .filterbar-m{display:none;}
+  .filters-grab,.filters-done{display:none;}
+
   /* Phone layout: stack the header, let search take the width, keep taps big. */
   /* ---------- Phone ----------
      Two things matter on a 390px screen: give the map the height, and make
      everything thumb-sized. The header collapses to one row, the search
      becomes an icon until tapped, and controls meet the 44px touch target. */
   @media (max-width:600px){
-    .topbar{padding:8px 12px;gap:6px 8px;flex-wrap:wrap;}
-    .brand{min-width:0;flex:0 1 auto;}
+    /* The title and the buttons came to a few pixels more than 375 and wrapped,
+       which cost a whole 38px row for nothing. Trimmed just enough to share
+       one line; the subtitle keeps the line below it. */
+    .topbar{padding:7px 12px;gap:4px 6px;flex-wrap:wrap;}
+    .brand{min-width:0;flex:0 1 auto;gap:8px;}
     /* Beside the title there is no room for the subtitle, so on a phone it
        gets its own full-width line under the header row. */
     .brand .tagline{display:none;}
     .tagline-m{display:block;margin:0;font-size:0.72rem;line-height:1.25;width:100%;}
     .brand-mark{width:32px;height:32px;border-radius:10px;}
     .brand-mark svg{width:18px;height:18px;}
-    .brand h1{font-size:1rem;white-space:nowrap;}
-    .controls{width:auto;flex:1 1 auto;justify-content:flex-end;gap:6px;flex-wrap:nowrap;}
-    .lang-switch button{padding:7px 9px;}
+    .brand h1{font-size:0.95rem;white-space:nowrap;}
+    .controls{width:auto;flex:1 1 auto;justify-content:flex-end;gap:5px;flex-wrap:nowrap;}
+    .lang-switch button{padding:7px 8px;font-size:0.74rem;}
     .icon-btn{padding:0 12px;min-height:44px;}
     #listToggle span{display:none;}            /* the icon says enough */
-    #listToggle{padding:0 13px;}
+    #listToggle{padding:0 11px;}
     .search{flex:0 0 auto;}
     .search input{
       width:44px;max-width:none;padding-left:38px;padding-right:0;
@@ -1295,38 +1301,62 @@
     .search > svg{left:14px;}
     .suggest{left:0;right:0;width:auto;max-width:none;max-height:min(46vh,320px);}
     .suggest-item .sub{max-width:40%;}
-    .fav-toggle{padding:0 11px;min-height:44px;}
+    .fav-toggle{padding:0 10px;min-height:44px;}
 
-    /* Two rows on a phone: the categories get the full width to themselves,
-       and the three dropdowns drop to a line of their own where all of them
-       are visible at once. The vertical cost lands on the empty band above
-       the country, which the map was not using for anything. */
-    .filters{padding:7px 12px 8px;flex-wrap:wrap;row-gap:7px;}
-    .filters-scroll{
-      flex:1 1 100%;gap:6px;
-      -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);
-      mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);
+    /* The filters were costing a fifth of the screen before any map appeared,
+       and still hid six of eight controls behind a sideways scroll. On a phone
+       they move into a sheet instead: one slim button up here, and everything
+       visible at once down there when you actually want it. */
+    .filterbar-m{
+      display:flex;align-items:center;gap:10px;
+      padding:7px 12px;border-bottom:1px solid var(--border);
+      background:var(--surface);
     }
-    .filters > .dd:first-of-type{margin-left:0;}
-    .filter-sep-pin{display:none;}
+    .filterbar-m .chip{min-height:40px;padding:0 13px;font-size:0.85rem;}
+    .filterbar-m .icon{width:16px;height:16px;}
+    .fb-count{
+      margin-left:auto;font-size:0.78rem;color:var(--text-soft);
+      font-variant-numeric:tabular-nums;
+    }
+    .filters{
+      position:fixed;left:0;bottom:var(--kb, 0px);z-index:22;
+      width:100%;max-height:82vh;max-height:82dvh;overflow-y:auto;
+      flex-wrap:wrap;row-gap:9px;align-items:flex-start;
+      padding:0 14px 16px;
+      border-top:1px solid var(--border);border-bottom:0;
+      border-radius:18px 18px 0 0;
+      box-shadow:0 -6px 24px var(--shadow);
+      transform:translateY(100%);
+      transition:transform .22s cubic-bezier(.32,.72,0,1);
+    }
+    .filters.open{transform:translateY(0);}
+    .filters-grab{
+      display:block;flex:1 0 100%;height:4px;width:38px;
+      margin:10px auto 4px;border-radius:2px;background:var(--border);
+    }
+    /* Everything laid out, nothing scrolled sideways. */
+    .filters-scroll{flex:1 1 100%;gap:7px;flex-wrap:wrap;overflow:visible;}
+    .filters > .dd{flex:1 1 100%;margin-left:0;}
+    .filters > .dd .dd-trigger{width:100%;max-width:none;justify-content:flex-start;}
+    .filters > .dd .dd-chev{margin-left:auto;}
+    #regionDD{margin-left:0;}
+    #regionDD:not(.on) .dd-label{display:block;}
+    #regionDD:not(.on) .dd-trigger{padding:0 13px;gap:8px;}
+    .filter-sep,.filter-sep-pin{display:none;}
+    .chip-clear{margin-left:0;}
     .chip-clear::before{display:none;}
+    .filters-done{
+      display:block;margin-left:auto;padding:11px 20px;
+      border:1px solid var(--accent);border-radius:999px;
+      background:var(--accent);color:var(--accent-ink);
+      font-family:inherit;font-size:0.88rem;font-weight:600;cursor:pointer;
+    }
     .chip{padding:0 12px;min-height:42px;font-size:0.84rem;gap:6px;}
     .chip .dot.cat-icon{width:16px;height:16px;}
     .chip .dot.cat-icon svg{width:16px;height:16px;}
     .chip-count{font-size:0.73rem;}
     .dd-trigger{padding:0 12px;min-height:42px;font-size:0.84rem;}
-    /* Pinned Kraj costs the chip track a third of its width on a phone, and
-       the word "Kraj" says nothing the pin icon does not. It shows the name
-       only once a region is actually chosen, when the name is the point. */
-    .filters > .dd{margin-left:7px;}
-    #regionDD:not(.on) .dd-label{display:none;}
-    #regionDD:not(.on) .dd-trigger{padding:0 9px;gap:5px;}
-    .filters > .dd .dd-trigger{max-width:none;}
-    #regionDD.on .dd-trigger{max-width:176px;}
-    #regionDD{margin-left:auto;}
-    .filter-sep-pin{margin-left:8px;}
-    .chip-clear{margin-left:14px;padding:0 13px;min-height:44px;}
-    .chip-clear::before{right:calc(100% + 7px);}
+    .chip-clear{padding:0 13px;min-height:42px;}
 
     .map-inner{padding:4px 6px 38px;}
     /* The trigger shrinks to the month alone; the panel it opens comes up
@@ -1390,7 +1420,9 @@
     }
     .mobile-list-drawer .rec-open{flex:0 0 auto;margin:0;padding:12px 14px 16px;}
 
-    .map-caption{left:10px;bottom:10px;font-size:0.72rem;}
+    /* The filter bar already states the count; two of them on one screen
+       is just clutter over the map. */
+    .map-caption{display:none;}
     .map-reset{right:12px;bottom:10px;padding:0 14px;min-height:44px;}
     .map-zoom{right:12px;bottom:62px;}
 
@@ -1398,6 +1430,18 @@
     .drawer h2{font-size:1.3rem;}
     .d-story li{font-size:0.88rem;}
   }
+  /* iOS zooms the entire page the moment you focus a field whose text is
+     under 16px, and it does not zoom back. Everything then renders at a
+     larger scale than the window: the map slides out from under its pins,
+     panels run off the right edge, and the page looks broken until you
+     pinch out again. 16px is simply the price of that not happening. */
+  @media (pointer:coarse){
+    .search input,
+    .list-filter-input,
+    .rec-field input,
+    .rec-field textarea{font-size:16px;}
+  }
+
   @media (prefers-reduced-motion:reduce){
     *{transition-duration:0.01ms !important;}
   }
@@ -1476,7 +1520,15 @@
     <p class="rec-hint" id="recHint"></p>
   </div>
 
-  <div class="filters">
+  <div class="filterbar-m">
+    <button type="button" class="chip" id="filtersOpen" aria-haspopup="dialog">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="7" x2="14" y2="7"/><line x1="18" y1="7" x2="20" y2="7"/><circle cx="16" cy="7" r="2"/><line x1="4" y1="17" x2="8" y2="17"/><line x1="12" y1="17" x2="20" y2="17"/><circle cx="10" cy="17" r="2"/></svg>
+      <span id="txtFiltersBtn">Filtry</span><span class="chip-count" id="filtersCount"></span>
+    </button>
+    <span class="fb-count" id="filterCountM"></span>
+  </div>
+  <div class="filters" id="filtersPanel">
+    <span class="filters-grab" aria-hidden="true"></span>
     <div class="filters-scroll" role="group" aria-label="Filtrovat podle kategorie" id="filterBar">
     <button class="chip active" data-cat="all"><span class="dot"></span><span class="chip-label">V&#353;e</span><span class="chip-count" id="count-all"></span></button>
     <button class="chip" data-cat="meat" style="--cat:var(--meat)"><span class="dot"></span><span class="chip-label">Maso</span><span class="chip-count" id="count-meat"></span></button>
@@ -1511,6 +1563,7 @@
       <svg class="icon" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
       <span id="txtClear">Zru&#353;it filtry</span><span class="chip-count" id="count-active"></span>
     </button>
+    <button type="button" class="filters-done" id="filtersDone"></button>
   </div>
 
   <div class="layout">
@@ -1684,6 +1737,8 @@ function trackEvent(path, title){
       filterAria:"Filtrovat podle kategorie",
       footnote:"Kur\u00E1torovan\u00FD v\u00FDb\u011Br regenerativn\u00EDch a bio farem v \u010Cesku, sestaven\u00FD z web\u016F jednotliv\u00FDch farem. Chyb\u00ED v\u00E1m tu n\u011Bjak\u00E1 farma? Ozv\u011Bte se.",
       chipAll:"V\u0161e",
+      filtersBtn:"Filtry",
+      filtersDone:"Zobrazit",
       clearFilters:"Zru\u0161it filtry",
       townRegion:function(town, kraj){ return town + " \u00B7 " + kraj + " \u2014 ukazujeme v\u0161echny farmy v kraji."; },
       certNames:{ bio:"BIO certifikace", regen:"Regenerativn\u00ED zem\u011Bd\u011Blstv\u00ED" },
@@ -1768,6 +1823,8 @@ function trackEvent(path, title){
       filterAria:"Filter by category",
       footnote:"A curated starting list of regenerative and organic Czech farms, built from each farm's own site. Missing one you know? Add it.",
       chipAll:"All farms",
+      filtersBtn:"Filters",
+      filtersDone:"Show",
       clearFilters:"Clear filters",
       townRegion:function(town, kraj){ return town + " is in " + kraj + " \u2014 showing every farm there."; },
       certNames:{ bio:"Certified organic", regen:"Regenerative farming" },
@@ -3843,6 +3900,46 @@ function trackEvent(path, title){
   window.addEventListener('resize', function(){ updatePinScale(); updateTipSides(); positionCityLabels(); });
   window.addEventListener('resize', updateTipSides);
 
+  /* The pin layer is positioned onto the stage by measurement, so ANY change
+     to the map's box leaves it behind - and on a phone the box changes
+     constantly without a resize event: Safari collapsing its address bar on
+     scroll, the filter row reflowing, a font arriving late. A resize event
+     catches none of those reliably, so watch the element itself. */
+  if (window.ResizeObserver){
+    var mapBox = document.querySelector('.map-wrap');
+    if (mapBox) new ResizeObserver(function(){
+      updatePinScale();
+      positionCityLabels();
+      updateTipSides();
+    }).observe(mapBox);
+  }
+
+  /* Belt and braces. Every hook above is a guess about WHEN the map's box
+     might move; this checks whether it actually HAS. The layer's position is
+     derived from the stage, so the two rects disagreeing is a bug by
+     definition, whatever caused it - a collapsing address bar, a late font, a
+     rotation, an observer that never fired. Two rect reads every 400ms, and a
+     write only when they have come apart, so drift heals itself within half a
+     second instead of leaving the pins sitting off the country. */
+  setInterval(function(){
+    var sr = mapStage.getBoundingClientRect();
+    if (!sr.width) return;
+    var pr = pinsLayer.getBoundingClientRect();
+    if (Math.abs(sr.top - pr.top) > 0.5 ||
+        Math.abs(sr.left - pr.left) > 0.5 ||
+        Math.abs(sr.width - pr.width) > 0.5){
+      updatePinScale();
+      positionCityLabels();
+      updateTipSides();
+    }
+  }, 400);
+
+  /* An address bar sliding away is a scroll, not a resize. */
+  window.addEventListener('scroll', function(){ positionCityLabels(); }, { passive:true });
+  window.addEventListener('orientationchange', function(){
+    setTimeout(function(){ updatePinScale(); positionCityLabels(); updateTipSides(); }, 150);
+  });
+
   function focusPin(id, on){
     var pin = pinsLayer.querySelector('.pin[data-id="'+id+'"]');
     if (on && pin){
@@ -4099,6 +4196,9 @@ function matches(f){
     var clearBtn = document.getElementById('clearFilters');
     clearBtn.hidden = activeCount === 0;
     document.getElementById('count-active').textContent = activeCount || '';
+    document.getElementById('filtersCount').textContent = activeCount || '';
+    document.getElementById('filterCountM').textContent =
+      visibleCount + ' ' + t('farmWord')(visibleCount) + (filtered ? t('farmsShown') + FARMS.length : '');
     updateMapControls();
     if (typeof renderSeason === 'function') renderSeason();
   }
@@ -4181,6 +4281,10 @@ function matches(f){
   /* The pin layer rides on the stage rather than inside it: give it the
      stage's current box and every pin's left/top percentage still resolves
      to the same point on the country, at full resolution. */
+  /* Reached from the visualViewport handler, which lives outside this
+     closure. */
+  window.__repositionMap = function(){ positionCityLabels(); updateTipSides(); };
+
   function positionPins(){
     var inner = mapStage.parentElement;
     var sr = mapStage.getBoundingClientRect();
@@ -4947,7 +5051,37 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
   document.getElementById('drawerClose').addEventListener('click', closeDrawer);
   scrim.addEventListener('click', function(){ closeDrawer(); closeMobileList(); });
   document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape'){ closeDrawer(); closeMobileList(); }
+    if (e.key === 'Escape'){ closeDrawer(); closeMobileList(); closeFilters(); }
+  });
+
+  /* ---- Filters as a sheet, on phones ---- */
+  var filtersPanel = document.getElementById('filtersPanel');
+  var filtersOpenBtn = document.getElementById('filtersOpen');
+
+  function phoneFilters(){ return window.matchMedia('(max-width:600px)').matches; }
+
+  function openFilters(){
+    if (!phoneFilters()) return;
+    filtersPanel.classList.add('open');
+    filtersOpenBtn.setAttribute('aria-expanded', 'true');
+    scrim.classList.add('show');
+  }
+  function closeFilters(){
+    filtersPanel.classList.remove('open');
+    filtersOpenBtn.setAttribute('aria-expanded', 'false');
+    if (!drawer.classList.contains('open') &&
+        !mobileListDrawer.classList.contains('open')) scrim.classList.remove('show');
+  }
+
+  filtersOpenBtn.addEventListener('click', function(){
+    if (filtersPanel.classList.contains('open')) closeFilters(); else openFilters();
+  });
+  document.getElementById('filtersDone').addEventListener('click', closeFilters);
+  /* The handle is a target, not decoration: tapping it puts the sheet away. */
+  document.querySelector('.filters-grab').addEventListener('click', closeFilters);
+  /* Leaving the phone breakpoint must not strand the panel off-screen. */
+  window.addEventListener('resize', function(){
+    if (!phoneFilters()) closeFilters();
   });
 
   /* ---- Mobile farm list drawer ---- */
@@ -5158,6 +5292,7 @@ function fitSuggest(){
     var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty('--kb', Math.round(kb) + 'px');
     fitSuggest();
+    if (typeof window.__repositionMap === 'function') window.__repositionMap();
   }
   vv.addEventListener('resize', apply);
   vv.addEventListener('scroll', apply);
@@ -5461,6 +5596,8 @@ var SEASON = {
     document.getElementById('txtListHeading').textContent = t('listHeading');
     document.getElementById('txtFavChip').textContent = t('favChip');
     document.getElementById('txtClear').textContent = t('clearFilters');
+    document.getElementById('txtFiltersBtn').textContent = t('filtersBtn');
+    document.getElementById('filtersDone').textContent = t('filtersDone');
     document.getElementById('txtMapReset').textContent = t('mapReset');
     /* On a 375px screen "Zelenina a plodiny \u00B7 36" is a third of the row, so
        only two categories were ever visible and the rest lived behind a
