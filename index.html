@@ -18,6 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
+    --peek:78px;
     --bg:#F6F0E1;
     --surface:#FFFDF7;
     --surface-2:#EFE2C6;
@@ -102,7 +103,10 @@
   }
 
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  /* A panel hanging past the right edge used to make the whole page
+     horizontally scrollable, and once Safari had scrolled sideways every
+     fixed panel - the farm card included - looked cut off. */
+  html,body{margin:0;padding:0;overflow-x:clip;}
   body{
     background:var(--bg);
     color:var(--text);
@@ -150,6 +154,10 @@
   .brand-mark svg{width:22px;height:22px;stroke:#fff;}
   .brand h1{font-size:1.28rem;line-height:1.1;letter-spacing:-0.01em;}
   .tagline{margin:2px 0 0;font-size:0.82rem;color:var(--text-soft);}
+  /* The phone copy of the subtitle: it needs to be a child of the header row
+     to take a full-width line of its own, so there are two and the phone
+     breakpoint swaps which one shows. */
+  .tagline-m{display:none;}
 
   .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
   .lang-switch{
@@ -320,21 +328,6 @@
     font-variant-numeric:tabular-nums;flex-shrink:0;
   }
   .dd-opt[aria-selected="true"] .dd-count{color:var(--accent);}
-  .near-ring[hidden]{display:none;}
-  .near-ring ellipse{
-    fill:var(--accent);fill-opacity:0.10;
-    stroke:var(--accent);stroke-width:1.4;stroke-dasharray:5 4;
-    vector-effect:non-scaling-stroke;
-  }
-  .near-ring circle{fill:var(--accent);stroke:var(--surface);stroke-width:2;vector-effect:non-scaling-stroke;}
-  .picking .map-stage{cursor:crosshair;}
-  .chip-near.active{background:var(--accent);border-color:transparent;color:#fff;}
-  .chip-near .icon{width:15px;height:15px;}
-  .farm-card .dist{
-    margin-left:auto;align-self:center;flex-shrink:0;
-    font-size:0.76rem;font-weight:600;color:var(--accent);
-    font-variant-numeric:tabular-nums;
-  }
 
 .chip-fav .dot.cat-icon{color:var(--accent);}
 .chip-fav.active{background:var(--accent);border-color:transparent;color:#fff;}
@@ -635,11 +628,17 @@
      focus or selection, so the region stays readable. */
   .pin.selected .pin-tip{opacity:1;transform:translateX(-50%) translateY(0);}
 
-  .pins{position:absolute;inset:0;pointer-events:none;}
+  /* Outside .map-stage, for the reason given above .city-labels: Safari
+     rasterises a CSS-transformed subtree and then magnifies that bitmap,
+     so pins and their names turned to mush as you zoomed in. Out here they
+     are ordinary page elements drawn sharp at every zoom; positionPins()
+     moves and resizes this layer onto wherever the stage currently is, so
+     the percentage coordinates on each pin still land true. */
+  .pins{position:absolute;inset:0;pointer-events:none;z-index:2;}
   .pin{
     position:absolute;
     transform-origin:50% 100%;
-    transform:translate(-50%,-100%) scale(calc(1 / var(--zoom-scale,1)));
+    transform:translate(-50%,-100%);
     pointer-events:auto;
     background:none;border:none;padding:0;cursor:pointer;
     display:flex;flex-direction:column;align-items:center;
@@ -647,32 +646,32 @@
     transition:transform .15s ease, opacity .15s ease;
     z-index:1;
   }
-  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.16 / var(--zoom-scale,1)));z-index:5;}
+  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(1.16);z-index:5;}
   .pin:focus-visible{outline:none;}
   /* Farms outside the current filter leave the map entirely &#8212; a greyed-out
      layer underneath read as noise. */
   .pin.dim{display:none;}
-  .pin.hovered{z-index:5;transform:translate(-50%,-100%) scale(calc(1.2 / var(--zoom-scale,1)));}
+  .pin.hovered{z-index:5;transform:translate(-50%,-100%) scale(1.2);}
   .pin.faded{opacity:0.28;}
   .pin.faded .pin-tip{opacity:0 !important;}
   .pin.hovered .pin-outline{stroke:var(--surface);stroke-width:2.6;}
   .pin.hovered{filter:drop-shadow(0 4px 9px var(--shadow)) drop-shadow(0 1px 2px var(--shadow));}
-  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(calc(1.34 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin{transform:translate(-50%,-100%) scale(1.34);}
   /* Inside a selected kraj the pin is scaled up and the name rides along
      with it, which made the label shout. Trim it back. */
   .pins.zoomed .pin-tip{font-size:0.62rem;padding:4px 8px;border-radius:8px;}
 
   .pins.zoomed .pin:hover,
-  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(calc(1.52 / var(--zoom-scale,1)));}
-  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(calc(1.57 / var(--zoom-scale,1)));}
+  .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(1.52);}
+  .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(1.57);}
   @media (pointer:coarse){
     .pin{filter:none;}
     .pin.hovered,.pin:hover{filter:none;}
     .pin-badge .pin-outline{stroke-width:2.6;}
   }
   .pin.selected{z-index:6;filter:drop-shadow(0 0 5px var(--accent)) drop-shadow(0 3px 6px var(--shadow));}
-  /* Sized directly rather than through the transform, which already
-     carries the zoom counter-scale. */
+  /* Sized directly rather than through the transform, which carries the
+     hover and zoomed-in steps. */
   .pin-badge{
     width:calc(27px * var(--pin-scale,1));
     height:calc(33.5px * var(--pin-scale,1));
@@ -697,6 +696,87 @@
   .pin.tip-below .pin-tip{bottom:auto;top:calc(100% + 6px);transform:translateX(-50%) translateY(-4px);}
   .pin.tip-below:hover .pin-tip,.pin.tip-below:focus-visible .pin-tip{transform:translateX(-50%) translateY(0);}
 
+  /* ---- What is in season ----
+     The map frame already carries furniture in three corners (the farm count
+     bottom-left, zoom and reset bottom-right). This takes the fourth, so the
+     panel costs the map no height at all. It tucks itself away when you zoom
+     into a kraj, where that corner stops being empty. */
+  .season{
+    position:absolute;left:18px;top:14px;z-index:3;
+    width:262px;max-width:calc(100% - 36px);
+    background:color-mix(in srgb, var(--surface) 94%, transparent);
+    border:1px solid var(--border);
+    border-radius:var(--radius-md);
+    box-shadow:0 2px 10px var(--shadow);
+    overflow:hidden;
+  }
+  .season-head{
+    display:flex;align-items:center;gap:8px;width:100%;
+    padding:9px 11px;border:0;background:none;cursor:pointer;
+    font-family:inherit;color:var(--text);text-align:left;
+  }
+  .season-head:hover{background:var(--surface-2);}
+  .season-leaf{width:16px;height:16px;flex-shrink:0;color:var(--veg);}
+  .season-month{font-size:0.88rem;font-weight:700;letter-spacing:-0.01em;}
+  .season-kicker{
+    font-size:0.72rem;color:var(--text-soft);font-weight:500;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .season-chev{
+    width:14px;height:14px;margin-left:auto;flex-shrink:0;
+    color:var(--text-soft);transition:transform .18s ease;
+  }
+  .season[data-open="0"] .season-chev{transform:rotate(-90deg);}
+  .season[data-open="0"] .season-body{display:none;}
+  .season-body{
+    padding:2px 11px 11px;
+    /* Kept short on purpose: the country fills most of the frame, so the
+       card earns only the corner it can have without covering pins. */
+    max-height:min(38vh,300px);overflow-y:auto;
+  }
+  .season-group + .season-group{margin-top:13px;}
+  .season-group h4{
+    margin:0 0 4px;font-family:"Work Sans",sans-serif;
+    font-size:0.64rem;font-weight:700;letter-spacing:0.08em;
+    text-transform:uppercase;color:var(--text-soft);
+  }
+  /* Twenty-odd items as bordered pills read as a wall. As running text they
+     read as a sentence, which is what a list of names wants to be. */
+  .season-line{margin:0;font-size:0.82rem;line-height:1.5;color:var(--text);}
+  .season-line + .season-line{margin-top:7px;}
+  /* Picked now, kept from this year's harvest, or grown under glass are not
+     the same thing - but the label only earns its place in a month that
+     actually mixes them. In October everything is fresh and it stays silent. */
+  .season-line em{
+    display:block;font-style:normal;
+    font-size:0.62rem;font-weight:700;letter-spacing:0.07em;
+    text-transform:uppercase;color:var(--text-soft);margin-bottom:1px;
+  }
+  .season-line.s,.season-line.g{color:var(--text-soft);}
+  .season-note{margin:9px 0 0;font-size:0.68rem;line-height:1.45;color:var(--text-soft);}
+  .season-nav{
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+    margin-top:10px;padding-top:9px;border-top:1px solid var(--border);
+  }
+  .season-nav button{
+    border:0;background:none;padding:3px 4px;cursor:pointer;
+    font-family:inherit;font-size:0.72rem;font-weight:600;color:var(--accent);
+  }
+  .season-nav button:hover{text-decoration:underline;}
+  .season-nav button[disabled]{visibility:hidden;}
+  .season-today{
+    border:0;background:none;padding:3px 4px;cursor:pointer;
+    font-family:inherit;font-size:0.68rem;color:var(--text-soft);
+  }
+  .season-today[hidden]{display:none;}
+  .season-link{
+    display:block;width:100%;margin-top:9px;padding:7px 9px;
+    border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:var(--surface-2);cursor:pointer;
+    font-family:inherit;font-size:0.74rem;font-weight:600;
+    color:var(--accent);text-align:left;
+  }
+  .season-link:hover{background:var(--surface-3);}
   .map-reset{
     position:absolute;right:18px;bottom:14px;
     display:inline-flex;align-items:center;gap:7px;
@@ -796,7 +876,7 @@
   .drawer-tools{gap:12px;padding:14px 14px 0;margin-bottom:-46px;}
   .drawer-tool{width:44px;height:44px;}
   .drawer-tool svg{width:20px;height:20px;}
-  .d-cats{padding-right:110px;}
+  .d-cats{padding-right:168px;}
 }
 .drawer-tool:hover{background:var(--surface-3);}
 .drawer-tool svg{width:17px;height:17px;}
@@ -817,6 +897,24 @@
     display:none;
   }
   .mobile-list-drawer.open{transform:translateX(0);}
+  .sheet-grab{display:none;}
+  /* 91 farms is a lot of scrolling, so every place the list appears -
+     the desktop panel, the slide-in, the phone sheet - carries the same
+     filter box above it. */
+  .list-filter{
+    display:flex;align-items:center;gap:8px;flex:0 0 auto;
+    margin:0 0 10px;padding:0 12px;
+    background:var(--surface-2);border:1px solid var(--border);border-radius:12px;
+  }
+  .list-filter:focus-within{border-color:var(--accent);}
+  .list-filter svg{width:15px;height:15px;flex-shrink:0;color:var(--text-soft);}
+  .list-filter-input{
+    flex:1;min-width:0;height:36px;border:0;background:none;outline:none;
+    font-family:inherit;font-size:0.88rem;color:var(--text);
+    -webkit-appearance:none;appearance:none;
+  }
+  .list-filter-input::placeholder{color:var(--text-soft);}
+  .mobile-list-drawer .list-filter{margin:0 0 12px;}
 
   /* ---------- Drawer content ---------- */
   .cert-pill{
@@ -1094,7 +1192,6 @@
     .mobile-list-drawer{display:block;}
     #listToggle{display:inline-flex;}
     .search input{width:150px;}
-    .tagline{display:none;}
     /* Too narrow to centre a card: it comes up from the bottom instead. */
     .drawer{width:100%;max-width:100%;left:0;top:auto;bottom:0;
       height:86vh;max-height:86vh;
@@ -1111,20 +1208,120 @@
   }
 
   /* Phone layout: stack the header, let search take the width, keep taps big. */
+  /* ---------- Phone ----------
+     Two things matter on a 390px screen: give the map the height, and make
+     everything thumb-sized. The header collapses to one row, the search
+     becomes an icon until tapped, and controls meet the 44px touch target. */
   @media (max-width:600px){
-    .topbar{padding:10px 14px;gap:9px;}
-    .brand-mark{width:34px;height:34px;border-radius:10px;}
-    .brand-mark svg{width:19px;height:19px;}
-    .brand h1{font-size:1.05rem;}
-    .controls{width:100%;gap:8px;flex-wrap:nowrap;}
-    .search{flex:1;min-width:0;}
-    .search input{width:100%;max-width:none;}
-    .icon-btn{padding:9px 12px;}
-    .filters{padding:9px 14px;gap:7px;}
-    .chip{padding:9px 13px;}
-    .select-filter{padding:9px 30px 9px 13px;max-width:190px;}
-    .map-inner{padding:8px;}
-    .map-caption{left:10px;bottom:10px;}
+    .topbar{padding:8px 12px;gap:6px 8px;flex-wrap:wrap;}
+    .brand{min-width:0;flex:0 1 auto;}
+    /* Beside the title there is no room for the subtitle, so on a phone it
+       gets its own full-width line under the header row. */
+    .brand .tagline{display:none;}
+    .tagline-m{display:block;margin:0;font-size:0.72rem;line-height:1.25;width:100%;}
+    .brand-mark{width:32px;height:32px;border-radius:10px;}
+    .brand-mark svg{width:18px;height:18px;}
+    .brand h1{font-size:1rem;white-space:nowrap;}
+    .controls{width:auto;flex:1 1 auto;justify-content:flex-end;gap:6px;flex-wrap:nowrap;}
+    .lang-switch button{padding:7px 9px;}
+    .icon-btn{padding:0 12px;min-height:44px;}
+    #listToggle span{display:none;}            /* the icon says enough */
+    #listToggle{padding:0 13px;}
+    .search{flex:0 0 auto;}
+    .search input{
+      width:44px;max-width:none;padding-left:38px;padding-right:0;
+      height:44px;cursor:pointer;
+      transition:width .18s ease, padding-right .18s ease;
+    }
+    /* Typing takes the whole header row - 62vw left the suggestions
+       narrower than their own text, and hung them off the screen edge. */
+    .topbar.searching .controls > *:not(.search){display:none;}
+    .topbar.searching .controls > #listToggle{display:none;}  /* beats #listToggle above */
+    .topbar.searching .search{flex:1 1 100%;}
+    .topbar.searching .search input{width:100%;padding-right:40px;cursor:text;}
+    .search input:focus{width:100%;padding-right:40px;cursor:text;}
+    .search > svg{left:14px;}
+    .suggest{left:0;right:0;width:auto;max-width:none;max-height:min(46vh,320px);}
+    .suggest-item .sub{max-width:40%;}
+    .fav-toggle{padding:0 11px;min-height:44px;}
+
+    .filters{padding:8px 12px;}
+    .filters-scroll{gap:7px;}
+    .chip{padding:0 14px;min-height:44px;font-size:0.88rem;}
+    .dd-trigger{padding:0 13px;min-height:44px;}
+    .chip-clear{margin-left:14px;padding:0 13px;min-height:44px;}
+    .chip-clear::before{right:calc(100% + 7px);}
+
+    /* The sheet sits on the bottom of the frame, so the country centres in
+       what is left rather than behind it. */
+    .map-inner{padding:4px 6px calc(var(--peek) + 8px);}
+    /* Narrow enough to leave the country visible beside it; it opens on a
+       tap and starts tucked away. */
+    .season{left:10px;top:8px;width:min(66vw,232px);}
+    .season-head{padding:10px 11px;min-height:40px;}
+    .season-body{max-height:min(54vh,400px);}
+    .map-caption{left:10px;bottom:10px;font-size:0.72rem;}
+    .map-reset{right:12px;bottom:10px;padding:0 14px;min-height:44px;}
+    .map-zoom{right:12px;bottom:62px;}
+    .map-zoom button{width:44px;height:44px;}
+
+    /* Town names shrink with the map, or they cover half the country. */
+    .city-labels span{font-size:10.5px;}
+    .city-labels span.capital{font-size:11.5px;}
+    .city-labels span.town{font-size:9.5px;}
+    .city-labels.zoomed span{font-size:11.5px;}
+    .city-labels.zoomed span.capital{font-size:13px;}
+    .city-labels.zoomed span.town{font-size:10.5px;}
+
+    /* ---- Farm list as a bottom sheet ----
+       In portrait the country can only ever fill about a third of the screen,
+       so the space under it carries the list instead of staying empty. The
+       sheet rests peeking; dragging or tapping the bar opens it. */
+    .mobile-list-drawer{
+      display:flex;flex-direction:column;
+      top:auto;bottom:0;left:0;
+      width:100%;max-width:100%;height:72vh;
+      padding:0;overflow:hidden;
+      border-right:0;border-top:1px solid var(--border);
+      border-radius:18px 18px 0 0;
+      box-shadow:0 -6px 24px var(--shadow);
+      transform:translateY(calc(100% - var(--peek)));
+    }
+    .mobile-list-drawer.open{transform:translateY(0);}
+    .sheet-grab{
+      display:flex;flex-direction:column;align-items:center;gap:2px;
+      position:relative;flex:0 0 auto;
+      width:100%;min-height:var(--peek);padding:9px 14px 10px;
+      background:none;border:0;cursor:pointer;font:inherit;color:inherit;
+      touch-action:none;
+    }
+    .sheet-bar{
+      width:38px;height:4px;border-radius:2px;
+      background:var(--border);margin-bottom:5px;
+    }
+    .sheet-title{
+      font-size:0.74rem;font-weight:700;letter-spacing:0.07em;
+      text-transform:uppercase;color:var(--text-soft);
+    }
+    .sheet-count{
+      font-size:0.8rem;color:var(--text-soft);font-variant-numeric:tabular-nums;
+    }
+    /* 91 farms is a lot of thumb: the list gets its own filter box so you
+       can narrow it without going back up to the header. */
+    /* Thumb-sized inside the sheet, and clear of its rounded edges. */
+    .mobile-list-drawer .list-filter{margin:0 14px 10px;}
+    .list-filter-input{height:42px;font-size:0.95rem;}
+    .mobile-list-drawer .farm-list{
+      flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
+      padding:0 14px 8px;
+    }
+    .mobile-list-drawer .rec-open{flex:0 0 auto;margin:0;padding:12px 14px 16px;}
+
+    /* the map's own controls step above the peeking sheet */
+    .map-caption{bottom:calc(var(--peek) + 10px);}
+    .map-reset{bottom:calc(var(--peek) + 10px);}
+    .map-zoom{bottom:calc(var(--peek) + 62px);}
+
     .drawer-content{padding:14px 18px 28px;}
     .drawer h2{font-size:1.3rem;}
     .d-story li{font-size:0.88rem;}
@@ -1165,6 +1362,7 @@
         <div class="suggest" id="searchSuggest" role="listbox" hidden></div>
       </div>
     </div>
+      <p class="tagline tagline-m" id="txtTaglineM">Mapa bio a regenerativn&#237;ch farem v &#268;esku</p>
   </header>
 
   <div class="rec-scrim" id="recScrim" hidden></div>
@@ -1213,17 +1411,6 @@
         <svg class="icon dd-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
     </div>
-    <span class="filter-sep" aria-hidden="true"></span>
-    <button class="chip chip-near" id="nearChip" aria-pressed="false">
-      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><circle cx="12" cy="12" r="8.4"/><line x1="12" y1="1.4" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.6"/><line x1="1.4" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.6" y2="12"/></svg>
-      <span id="txtNearChip">Bl&#237;zko m&#283;</span>
-    </button>
-    <div class="dd" id="nearDD" hidden>
-      <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false">
-        <span class="dd-label"></span>
-        <svg class="icon dd-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-    </div>
     </div>
     <button class="chip chip-clear" id="clearFilters" hidden>
       <svg class="icon" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
@@ -1240,6 +1427,10 @@
         </span>
         <span class="sidebar-count" id="sidebarCount"></span>
       </div>
+      <div class="list-filter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="list-filter-input" id="sidebarSearch" autocomplete="off">
+      </div>
       <ul class="farm-list" id="farmList"></ul>
       <p class="sidebar-footnote" id="txtFootnote">Kur&#225;torovan&#253; v&#253;b&#283;r regenerativn&#237;ch a bio farem v &#268;esku, sestaven&#253; z web&#367; jednotliv&#253;ch farem. Chyb&#237; v&#225;m tu n&#283;jak&#225; farma? Ozv&#283;te se.</p>
       <button type="button" class="rec-open" id="recOpen" data-rec-open></button>
@@ -1253,15 +1444,29 @@
             <g class="rivers" id="riversLayer" aria-hidden="true"></g>
             <path class="region-outline" id="regionOutline" d="" hidden></path>
             <g class="cities" id="citiesLayer" aria-hidden="true"></g>
-            <g class="near-ring" id="nearRing" aria-hidden="true" hidden>
-              <ellipse id="nearEllipse" cx="0" cy="0" rx="0" ry="0"></ellipse>
-              <circle id="nearDot" cx="0" cy="0" r="4"></circle>
-            </g>
           </svg>
-          <div class="pins" id="pinsLayer"></div>
         </div>
+        <div class="pins" id="pinsLayer"></div>
         <div class="city-labels" id="cityLabels" aria-hidden="true"></div>
       </div>
+      <aside class="season" id="season" data-open="1">
+        <button type="button" class="season-head" id="seasonToggle" aria-expanded="true" aria-controls="seasonBody">
+          <svg class="season-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          <span class="season-month" id="seasonMonth"></span>
+          <span class="season-kicker" id="seasonKicker"></span>
+          <svg class="season-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="season-body" id="seasonBody">
+          <div id="seasonGroups"></div>
+          <p class="season-note" id="seasonNote"></p>
+          <button type="button" class="season-link" id="seasonLink"></button>
+          <div class="season-nav">
+            <button type="button" id="seasonPrev"></button>
+            <button type="button" class="season-today" id="seasonToday" hidden></button>
+            <button type="button" id="seasonNext"></button>
+          </div>
+        </div>
+      </aside>
       <div class="map-caption" id="mapCaption">10 farem</div>
       <div class="map-zoom" role="group" aria-label="Zoom">
         <button type="button" id="zoomIn" aria-label="+">
@@ -1280,6 +1485,15 @@
 </div>
 
 <nav class="mobile-list-drawer" id="mobileListDrawer" aria-hidden="true">
+  <button type="button" class="sheet-grab" id="sheetGrab" aria-expanded="false">
+    <span class="sheet-bar" aria-hidden="true"></span>
+    <span class="sheet-title" id="txtSheetTitle">Farmy na map&#283;</span>
+    <span class="sheet-count" id="sheetCount"></span>
+  </button>
+  <div class="list-filter">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" class="list-filter-input" id="sheetSearch" autocomplete="off">
+  </div>
   <ul class="farm-list" id="mobileFarmList"></ul>
   <button type="button" class="rec-open" data-rec-open></button>
 </nav>
@@ -1375,6 +1589,18 @@ function trackEvent(path, title){
       tagline:"Mapa bio a regenerativn\u00EDch farem v \u010Cesku",
       listToggle:"Farmy",
       searchPlaceholder:"Hledat farmu nebo m\u011Bsto\u2026",
+      seasonKicker:"te\u010F v sez\u00F3n\u011B",
+      seasonOther:"v sez\u00F3n\u011B",
+      seasonVeg:"Zelenina",
+      seasonFruit:"Ovoce",
+      seasonHerbs:"Bylinky",
+      legFresh:"\u010Derstv\u00E9 z pole",
+      legStored:"ze skladu",
+      legGlass:"ze sklen\u00EDku",
+      seasonToday:"zp\u011Bt na dne\u0161ek",
+      seasonNote:"Orienta\u010Dn\u00ED kalend\u00E1\u0159 pro \u010Desk\u00E9 podm\u00EDnky. Co m\u00E1 farma zrovna na pult\u011B, ov\u011B\u0159te u n\u00ED.",
+      seasonLink:function(n){ return "Zobrazit farmy se zeleninou a ovocem" + (n ? " (" + n + ")" : ""); },
+      listFilter:"Filtrovat seznam\u2026",
       filterAria:"Filtrovat podle kategorie",
       footnote:"Kur\u00E1torovan\u00FD v\u00FDb\u011Br regenerativn\u00EDch a bio farem v \u010Cesku, sestaven\u00FD z web\u016F jednotliv\u00FDch farem. Chyb\u00ED v\u00E1m tu n\u011Bjak\u00E1 farma? Ozv\u011Bte se.",
       chipAll:"V\u0161e",
@@ -1431,13 +1657,8 @@ function trackEvent(path, title){
       offerNames:{ bedynky:"bed\u00FDnky", samosber:"samosb\u011Br", bistro:"bistro", automat:"prodejn\u00ED automat", kpz:"KPZ (komunitou podporovan\u00E9 zem\u011Bd\u011Blstv\u00ED)", tours:"exkurze", mobile:"poj\u00EDzdn\u00E1 prodejna" },
       waysToBuy:"Jak u nich nakoupit",
       alsoOnFarm:"Na farm\u011B najdete i",
-      nearChip:"Bl\u00EDzko m\u011B",
-      nearHint:"Klikn\u011Bte na mapu a ozna\u010Dte, kde jste.",
-      nearDenied:"Polohu se nepoda\u0159ilo zjistit. Klikn\u011Bte na mapu a ozna\u010Dte, kde jste.",
       nearNote:"Odhad podle vzdu\u0161n\u00E9 vzd\u00E1lenosti, ne podle trasy (po\u010D\u00EDt\u00E1no s ~50 km/h).",
-      youAreHere:"Va\u0161e poloha",
       changeLoc:"Zm\u011Bnit polohu",
-      driveMinutes:function(m){ return "do " + m + " min j\u00EDzdy"; },
       listHeading:"Farmy na map\u011B",
       mapReset:"Zobrazit cel\u00E9 \u010Cesko",
       channelAll:"V\u0161echny mo\u017Enosti",
@@ -1452,6 +1673,18 @@ function trackEvent(path, title){
       tagline:"A map of organic and regenerative farms in the Czech Republic",
       listToggle:"Farms",
       searchPlaceholder:"Search farm or town\u2026",
+      seasonKicker:"in season now",
+      seasonOther:"in season",
+      seasonVeg:"Vegetables",
+      seasonFruit:"Fruit",
+      seasonHerbs:"Herbs",
+      legFresh:"fresh from the field",
+      legStored:"from store",
+      legGlass:"under glass",
+      seasonToday:"back to today",
+      seasonNote:"A guide to Czech growing conditions. Check with the farm what they actually have.",
+      seasonLink:function(n){ return "Show farms with vegetables and fruit" + (n ? " (" + n + ")" : ""); },
+      listFilter:"Filter the list\u2026",
       filterAria:"Filter by category",
       footnote:"A curated starting list of regenerative and organic Czech farms, built from each farm's own site. Missing one you know? Add it.",
       chipAll:"All farms",
@@ -1508,13 +1741,8 @@ function trackEvent(path, title){
       offerNames:{ bedynky:"veg boxes", samosber:"pick your own", bistro:"a bistro", automat:"a vending machine", kpz:"a CSA scheme", tours:"farm tours", mobile:"a mobile shop" },
       waysToBuy:"How you can buy from them",
       alsoOnFarm:"Also at the farm",
-      nearChip:"Near me",
-      nearHint:"Click the map to mark where you are.",
-      nearDenied:"Couldn't get your location. Click the map to mark where you are.",
       nearNote:"Estimated as straight-line distance, not a real route (assumes ~50 km/h).",
-      youAreHere:"Your location",
       changeLoc:"Change location",
-      driveMinutes:function(m){ return "within " + m + " min drive"; },
       listHeading:"Farms on the map",
       mapReset:"Show all of Czechia",
       channelAll:"All channels",
@@ -1785,51 +2013,33 @@ function trackEvent(path, title){
         ]
       }
     },
-    {
-      id:"refarma", name:"ReFarma",
+    { id:"refarma", shipNote:{cs:"Objedn\u00E1vky jdou p\u0159\u00EDmo od farm\u00E1\u0159e k z\u00E1kazn\u00EDkovi \u2013 p\u0159es jednoduch\u00FD formul\u00E1\u0159, osobn\u00ED odb\u011Br nebo rozvoz.", en:"Orders go straight from farmer to customer \u2014 by simple form, farm pickup, or delivery."}, name:"ReFarma",
       town:{cs:"Lidma\u0148, okres Pelh\u0159imov", en:"Lidma\u0148, Pelh\u0159imov District"},
       region:{cs:"Kraj Vyso\u010Dina", en:"Vyso\u010Dina Region"},
       lat:49.466, lon:15.169, cats:["meat"],
       website:"https://refar.ma/", eshop:"https://docs.google.com/forms/d/e/1FAIpQLSd_9fz_Uo_9VRWMc9_1AZMLcPFEocZECeMoJgZJY2u6BFpbgg/viewform",
       phone:"+420 728 643 798",
-      story:{
-        cs:[
-          "Rodinn\u00E1 regenerativn\u00ED farma na Vyso\u010Din\u011B chovaj\u00EDc\u00ED skot plemene Aberdeen Angus a pastevn\u00ED ku\u0159ata.",
-          "Vyu\u017E\u00EDv\u00E1 metodu \u201Etotal grazing\u201C \u2013 napodobuje pohyb velk\u00FDch voln\u011B \u017Eij\u00EDc\u00EDch st\u00E1d b\u00FDlo\u017Eravc\u016F, co\u017E pom\u00E1h\u00E1 pastvin\u00E1m i p\u016Fd\u011B regenerovat.",
-          "Zv\u00ED\u0159ata \u017Eij\u00ED celoro\u010Dn\u011B venku, hov\u011Bz\u00ED maso zraje 10\u201314 dn\u00ED ve vlastn\u00ED bour\u00E1rn\u011B.",
-          "Objedn\u00E1vky jdou p\u0159\u00EDmo od farm\u00E1\u0159e k z\u00E1kazn\u00EDkovi \u2013 p\u0159es jednoduch\u00FD formul\u00E1\u0159, osobn\u00ED odb\u011Br nebo rozvoz."
-        ],
-        en:[
-          "A family regenerative farm in the Vyso\u010Dina highlands raising Aberdeen Angus cattle and pasture-raised chicken.",
-          "Uses \u201Ctotal grazing\u201D \u2014 mimicking the movement of large wild herbivore herds to help pastures and soil regenerate.",
-          "Animals live outdoors year-round; beef is dry-aged 10\u201314 days in the farm's own butchery.",
-          "Orders go straight from farmer to customer \u2014 by simple form, farm pickup, or delivery."
-        ]
-      }
+      story:{ cs:["Rodinn\u00E1 regenerativn\u00ED farma na Vyso\u010Din\u011B chovaj\u00EDc\u00ED skot plemene Aberdeen Angus a pastevn\u00ED ku\u0159ata.",
+              "Vyu\u017E\u00EDv\u00E1 metodu \u201Etotal grazing\u201C \u2013 napodobuje pohyb velk\u00FDch voln\u011B \u017Eij\u00EDc\u00EDch st\u00E1d b\u00FDlo\u017Eravc\u016F, co\u017E pom\u00E1h\u00E1 pastvin\u00E1m i p\u016Fd\u011B regenerovat.",
+              "Zv\u00ED\u0159ata \u017Eij\u00ED celoro\u010Dn\u011B venku, hov\u011Bz\u00ED maso zraje 10\u201314 dn\u00ED ve vlastn\u00ED bour\u00E1rn\u011B."],
+          en:["A family regenerative farm in the Vyso\u010Dina highlands raising Aberdeen Angus cattle and pasture-raised chicken.",
+              "Uses \u201Ctotal grazing\u201D \u2014 mimicking the movement of large wild herbivore herds to help pastures and soil regenerate.",
+              "Animals live outdoors year-round; beef is dry-aged 10\u201314 days in the farm's own butchery."] }
     },
-    {
-      id:"beranuv", cert:"bio", delivery:["praha"], facebook:"https://www.facebook.com/profile.php?id=61557677933203", instagram:"https://www.instagram.com/beranuv_grunt/", name:"Beran\u016Fv Grunt",
+    { id:"beranuv", shipNote:{cs:"Maso rozv\u00E1\u017Eej\u00ED zdarma a\u017E dom\u016F \u2014 jezd\u00ED po Havl\u00ED\u010Dkobrodsku, Jihlavsku, po Praze i na Kladensku, a r\u00E1di p\u0159iberou i to, co je trochu po cest\u011B.", en:"They deliver the meat to your door free of charge \u2014 around Havl\u00ED\u010Dk\u016Fv Brod, Jihlava, Prague and Kladno, and anywhere roughly on the way."}, cert:"bio", delivery:["praha"], facebook:"https://www.facebook.com/profile.php?id=61557677933203", instagram:"https://www.instagram.com/beranuv_grunt/", name:"Beran\u016Fv Grunt",
       town:{cs:"Horn\u00ED Krup\u00E1, okres Havl\u00ED\u010Dk\u016Fv Brod", en:"Horn\u00ED Krup\u00E1, Havl\u00ED\u010Dk\u016Fv Brod District"},
       region:{cs:"Kraj Vyso\u010Dina", en:"Vyso\u010Dina Region"},
       lat:49.630, lon:15.523, cats:["meat"],
       website:"https://www.beranuvgrunt.cz/", eshop:"https://shop.beranuvgrunt.cz/",
       email:"farma@beranuv-grunt.cz", phone:"+420 734 792 822",
-      story:{
-        cs:[
-          "Rodinn\u00E1 biofarma Mark\u00E9ty Beranov\u00E9 chov\u00E1 skot plemene Aberdeen Angus v ekologick\u00E9m re\u017Eimu (CZ-BIO-002).",
-          "Zv\u00ED\u0159ata se pasou celoro\u010Dn\u011B venku, bez chemick\u00FDch post\u0159ik\u016F a hnojiv.",
-          "Hov\u011Bz\u00ED maso p\u0159ed prodejem pomalu zraje do pln\u00E9 vyzr\u00E1losti.",
-          "100 % bio, voln\u00FD chov, bez GMO.",
-          "Maso rozv\u00E1\u017Eej\u00ED zdarma a\u017E dom\u016F \u2014 jezd\u00ED po Havl\u00ED\u010Dkobrodsku, Jihlavsku, po Praze i na Kladensku, a r\u00E1di p\u0159iberou i to, co je trochu po cest\u011B."
-        ],
-        en:[
-          "A family organic farm run by Mark\u00E9ta Beranov\u00E1, raising Aberdeen Angus cattle under certified organic status (CZ-BIO-002).",
-          "Animals graze outdoors year-round, with no chemical pesticides or fertilizers used on the land.",
-          "Beef is slow-matured before it reaches customers.",
-          "100% organic, free-range, GMO-free.",
-          "They deliver the meat to your door free of charge \u2014 around Havl\u00ED\u010Dk\u016Fv Brod, Jihlava, Prague and Kladno, and anywhere roughly on the way."
-        ]
-      }
+      story:{ cs:["Rodinn\u00E1 biofarma Mark\u00E9ty Beranov\u00E9 chov\u00E1 skot plemene Aberdeen Angus v ekologick\u00E9m re\u017Eimu (CZ-BIO-002).",
+              "Zv\u00ED\u0159ata se pasou celoro\u010Dn\u011B venku, bez chemick\u00FDch post\u0159ik\u016F a hnojiv.",
+              "Hov\u011Bz\u00ED maso p\u0159ed prodejem pomalu zraje do pln\u00E9 vyzr\u00E1losti.",
+              "100 % bio, voln\u00FD chov, bez GMO."],
+          en:["A family organic farm run by Mark\u00E9ta Beranov\u00E1, raising Aberdeen Angus cattle under certified organic status (CZ-BIO-002).",
+              "Animals graze outdoors year-round, with no chemical pesticides or fertilizers used on the land.",
+              "Beef is slow-matured before it reaches customers.",
+              "100% organic, free-range, GMO-free."] }
     },
     {
       id:"rasovice", cert:"bio", shipNote:{cs:"Rozv\u00E1\u017E\u00ED chlazen\u011B p\u0159es Cool Bal\u00EDk (PPL) \u2014 na adresu nebo do v\u00FDdejn\u00EDho boxu, 149 K\u010D, nad 3 500 K\u010D zdarma. Objedn\u00E1vky odes\u00EDlaj\u00ED v \u00FAter\u00FD a ve \u010Dtvrtek, doru\u010Den\u00ED do 2\u20134 pracovn\u00EDch dn\u016F. Osobn\u00ED odb\u011Br na farm\u011B Mitrov 9 zdarma, po telefonick\u00E9 domluv\u011B.", en:"Chilled delivery by Cool Bal\u00EDk (PPL) \u2014 to your address or a parcel box, 149 CZK, free over 3,500 CZK. Orders go out Tuesdays and Thursdays, arriving in 2\u20134 working days. Collection at the farm, Mitrov 9, is free by phone arrangement."}, name:"Bio farma Ra\u0161ovice",
@@ -1982,19 +2192,17 @@ function trackEvent(path, title){
                   "Their sister project RegeFarm works from the same address in Velk\u00E1 nad Veli\u010Dkou and shares the phone number and social accounts.",
                   "There is no e-shop \u2014 what is available is arranged directly by phone or email."] } },
 
-    { id:"jezek", cert:"bio", shops:{ scuk:"https://www.scuk.cz/farmar-jezek" }, delivery:["cr"], hours:{cs:"Objedn\u00E1vky p\u0159es online syst\u00E9m, vyzvednut\u00ED na farm\u011B v term\u00EDnu, kter\u00FD si zvol\u00EDte", en:"Orders through their online system, collected at the farm on a slot you choose"}, eshop:"https://farmarjezek.sumupstore.com/", facebook:"https://www.facebook.com/farmarjezek", instagram:"https://www.instagram.com/farmarjezek/", name:"Farm\u00E1\u0159 Je\u017Eek",
+    { id:"jezek", shipNote:{cs:"Nakupuje se p\u0159es jejich jednoduch\u00FD objedn\u00E1vkov\u00FD syst\u00E9m: objedn\u00E1te a zaplat\u00EDte online, farm\u00E1\u0159 nachyst\u00E1 a vy si vyzvednete na farm\u011B.", en:"You buy through their simple order system: order and pay online, the farmer packs it, you collect at the farm."}, cert:"bio", shops:{ scuk:"https://www.scuk.cz/farmar-jezek" }, delivery:["cr"], hours:{cs:"Objedn\u00E1vky p\u0159es online syst\u00E9m, vyzvednut\u00ED na farm\u011B v term\u00EDnu, kter\u00FD si zvol\u00EDte", en:"Orders through their online system, collected at the farm on a slot you choose"}, eshop:"https://farmarjezek.sumupstore.com/", facebook:"https://www.facebook.com/farmarjezek", instagram:"https://www.instagram.com/farmarjezek/", name:"Farm\u00E1\u0159 Je\u017Eek",
       town:{cs:"Podch\u00FD\u0161sk\u00E1 224, Praha 4 \u2013 Cholupice", en:"Podch\u00FD\u0161sk\u00E1 224, Prague 4 \u2013 Cholupice"},
       region:{cs:"Hlavn\u00ED m\u011Bsto Praha", en:"Prague"},
       lat:49.981, lon:14.443, cats:["veggies","honey"],
       website:"https://farmarjezek.cz/",
       story:{ cs:["Regenerativn\u00ED hospoda\u0159en\u00ED na okraji Prahy v Cholupic\u00EDch.",
-                  "Zelenina, ovoce, med a zava\u0159eniny p\u0159\u00EDmo od farm\u00E1\u0159e.",
-                  "Nakupuje se p\u0159es jejich jednoduch\u00FD objedn\u00E1vkov\u00FD syst\u00E9m: objedn\u00E1te a zaplat\u00EDte online, farm\u00E1\u0159 nachyst\u00E1 a vy si vyzvednete na farm\u011B.",
-                  "Aktu\u00E1ln\u00ED nab\u00EDdku a term\u00EDny hl\u00E1s\u00ED i na Facebooku a Instagramu \u2014 sezonn\u00ED v\u011Bci nemus\u00ED b\u00FDt v\u017Edy skladem."],
-              en:["Regenerative growing on the edge of Prague, in Cholupice.",
-                  "Vegetables, fruit, honey and preserves straight from the grower.",
-                  "You buy through their simple order system: order and pay online, the farmer packs it, you collect at the farm.",
-                  "What is ready, and when, also goes up on Facebook and Instagram \u2014 seasonal items are not always in stock."] } },
+              "Zelenina, ovoce, med a zava\u0159eniny p\u0159\u00EDmo od farm\u00E1\u0159e.",
+              "Aktu\u00E1ln\u00ED nab\u00EDdku a term\u00EDny hl\u00E1s\u00ED i na Facebooku a Instagramu \u2014 sezonn\u00ED v\u011Bci nemus\u00ED b\u00FDt v\u017Edy skladem."],
+          en:["Regenerative growing on the edge of Prague, in Cholupice.",
+              "Vegetables, fruit, honey and preserves straight from the grower.",
+              "What is ready, and when, also goes up on Facebook and Instagram \u2014 seasonal items are not always in stock."] } },
 
     { id:"ucadu", cert:"bio", facebook:"https://www.facebook.com/Statek-u-%C4%8Cadu-331427170379296/", phone:"+420 776 550 676", email:"milenka.75@seznam.cz", hours:{cs:"Bio maso na objedn\u00E1vku \u2014 domluvte se p\u0159edem", en:"Organic meat to order \u2014 arrange ahead"}, name:"Statek U \u010Cadu",
       town:{cs:"Horn\u00ED Libchavy 75, Libchavy", en:"Horn\u00ED Libchavy 75, Libchavy"},
@@ -2011,7 +2219,7 @@ function trackEvent(path, title){
                   "Family boxes of 6\u201312 kg are the favourite, with steaks or plain fore- and hindquarter cuts on request.",
                   "Everything is sold straight from the farm \u2014 order ahead by phone or email."] } },
 
-    { id:"sobanovi", sellers:[{ name:"Ml\u00E9\u010Dn\u00E9 v\u00FDrobky a ceny", url:"https://www.farmasobanovi.com/team-1" },
+    { id:"sobanovi", shipNote:{cs:"Ml\u00E9ko se \u010Depuje do vlastn\u00EDch n\u00E1dob v automatu ve Vl\u010Dnov\u011B \u2014 nonstop, 22 K\u010D za litr. Vedle automatu stoj\u00ED miniml\u00E9k\u00E1rna s vlastn\u00ED prodejnou: selsk\u00FD b\u00EDl\u00FD i ochucen\u00FD jogurt, jogurtov\u00FD n\u00E1poj a smetana ke \u0161leh\u00E1n\u00ED, ve vratn\u00FDch obalech se z\u00E1lohou 10 K\u010D.", en:"Milk is drawn into your own container from the vending machine at Vl\u010Dnov \u2014 around the clock, 22 CZK a litre. Next to it is the small creamery with its own shop: plain and flavoured farmhouse yoghurt, a yoghurt drink and whipping cream, in returnable packaging with a 10 CZK deposit."}, sellers:[{ name:"Ml\u00E9\u010Dn\u00E9 v\u00FDrobky a ceny", url:"https://www.farmasobanovi.com/team-1" },
            { name:"\u010Cerstv\u00E9 hov\u011Bz\u00ED maso", url:"https://www.farmasobanovi.com/%C4%8Derstv%C3%A9-hov%C4%9Bz%C3%AD-maso" },
            { name:"Vl\u010Dnov 35 na map\u011B", url:"https://goo.gl/maps/JLAp7Ag7htXxLMDo9" }], facebook:"https://www.facebook.com/Rodinn%C3%A1-farma-%C5%A0ob%C3%A1%C5%88ovi-107737470623714/", hours:{cs:"Ml\u00E9\u010Dn\u00FD automat Vl\u010Dnov: nonstop 24/7. Prodejna miniml\u00E9k\u00E1rny: \u00DAt\u2013P\u00E1 8:00\u201311:00 a 13:30\u201317:00, So 7:30\u201311:00, Po a Ne zav\u0159eno",
          en:"Milk vending machine at Vl\u010Dnov: open 24/7. Creamery shop: Tue\u2013Fri 8:00\u201311:00 and 13:30\u201317:00, Sat 7:30\u201311:00, closed Mon and Sun"}, offers:["automat"], email:"farmasobanovi@gmail.com", phone:"+420 604 274 180", instagram:"https://www.instagram.com/rodinna_farma_sobanovi/", name:"Rodinn\u00E1 farma \u0160ob\u00E1\u0148ovi",
@@ -2020,14 +2228,10 @@ function trackEvent(path, title){
       lat:48.99, lon:17.58, cats:["dairy","meat"],
       website:"https://farmasobanovi.com/",
       story:{ cs:["Rodinn\u00E1 farma ve Vl\u010Dnov\u011B zapojen\u00E1 do s\u00EDt\u011B regenerativn\u00EDch hospod\u00E1\u0159\u016F.",
-                  "\u010Cerstv\u00E9 ml\u00E9ko, ml\u00E9\u010Dn\u00E9 v\u00FDrobky a hov\u011Bz\u00ED maso.",
-              "Ml\u00E9ko se \u010Depuje do vlastn\u00EDch n\u00E1dob v automatu ve Vl\u010Dnov\u011B \u2014 nonstop, 22 K\u010D za litr.",
-              "Vedle automatu stoj\u00ED miniml\u00E9k\u00E1rna s vlastn\u00ED prodejnou: selsk\u00FD b\u00EDl\u00FD i ochucen\u00FD jogurt, jogurtov\u00FD n\u00E1poj a smetana ke \u0161leh\u00E1n\u00ED, ve vratn\u00FDch obalech se z\u00E1lohou 10 K\u010D.",
+              "\u010Cerstv\u00E9 ml\u00E9ko, ml\u00E9\u010Dn\u00E9 v\u00FDrobky a hov\u011Bz\u00ED maso.",
               "Hov\u011Bz\u00ED se objedn\u00E1v\u00E1 p\u0159edem na \u010D\u00EDsle +420 739 246 092 \u2014 maso je v\u017Edy z vlastn\u00EDho chovu a vyd\u00E1v\u00E1 se po d\u00E1vk\u00E1ch."],
           en:["A family farm in Vl\u010Dnov, part of the regenerative growers' network.",
-                  "Fresh milk, dairy products and beef.",
-              "Milk is drawn into your own container from the vending machine at Vl\u010Dnov \u2014 around the clock, 22 CZK a litre.",
-              "Next to it is the small creamery with its own shop: plain and flavoured farmhouse yoghurt, a yoghurt drink and whipping cream, in returnable packaging with a 10 CZK deposit.",
+              "Fresh milk, dairy products and beef.",
               "Beef is ordered ahead on +420 739 246 092 \u2014 always from their own herd and released in batches."] } },
 
     { id:"dolinek", cert:"bio", tags:["koz\u00ED ml\u00E9ko","kef\u00EDr","jehn\u011B\u010D\u00ED","vejce"], delivery:["pickup"], hours:{cs:"Samoobslu\u017En\u00E9 lednice p\u0159ed farmou 24/7", en:"Self-service fridges at the farm gate, 24/7"}, offers:["automat"], email:"biofarmadolinek@gmail.com", phone:"+420 774 429 405", shipNote:{cs:"Objedn\u00E1vku z e-shopu zaplat\u00EDte p\u0159edem; o jej\u00EDm stavu a term\u00EDnu vyzvednut\u00ED v\u00E1s farma informuje e-mailem. Ve smluven\u00FD den najdete ozna\u010Denou ta\u0161ku v samoobslu\u017En\u00E9 lednici p\u0159ed farmou \u2014 ta\u0161ka v n\u00ED \u010Dek\u00E1 jen jeden den.",en:"E-shop orders are paid up front; the farm e-mails you the status and the pickup date. On the agreed day your marked bag waits in the self-service fridge in front of the farm \u2014 it stays there for one day only."}, eshop:"https://biomleko.eu/eshop/", facebook:"https://www.facebook.com/biofarmadolinek", instagram:"https://www.instagram.com/kozibiofarma/", name:"Biofarma Dol\u00EDnek",
@@ -2050,7 +2254,7 @@ function trackEvent(path, title){
               en:["An organic farm in the Vla\u0161im area with a wide range of poultry.",
                   "Chicken, turkey, duck, goose, eggs, milk, vegetables and fruit."] } },
 
-    { id:"farmakosik", cert:"bio", shops:{ scuk:"https://www.scuk.cz/farma-kosik" },
+    { id:"farmakosik", shipNote:{cs:"Objedn\u00E1vky z e-shopu jde vyzvednout i v Praze na Ra\u0161\u00EDnov\u011B n\u00E1b\u0159e\u017E\u00ED 78, kousek od Tan\u010D\u00EDc\u00EDho domu.", en:"E-shop orders can also be collected in Prague at Ra\u0161\u00EDnovo n\u00E1b\u0159e\u017E\u00ED 78, just along from the Dancing House."}, cert:"bio", shops:{ scuk:"https://www.scuk.cz/farma-kosik" },
       website:"http://www.farmakosik.cz/cz/produkty/", eshop:"https://www.e-farmakosik.cz/",
       facebook:"https://www.facebook.com/farma.Kosik",
       email:"info@farmakosik.cz", phone:"+420 325 514 850",
@@ -2064,19 +2268,17 @@ function trackEvent(path, title){
       lat:50.24, lon:15.17, cats:["meat","dairy","eggs","veggies"],
       tags:["ov\u010D\u00ED s\u00FDr","brynza","\u017Ein\u010Dica","o\u0161tiepok","mangalica","p\u0159e\u0161t\u00EDk","jehn\u011B\u010D\u00ED","sheep cheese","lamb"],
       story:{ cs:["Farma v \u00FAdol\u00ED asi 70 kilometr\u016F od Prahy, kterou jej\u00ED hospod\u00E1\u0159i popisuj\u00ED jako ostr\u016Fvek slovensk\u00FDch produkt\u016F ve st\u0159edn\u00EDch \u010Cech\u00E1ch.",
-                  "Za\u010Dalo to v roce 2006 s patn\u00E1cti romanovsk\u00FDmi ovcemi, kter\u00E9 sp\u00E1saly zarostl\u00E1 pole kolem chaloupky v Ko\u0161\u00EDku; po dvoulet\u00E9m p\u0159echodn\u00E9m obdob\u00ED farma v roce 2009 z\u00EDskala zna\u010Dku BIO.",
-                  "Prim hraje chov romanovsk\u00FDch a v\u00FDchodofri\u0161sk\u00FDch ovc\u00ED; p\u0159ibyly k nim kozy, prasata mangalica a p\u0159e\u0161t\u00EDk a kr\u00E1vy Jersey.",
-                  "Ov\u010D\u00ED s\u00FDry jsou sezonn\u00ED \u2014 od Velikonoc do Michala: hrudka, tvrd\u00FD s\u00FDr ement\u00E1lsk\u00E9ho typu, uzen\u00FD o\u0161tiepok, brynza a \u017Ein\u010Dica.",
-                  "Vedle ml\u00E9\u010Dn\u00FDch v\u00FDrobk\u016F nab\u00EDzej\u00ED jehn\u011B\u010D\u00ED a k\u016Fzle\u010D\u00ED maso, mlad\u00E9 vep\u0159ov\u00E9, klob\u00E1sky, uzenou slaninu, vejce, marmel\u00E1dy, nakl\u00E1danou zeleninu a chutney; podle sezony ovoce, zeleninu a brambory.",
-                  "Objedn\u00E1vky z e-shopu jde vyzvednout i v Praze na Ra\u0161\u00EDnov\u011B n\u00E1b\u0159e\u017E\u00ED 78, kousek od Tan\u010D\u00EDc\u00EDho domu.",
-                  "V restauraci penzionu Tuchom va\u0159\u00ED jehn\u011B\u010D\u00ED na mnoho zp\u016Fsob\u016F, slovenskou kapustnicu i brynzov\u00E9 halu\u0161ky."],
-              en:["A farm in a valley some 70 kilometres from Prague, which its keepers describe as an island of Slovak products in Central Bohemia.",
-                  "It began in 2006 with fifteen Romanov sheep grazing the overgrown fields around the family cottage in Ko\u0161\u00EDk; after a two-year conversion period the farm earned organic certification in 2009.",
-                  "Romanov and East Friesian sheep lead the way, joined since by goats, Mangalica and P\u0159e\u0161tice pigs and Jersey cows.",
-                  "The sheep cheeses are seasonal \u2014 from Easter to Michaelmas: fresh hrudka, a hard Emmental-style cheese, smoked o\u0161tiepok, bryndza and \u017Ein\u010Dica.",
-                  "Alongside the dairy they sell lamb and kid, young pork, sausages, smoked bacon, eggs, jams, pickled vegetables and chutneys, plus seasonal fruit, vegetables and potatoes.",
-                  "E-shop orders can also be collected in Prague at Ra\u0161\u00EDnovo n\u00E1b\u0159e\u017E\u00ED 78, just along from the Dancing House.",
-                  "The restaurant at the Tuchom guesthouse cooks lamb many ways, along with Slovak kapustnica and bryndza halu\u0161ky."] } },
+              "Za\u010Dalo to v roce 2006 s patn\u00E1cti romanovsk\u00FDmi ovcemi, kter\u00E9 sp\u00E1saly zarostl\u00E1 pole kolem chaloupky v Ko\u0161\u00EDku; po dvoulet\u00E9m p\u0159echodn\u00E9m obdob\u00ED farma v roce 2009 z\u00EDskala zna\u010Dku BIO.",
+              "Prim hraje chov romanovsk\u00FDch a v\u00FDchodofri\u0161sk\u00FDch ovc\u00ED; p\u0159ibyly k nim kozy, prasata mangalica a p\u0159e\u0161t\u00EDk a kr\u00E1vy Jersey.",
+              "Ov\u010D\u00ED s\u00FDry jsou sezonn\u00ED \u2014 od Velikonoc do Michala: hrudka, tvrd\u00FD s\u00FDr ement\u00E1lsk\u00E9ho typu, uzen\u00FD o\u0161tiepok, brynza a \u017Ein\u010Dica.",
+              "Vedle ml\u00E9\u010Dn\u00FDch v\u00FDrobk\u016F nab\u00EDzej\u00ED jehn\u011B\u010D\u00ED a k\u016Fzle\u010D\u00ED maso, mlad\u00E9 vep\u0159ov\u00E9, klob\u00E1sky, uzenou slaninu, vejce, marmel\u00E1dy, nakl\u00E1danou zeleninu a chutney; podle sezony ovoce, zeleninu a brambory.",
+              "V restauraci penzionu Tuchom va\u0159\u00ED jehn\u011B\u010D\u00ED na mnoho zp\u016Fsob\u016F, slovenskou kapustnicu i brynzov\u00E9 halu\u0161ky."],
+          en:["A farm in a valley some 70 kilometres from Prague, which its keepers describe as an island of Slovak products in Central Bohemia.",
+              "It began in 2006 with fifteen Romanov sheep grazing the overgrown fields around the family cottage in Ko\u0161\u00EDk; after a two-year conversion period the farm earned organic certification in 2009.",
+              "Romanov and East Friesian sheep lead the way, joined since by goats, Mangalica and P\u0159e\u0161tice pigs and Jersey cows.",
+              "The sheep cheeses are seasonal \u2014 from Easter to Michaelmas: fresh hrudka, a hard Emmental-style cheese, smoked o\u0161tiepok, bryndza and \u017Ein\u010Dica.",
+              "Alongside the dairy they sell lamb and kid, young pork, sausages, smoked bacon, eggs, jams, pickled vegetables and chutneys, plus seasonal fruit, vegetables and potatoes.",
+              "The restaurant at the Tuchom guesthouse cooks lamb many ways, along with Slovak kapustnica and bryndza halu\u0161ky."] } },
 
     { id:"lukava", cert:"bio", offers:["kpz","bedynky"], eshop:"https://www.lukava.net/nase-produkce/", email:"martin@lukava.net", phone:"+420 731 116 551", facebook:"https://www.facebook.com/farmalukava", instagram:"https://www.instagram.com/farmalukava/", saleLabel:{cs:"Prodej ze dvora", en:"Farm-gate sale"}, name:"Farma Lukava",
       town:{cs:"Jind\u0159ichovice pod Smrkem", en:"Jind\u0159ichovice pod Smrkem"},
@@ -2451,7 +2653,7 @@ function trackEvent(path, title){
 /* ---- Farms added from the regional list. Every link below was fetched and
    confirmed live; where a farm has no e-shop or no social account, the
    field is simply absent rather than guessed. ---- */
-{ id:"moulisovych", cert:"bio", website:"https://www.farmamoulisovych.cz/", eshop:"https://obchod.farmamoulisovych.cz/",
+{ id:"moulisovych", shipNote:{cs:"Prodej b\u011B\u017E\u00ED po term\u00EDnech: objedn\u00E1te v e-shopu a vyzvednete na farm\u011B, nebo v\u00E1m maso p\u0159ivezou po Plzni a okol\u00ED.", en:"Sales run in set rounds: order in the shop and collect at the farm, or have it delivered around Plze\u0148."}, cert:"bio", website:"https://www.farmamoulisovych.cz/", eshop:"https://obchod.farmamoulisovych.cz/",
   email:"obchod@farmamoulisovych.cz", phone:"+420 607 073 229",
   facebook:"https://www.facebook.com/farmamoulisovych", instagram:"https://www.instagram.com/farmamoulisovych/",
   hours:{cs:"Telefonicky ve v\u0161edn\u00EDch dnech 8:00\u201315:00", en:"By phone on weekdays 8:00\u201315:00"},
@@ -2462,16 +2664,14 @@ function trackEvent(path, title){
   offers:["tours"],
   story:{ cs:["Rodinn\u00E1 farma na Plze\u0148sku s BIO hov\u011Bz\u00EDm z vlastn\u00EDho chovu.",
               "Krom\u011B masa nab\u00EDzej\u00ED vejce a dom\u00E1c\u00ED marmel\u00E1dy \u2014 jahodov\u00E9, bor\u016Fvkov\u00E9, vi\u0161\u0148ov\u00E9 se sko\u0159ic\u00ED, meru\u0148kov\u00E9.",
-              "Prodej b\u011B\u017E\u00ED po term\u00EDnech: objedn\u00E1te v e-shopu a vyzvednete na farm\u011B, nebo v\u00E1m maso p\u0159ivezou po Plzni a okol\u00ED.",
               "St\u00E1l\u00FDm z\u00E1kazn\u00EDk\u016Fm d\u00E1vaj\u00ED slevu podle odebran\u00E9ho mno\u017Estv\u00ED za posledn\u00ED dva roky.",
               "K farm\u011B pat\u0159\u00ED i jezdeck\u00FD klub, ubytov\u00E1n\u00ED a z\u00E1\u017Eitkov\u00E9 programy pro \u0161koly."],
           en:["A family farm near Plze\u0148 with organic beef from its own herd.",
               "Besides meat they sell eggs and home-made jams \u2014 strawberry, blueberry, cherry with cinnamon, apricot.",
-              "Sales run in set rounds: order in the shop and collect at the farm, or have it delivered around Plze\u0148.",
               "Regular customers get a discount based on what they have bought over the past two years.",
               "The farm also runs a riding club, accommodation and school programmes."] } },
 
-{ id:"epona", cert:"bio", website:"https://www.biofarma-epona.cz/",
+{ id:"epona", shipNote:{cs:"Vlastn\u00ED e-shop nemaj\u00ED \u2014 zavolejte p\u0159edem pan\u00ED P\u00E1nkov\u00E9, domluv\u00EDte si nab\u00EDdku i term\u00EDn vyzvednut\u00ED.", en:"There is no e-shop \u2014 call Mrs P\u00E1nkov\u00E1 ahead to hear what is available and arrange collection."}, cert:"bio", website:"https://www.biofarma-epona.cz/",
   email:"pankovaivana@centrum.cz", phone:"+420 607 952 125",
   hours:{cs:"Prodej po telefonick\u00E9 domluv\u011B \u2014 zavolejte pro aktu\u00E1ln\u00ED nab\u00EDdku", en:"Sales by phone arrangement \u2014 call for what is available"},
   name:"Biofarma Epona",
@@ -2480,14 +2680,12 @@ function trackEvent(path, title){
   lat:50.0920, lon:13.1631, cats:["meat","eggs","veggies"],
   story:{ cs:["BIO farma na Karlovarsku, kde se chovaj\u00ED kon\u011B, skot a ovce.",
               "Pravideln\u011B nab\u00EDzej\u00ED \u010Derstv\u00E9 telec\u00ED nebo jehn\u011B\u010D\u00ED maso z vlastn\u00EDho chovu.",
-              "K tomu dom\u00E1c\u00ED vaj\u00ED\u010Dka, brambory, byliny a ovoce z vlastn\u00EDch pol\u00ED a sad\u016F.",
-              "Vlastn\u00ED e-shop nemaj\u00ED \u2014 zavolejte p\u0159edem pan\u00ED P\u00E1nkov\u00E9, domluv\u00EDte si nab\u00EDdku i term\u00EDn vyzvednut\u00ED."],
+              "K tomu dom\u00E1c\u00ED vaj\u00ED\u010Dka, brambory, byliny a ovoce z vlastn\u00EDch pol\u00ED a sad\u016F."],
           en:["An organic farm in the Karlovy Vary region with horses, cattle and sheep.",
               "They regularly offer fresh veal or lamb from their own animals.",
-              "Alongside that: farm eggs, potatoes, herbs and fruit from their own fields and orchards.",
-              "There is no e-shop \u2014 call Mrs P\u00E1nkov\u00E1 ahead to hear what is available and arrange collection."] } },
+              "Alongside that: farm eggs, potatoes, herbs and fruit from their own fields and orchards."] } },
 
-{ id:"abertamy", cert:"bio", awards:[{cs:"\u010Cesk\u00E1 biopotravina 2011 \u2014 ov\u010D\u00ED bios\u00FDr Arnika", en:"Czech Organic Food 2011 \u2014 Arnika sheep cheese"}], website:"https://www.farmazvirat.cz/",
+{ id:"abertamy", shipNote:{cs:"Otev\u00EDrac\u00ED doba obou m\u00EDst se li\u0161\u00ED, proto je u ka\u017Ed\u00E9ho uveden\u00E1 zvl\u00E1\u0161\u0165.", en:"The two places keep different hours, so each is listed separately."}, cert:"bio", awards:[{cs:"\u010Cesk\u00E1 biopotravina 2011 \u2014 ov\u010D\u00ED bios\u00FDr Arnika", en:"Czech Organic Food 2011 \u2014 Arnika sheep cheese"}], website:"https://www.farmazvirat.cz/",
   facebook:"https://www.facebook.com/farmazviratcz",
   email:"vlasta.jerabkova@farmazvirat.cz", phone:"+420 774 410 520",
   hours:{cs:"Bistro, s\u00FDr\u00E1rna a \u0159eznictv\u00ED, Farn\u00ED 28, Abertamy: Po\u2013\u010Ct 10:00\u201315:00, P\u00E1\u2013So 8:00\u201317:00, Ne 10:00\u201315:00", en:"Bistro, cheese dairy and butchery, Farn\u00ED 28, Abertamy: Mon\u2013Thu 10:00\u201315:00, Fri\u2013Sat 8:00\u201317:00, Sun 10:00\u201315:00"},
@@ -2498,15 +2696,13 @@ function trackEvent(path, title){
   region:{cs:"Karlovarsk\u00FD kraj", en:"Karlovy Vary Region"},
   lat:50.3689, lon:12.8184, cats:["dairy","meat"],
   story:{ cs:["Horsk\u00E9 hospod\u00E1\u0159stv\u00ED v Kru\u0161n\u00FDch hor\u00E1ch, kter\u00E9 si samo zpracov\u00E1v\u00E1 ml\u00E9ko i maso.",
-                  "Hospoda\u0159\u00ED v re\u017Eimu ekologick\u00E9ho zem\u011Bd\u011Blstv\u00ED; jejich ov\u010D\u00ED bios\u00FDr Arnika z\u00EDskal ocen\u011Bn\u00ED \u010Cesk\u00E1 biopotravina.",
+              "Hospoda\u0159\u00ED v re\u017Eimu ekologick\u00E9ho zem\u011Bd\u011Blstv\u00ED; jejich ov\u010D\u00ED bios\u00FDr Arnika z\u00EDskal ocen\u011Bn\u00ED \u010Cesk\u00E1 biopotravina.",
               "V Abertamech maj\u00ED bistro, s\u00FDr\u00E1rnu a \u0159eznictv\u00ED pod jednou st\u0159echou \u2014 s\u00FDry, ml\u00E9ko a maso z vlastn\u00EDho chovu.",
-              "Druhou prodejnu s bistrem provozuj\u00ED v Jind\u0159ichovic\u00EDch u Kraslic.",
-              "Otev\u00EDrac\u00ED doba obou m\u00EDst se li\u0161\u00ED, proto je u ka\u017Ed\u00E9ho uveden\u00E1 zvl\u00E1\u0161\u0165."],
+              "Druhou prodejnu s bistrem provozuj\u00ED v Jind\u0159ichovic\u00EDch u Kraslic."],
           en:["A mountain farm in the Ore Mountains that processes its own milk and meat.",
-                  "The holding is run under certified organic management, and their Arnika sheep cheese won the Czech Organic Food award.",
+              "The holding is run under certified organic management, and their Arnika sheep cheese won the Czech Organic Food award.",
               "In Abertamy the bistro, cheese dairy and butchery sit under one roof \u2014 cheese, milk and meat from their own animals.",
-              "A second shop with a bistro runs in Jind\u0159ichovice near Kraslice.",
-              "The two places keep different hours, so each is listed separately."] } },
+              "A second shop with a bistro runs in Jind\u0159ichovice near Kraslice."] } },
 
 { id:"kozodoj", cert:"bio", website:"https://www.kozodoj.cz/",
   facebook:"https://www.facebook.com/farma.kozodoj",
@@ -2576,7 +2772,7 @@ function trackEvent(path, title){
               "Under the Krkono\u0161sk\u00E9 hov\u011Bz\u00ED name they also sell on Scuk, with over fifty organic items.",
               "The farm also offers accommodation, meals and farm stays."] } },
 
-{ id:"belecko", cert:"bio", website:"https://www.belecko.cz/", eshop:"https://www.belecko.cz/",
+{ id:"belecko", shipNote:{cs:"Objednat se d\u00E1 p\u0159es e-shop s vyzvednut\u00EDm na ran\u010Di, nebo nakoupit rovnou na m\u00EDst\u011B.", en:"Order through the shop and collect at the ranch, or simply buy on site."}, cert:"bio", website:"https://www.belecko.cz/", eshop:"https://www.belecko.cz/",
   facebook:"https://www.facebook.com/RancBelecko/",
   email:"ranc-belecko@seznam.cz", phone:"+420 732 511 216",
   delivery:["praha"],
@@ -2586,11 +2782,9 @@ function trackEvent(path, title){
   lat:50.1210, lon:15.9360, cats:["dairy"],
   story:{ cs:["Rodinn\u00E1 ekofarma na Pardubicku s vlastn\u00ED ml\u00E9k\u00E1rnou.",
               "BIO ml\u00E9\u010Dn\u00E9 v\u00FDrobky z kravsk\u00E9ho i koz\u00EDho ml\u00E9ka \u2014 bez konzervant\u016F, zahu\u0161\u0165ovadel a stabiliz\u00E1tor\u016F.",
-              "Objednat se d\u00E1 p\u0159es e-shop s vyzvednut\u00EDm na ran\u010Di, nebo nakoupit rovnou na m\u00EDst\u011B.",
               "Jejich v\u00FDrobky vede p\u0159es t\u0159icet obchod\u016F ve v\u00FDchodn\u00EDch a st\u0159edn\u00EDch \u010Cech\u00E1ch a v Praze \u2014 mimo jin\u00E9 Biopotraviny, Ob\u017Eiva, Bio Jelen a Bio Sm\u00EDchov."],
           en:["A family organic farm near Pardubice with its own dairy.",
               "Organic dairy from both cow and goat milk \u2014 no preservatives, thickeners or stabilisers.",
-              "Order through the shop and collect at the ranch, or simply buy on site.",
               "Over thirty shops across East and Central Bohemia and Prague stock them, among them Biopotraviny, Ob\u017Eiva, Bio Jelen and Bio Sm\u00EDchov."] } },
 
 { id:"kozozel", cert:"bio", website:"https://www.bio-zelenina.cz/",
@@ -2671,7 +2865,7 @@ function trackEvent(path, title){
               "Alongside that: lamb and mutton, potatoes, beetroot, pumpkins and dried herbs.",
               "All of the farm's products are stated to be organically certified."] } },
 
-{ id:"rudimov", sellers:[{ name:"Farma Rudimov 105 \u2014 Po\u2013St 8\u201317, \u010Ct\u2013P\u00E1 8\u201316", url:"https://shop.masozluky.cz/kam-privezeme/" },
+{ id:"rudimov", shipNote:{cs:"Krom\u011B e-shopu a podnikov\u00E9 prodejny maj\u00ED v\u00FDdejn\u00ED m\u00EDsta ve Zl\u00EDn\u011B, Brn\u011B, Praze a B\u0159eclavi. Po Morav\u011B a na Slovensko rozv\u00E1\u017Eej\u00ED vlastn\u00EDm chlad\u00EDrensk\u00FDm autem, do \u010Cech zav\u00E1\u017E\u00ED slu\u017Ebou CoolBox. Trasy maj\u00ED pevn\u00E9 dny: v \u00FAter\u00FD Slovensko, ve st\u0159edu Jihomoravsk\u00FD kraj a bl\u00EDzk\u00E9 Zl\u00EDnsko, ve \u010Dtvrtek Vyso\u010Dinu a Moravskoslezsk\u00FD kraj; dopravn\u00E9 podle m\u011Bsta vych\u00E1z\u00ED zhruba na 100\u2013300 K\u010D. P\u0159i osobn\u00EDm odb\u011Bru nebo nad 2 500 K\u010D je doprava zdarma. Krom\u011B farmy v Rudimov\u011B se d\u00E1 vyzvednout ve Zl\u00EDn\u011B, v Brn\u011B a v Praze \u2014 na t\u011Bchto m\u00EDstech se plat\u00ED p\u0159edem.", en:"Beyond the shop and farm store they run pickup points in Zl\u00EDn, Brno, Prague and B\u0159eclav. They deliver across Moravia and into Slovakia in their own refrigerated van, and reach Bohemia through the CoolBox courier. The routes run on fixed days: Slovakia on Tuesday, the South Moravian region and nearby Zl\u00EDn area on Wednesday, Vyso\u010Dina and the Moravian-Silesian region on Thursday; delivery runs roughly 100\u2013300 CZK depending on the town. Collection in person, or any order over 2,500 CZK, is free. Besides the farm at Rudimov you can collect in Zl\u00EDn, Brno and Prague \u2014 those points are paid for in advance."}, sellers:[{ name:"Farma Rudimov 105 \u2014 Po\u2013St 8\u201317, \u010Ct\u2013P\u00E1 8\u201316", url:"https://shop.masozluky.cz/kam-privezeme/" },
            { name:"Zl\u00EDn \u2014 Fitness Hala Novesta, U zimn\u00EDho stadionu 4286" },
            { name:"Brno \u2014 TEREZA chocolate, Kola\u0159\u00EDkova 1144/5 (Po\u2013P\u00E1 9\u201317)" },
            { name:"Praha 7 \u2014 Grill Garden, Tusarova 31 (\u00DAt\u2013P\u00E1 13\u201318, So 10\u201318)" }], shops:{ kosik:"https://www.kosik.cz/b20231-masozluky" }, cert:"bio", website:"https://www.farmarudimov.cz/", eshop:"https://shop.masozluky.cz/maso/",
@@ -2685,20 +2879,12 @@ function trackEvent(path, title){
   lat:49.0798, lon:17.8283, cats:["meat"],
   story:{ cs:["Certifikovan\u00E1 BIO farma v B\u00EDl\u00FDch Karpatech s vlastn\u00ED por\u00E1\u017Ekou a zpracov\u00E1n\u00EDm.",
               "Skot i ovce se pasou venku; maso nech\u00E1vaj\u00ED vyzr\u00E1t a prod\u00E1vaj\u00ED pod zna\u010Dkou Maso z l\u00FAky.",
-              "V nab\u00EDdce je vyzr\u00E1l\u00E9 hov\u011Bz\u00ED a jehn\u011B\u010D\u00ED, uzeniny a pa\u0161tiky, ale i ovoce a ov\u010D\u00ED ko\u017Ee\u0161iny.",
-              "Krom\u011B e-shopu a podnikov\u00E9 prodejny maj\u00ED v\u00FDdejn\u00ED m\u00EDsta ve Zl\u00EDn\u011B, Brn\u011B, Praze a B\u0159eclavi.",
-              "Po Morav\u011B a na Slovensko rozv\u00E1\u017Eej\u00ED vlastn\u00EDm chlad\u00EDrensk\u00FDm autem, do \u010Cech zav\u00E1\u017E\u00ED slu\u017Ebou CoolBox.",
-              "Trasy maj\u00ED pevn\u00E9 dny: v \u00FAter\u00FD Slovensko, ve st\u0159edu Jihomoravsk\u00FD kraj a bl\u00EDzk\u00E9 Zl\u00EDnsko, ve \u010Dtvrtek Vyso\u010Dinu a Moravskoslezsk\u00FD kraj; dopravn\u00E9 podle m\u011Bsta vych\u00E1z\u00ED zhruba na 100\u2013300 K\u010D.",
-              "P\u0159i osobn\u00EDm odb\u011Bru nebo nad 2 500 K\u010D je doprava zdarma. Krom\u011B farmy v Rudimov\u011B se d\u00E1 vyzvednout ve Zl\u00EDn\u011B, v Brn\u011B a v Praze \u2014 na t\u011Bchto m\u00EDstech se plat\u00ED p\u0159edem."],
+              "V nab\u00EDdce je vyzr\u00E1l\u00E9 hov\u011Bz\u00ED a jehn\u011B\u010D\u00ED, uzeniny a pa\u0161tiky, ale i ovoce a ov\u010D\u00ED ko\u017Ee\u0161iny."],
           en:["A certified organic farm in the White Carpathians with its own slaughter and processing.",
               "Cattle and sheep are pasture-raised; the meat is aged and sold under the Maso z l\u00FAky name.",
-              "The range covers dry-aged beef and lamb, charcuterie and p\u00E2t\u00E9s, plus fruit and sheepskins.",
-              "Beyond the shop and farm store they run pickup points in Zl\u00EDn, Brno, Prague and B\u0159eclav.",
-              "They deliver across Moravia and into Slovakia in their own refrigerated van, and reach Bohemia through the CoolBox courier.",
-              "The routes run on fixed days: Slovakia on Tuesday, the South Moravian region and nearby Zl\u00EDn area on Wednesday, Vyso\u010Dina and the Moravian-Silesian region on Thursday; delivery runs roughly 100\u2013300 CZK depending on the town.",
-              "Collection in person, or any order over 2,500 CZK, is free. Besides the farm at Rudimov you can collect in Zl\u00EDn, Brno and Prague \u2014 those points are paid for in advance."] } },
+              "The range covers dry-aged beef and lamb, charcuterie and p\u00E2t\u00E9s, plus fruit and sheepskins."] } },
 
-{ id:"jure", cert:"bio", website:"https://www.biofarmajure.cz/", eshop:"https://www.biofarmajure.cz/",
+{ id:"jure", shipNote:{cs:"E-shop rozv\u00E1\u017E\u00ED po cel\u00E9 \u010CR, nad 2 500 K\u010D je doprava zdarma.", en:"The shop delivers nationwide, free over 2,500 CZK."}, cert:"bio", website:"https://www.biofarmajure.cz/", eshop:"https://www.biofarmajure.cz/",
   facebook:"https://www.facebook.com/biofarmajure",
   email:"info@biofarmajure.cz", phone:"+420 605 289 205",
   delivery:["cr"],
@@ -2711,15 +2897,13 @@ function trackEvent(path, title){
   story:{ cs:["Biofarma hospoda\u0159\u00EDc\u00ED od roku 1920, dnes zam\u011B\u0159en\u00E1 na zpracov\u00E1n\u00ED BIO ovoce a zeleniny.",
               "Su\u0161en\u00E9 ovoce a zelenina, povidla a marmel\u00E1dy bez p\u0159idan\u00E9ho cukru a konzervant\u016F.",
               "Provozuj\u00ED tak\u00E9 v\u00FDkupnu BIO ovoce a zeleniny od okoln\u00EDch p\u011Bstitel\u016F.",
-              "E-shop rozv\u00E1\u017E\u00ED po cel\u00E9 \u010CR, nad 2 500 K\u010D je doprava zdarma.",
               "O v\u00EDkendu je otev\u0159en\u00E1 Hosp\u016Fdka na Jur\u00E9m, k tomu h\u0159i\u0161t\u011B a lesopark."],
           en:["A farm working the land since 1920, today focused on processing organic fruit and vegetables.",
               "Dried fruit and vegetables, jams and preserves with no added sugar or preservatives.",
               "They also run a buying point for organic fruit and vegetables from growers nearby.",
-              "The shop delivers nationwide, free over 2,500 CZK.",
               "At weekends the Hosp\u016Fdka na Jur\u00E9m is open, with a playground and woodland park."] } },
 
-{ id:"javornikstitna", sellers:[{ name:"Z\u00E1vozov\u00E9 trasy a ceny", url:"https://www.eshop-ekofarmajavornik.cz/o-nas/zavozove-trasy" },
+{ id:"javornikstitna", shipNote:{cs:"Rozv\u00E1\u017Eej\u00ED vlastn\u00EDm autem po pevn\u00FDch tras\u00E1ch: v \u00FAter\u00FD na Slavi\u010D\u00EDn, Luha\u010Dovice, Uhersk\u00FD Brod, Uhersk\u00E9 Hradi\u0161t\u011B, Vesel\u00ED nad Moravou, Hodon\u00EDn a B\u0159eclav (90 K\u010D) a na Vset\u00EDn, Vala\u0161sk\u00E9 Mezi\u0159\u00ED\u010D\u00ED, Ro\u017Enov, Fr\u00FDdek-M\u00EDstek, Hav\u00ED\u0159ov a Ostravu (150 K\u010D). Ve st\u0159edu jedou na Zl\u00EDn, Vizovice, Slu\u0161ovice a Otrokovice (90 K\u010D) a na Krom\u011B\u0159\u00ED\u017E, Hul\u00EDn, Hole\u0161ov a Brno (150 K\u010D), ve \u010Dtvrtek do Prahy (250 K\u010D) a v p\u00E1tek znovu na Zl\u00EDnsko (90 K\u010D). Nad 1 500 K\u010D je doprava zdarma; p\u0159esn\u00FD term\u00EDn doru\u010Den\u00ED po\u0161lou e-mailem, jakmile je objedn\u00E1vka p\u0159ipraven\u00E1.", en:"They deliver in their own van on fixed routes: Tuesday to Slavi\u010D\u00EDn, Luha\u010Dovice, Uhersk\u00FD Brod, Uhersk\u00E9 Hradi\u0161t\u011B, Vesel\u00ED nad Moravou, Hodon\u00EDn and B\u0159eclav (90 CZK), and to Vset\u00EDn, Vala\u0161sk\u00E9 Mezi\u0159\u00ED\u010D\u00ED, Ro\u017Enov, Fr\u00FDdek-M\u00EDstek, Hav\u00ED\u0159ov and Ostrava (150 CZK). Wednesday covers Zl\u00EDn, Vizovice, Slu\u0161ovice and Otrokovice (90 CZK) and Krom\u011B\u0159\u00ED\u017E, Hul\u00EDn, Hole\u0161ov and Brno (150 CZK); Thursday is Prague (250 CZK) and Friday returns to the Zl\u00EDn area (90 CZK). Delivery is free over 1,500 CZK; they e-mail the exact delivery time once the order is packed."}, sellers:[{ name:"Z\u00E1vozov\u00E9 trasy a ceny", url:"https://www.eshop-ekofarmajavornik.cz/o-nas/zavozove-trasy" },
            { name:"Farm\u00E1\u0159sk\u00E1 prodejna, \u0160t\u00EDtn\u00E1 nad Vl\u00E1\u0159\u00ED 414", url:"https://www.eshop-ekofarmajavornik.cz/o-nas/nase-prodejna" }], awards:[{cs:"Zem\u011Bd\u011Blec roku 2011 a 2014", en:"Farmer of the Year 2011 and 2014"},
            {cs:"Nejlep\u0161\u00ED sedl\u00E1k roku 2016", en:"Best Smallholder of the Year 2016"},
            {cs:"Nejlep\u0161\u00ED biopotravina 2021 a 2022", en:"Best Organic Food 2021 and 2022"}], hours:{cs:"Farm\u00E1\u0159sk\u00E1 prodejna \u0160t\u00EDtn\u00E1 nad Vl\u00E1\u0159\u00ED 414: Po 6:30\u201312:00, \u00DAt 6:30\u201312:00 a 12:30\u201316:00, St 6:30\u201312:00, \u010Ct 6:30\u201312:00 a 12:30\u201315:00, P\u00E1 6:30\u201312:00 a 12:30\u201315:00",
@@ -2733,20 +2917,14 @@ function trackEvent(path, title){
               "BIO ml\u00E9ko a ml\u00E9\u010Dn\u00E9 v\u00FDrobky, k tomu rostlinn\u00E1 v\u00FDroba.",
               "Pozor na z\u00E1m\u011Bnu: jde o farmu ve \u0160t\u00EDtn\u00E9 nad Vl\u00E1\u0159\u00ED, ne o regenerativn\u00ED Farmu Javorn\u00EDk u Velk\u00E9 nad Veli\u010Dkou.",
               "Vlastn\u00ED e-shop nemaj\u00ED \u2014 n\u00E1kup se domlouv\u00E1 p\u0159\u00EDmo s provozem.",
-              "Rozv\u00E1\u017Eej\u00ED vlastn\u00EDm autem po pevn\u00FDch tras\u00E1ch: v \u00FAter\u00FD na Slavi\u010D\u00EDn, Luha\u010Dovice, Uhersk\u00FD Brod, Uhersk\u00E9 Hradi\u0161t\u011B, Vesel\u00ED nad Moravou, Hodon\u00EDn a B\u0159eclav (90 K\u010D) a na Vset\u00EDn, Vala\u0161sk\u00E9 Mezi\u0159\u00ED\u010D\u00ED, Ro\u017Enov, Fr\u00FDdek-M\u00EDstek, Hav\u00ED\u0159ov a Ostravu (150 K\u010D).",
-              "Ve st\u0159edu jedou na Zl\u00EDn, Vizovice, Slu\u0161ovice a Otrokovice (90 K\u010D) a na Krom\u011B\u0159\u00ED\u017E, Hul\u00EDn, Hole\u0161ov a Brno (150 K\u010D), ve \u010Dtvrtek do Prahy (250 K\u010D) a v p\u00E1tek znovu na Zl\u00EDnsko (90 K\u010D).",
-              "Nad 1 500 K\u010D je doprava zdarma; p\u0159esn\u00FD term\u00EDn doru\u010Den\u00ED po\u0161lou e-mailem, jakmile je objedn\u00E1vka p\u0159ipraven\u00E1.",
               "P\u0159\u00EDmo v are\u00E1lu farmy je farm\u00E1\u0159sk\u00E1 prodejna s ml\u00E9\u010Dn\u00FDmi v\u00FDrobky, pe\u010Divem a mo\u0161ty \u2014 objedn\u00E1vky bere vedouc\u00ED prodejny na +420 778 745 481."],
           en:["A large organic holding in the White Carpathians with its own dairy.",
               "Organic milk and dairy products, alongside crop production.",
               "Not to be confused with the regenerative Farma Javorn\u00EDk near Velk\u00E1 nad Veli\u010Dkou \u2014 this is the \u0160t\u00EDtn\u00E1 farm.",
               "There is no e-shop \u2014 purchases are arranged directly with the operation.",
-              "They deliver in their own van on fixed routes: Tuesday to Slavi\u010D\u00EDn, Luha\u010Dovice, Uhersk\u00FD Brod, Uhersk\u00E9 Hradi\u0161t\u011B, Vesel\u00ED nad Moravou, Hodon\u00EDn and B\u0159eclav (90 CZK), and to Vset\u00EDn, Vala\u0161sk\u00E9 Mezi\u0159\u00ED\u010D\u00ED, Ro\u017Enov, Fr\u00FDdek-M\u00EDstek, Hav\u00ED\u0159ov and Ostrava (150 CZK).",
-              "Wednesday covers Zl\u00EDn, Vizovice, Slu\u0161ovice and Otrokovice (90 CZK) and Krom\u011B\u0159\u00ED\u017E, Hul\u00EDn, Hole\u0161ov and Brno (150 CZK); Thursday is Prague (250 CZK) and Friday returns to the Zl\u00EDn area (90 CZK).",
-              "Delivery is free over 1,500 CZK; they e-mail the exact delivery time once the order is packed.",
               "The farm shop on site sells the dairy, bakery and juices \u2014 the shop manager takes orders on +420 778 745 481."] } },
 
-{ id:"selongovi", cert:"bio", shops:{ scuk:"https://www.scuk.cz/ekofarma-selongovi" }, website:"https://farma-selongovi.webnode.cz/",
+{ id:"selongovi", shipNote:{cs:"V\u00FDdejn\u00ED m\u00EDsta maj\u00ED v Ostrav\u011B, Kop\u0159ivnici, P\u0159\u00EDbo\u0159e, Nov\u00E9m Ji\u010D\u00EDn\u011B, B\u00EDlovci, Ro\u017Enov\u011B a p\u0159\u00EDmo na statku v Pust\u011Bjov\u011B.", en:"Pickup points are in Ostrava, Kop\u0159ivnice, P\u0159\u00EDbor, Nov\u00FD Ji\u010D\u00EDn, B\u00EDlovec, Ro\u017Enov and at the farm in Pust\u011Bjov."}, cert:"bio", shops:{ scuk:"https://www.scuk.cz/ekofarma-selongovi" }, website:"https://farma-selongovi.webnode.cz/",
   email:"g.selongova@seznam.cz", phone:"+420 603 948 072",
   offers:["bedynky","kpz"],
   hours:{cs:"Bed\u00FDnky se odeb\u00EDraj\u00ED na v\u00FDdejn\u00EDch m\u00EDstech, nebo p\u0159\u00EDmo u n\u00E1s na statku", en:"Boxes are collected at pickup points, or at the farm itself"},
@@ -2763,12 +2941,10 @@ function trackEvent(path, title){
   lat:49.7006, lon:18.0040, cats:["veggies"],
   story:{ cs:["Rodinn\u00E1 ekofarma Pavla a Gabriely \u0160elongov\u00FDch, zelenina certifikovan\u00E1 BIO od roku 2013.",
               "Zeleninu prod\u00E1vaj\u00ED formou bed\u00FDnek v re\u017Eimu komunitou podporovan\u00E9ho zem\u011Bd\u011Blstv\u00ED.",
-              "Odb\u011Bratel plat\u00ED p\u0159edem na sezonu a dost\u00E1v\u00E1 pravidelnou bed\u00FDnku na sv\u00E9m v\u00FDdejn\u00EDm m\u00EDst\u011B.",
-              "V\u00FDdejn\u00ED m\u00EDsta maj\u00ED v Ostrav\u011B, Kop\u0159ivnici, P\u0159\u00EDbo\u0159e, Nov\u00E9m Ji\u010D\u00EDn\u011B, B\u00EDlovci, Ro\u017Enov\u011B a p\u0159\u00EDmo na statku v Pust\u011Bjov\u011B."],
+              "Odb\u011Bratel plat\u00ED p\u0159edem na sezonu a dost\u00E1v\u00E1 pravidelnou bed\u00FDnku na sv\u00E9m v\u00FDdejn\u00EDm m\u00EDst\u011B."],
           en:["Pavel and Gabriela \u0160elong's family organic farm; the vegetables have been certified organic since 2013.",
               "They sell through boxes on a community-supported agriculture model.",
-              "Members pay ahead for the season and pick up a regular box at their chosen point.",
-              "Pickup points are in Ostrava, Kop\u0159ivnice, P\u0159\u00EDbor, Nov\u00FD Ji\u010D\u00EDn, B\u00EDlovec, Ro\u017Enov and at the farm in Pust\u011Bjov."] } }
+              "Members pay ahead for the season and pick up a regular box at their chosen point."] } }
 ,
 
 /* ---- Farms reached through Scuk and the wider organic list. Producer pages
@@ -2801,7 +2977,7 @@ function trackEvent(path, title){
               "The shop has its own contact: +420 775 734 578, obchod@premiovehovezi.cz.",
               "The farm is part of a group of five local organic farms across Czechia."] } },
 
-{ id:"souckova",
+{ id:"souckova", shipNote:{cs:"V pond\u011Bl\u00ED rozv\u00E1\u017Eej\u00ED KPZ bed\u00FDnky do pra\u017Esk\u00E9 Bubenky a Etapy, v sobotu zav\u00E1\u017E\u00ED do Turnova.", en:"On Mondays they deliver CSA boxes to Bubenka and Etapa in Prague, and on Saturdays they drive to Turnov."},
   website:"https://www.farmahanasouckova.cz/",
   instagram:"https://www.instagram.com/hs_semice/",
   email:"info@farmahanasouckova.cz", phone:"+420 723 530 049",
@@ -2821,14 +2997,12 @@ function trackEvent(path, title){
               "P\u011Bstuj\u00ED p\u0159es 55 druh\u016F rostlin \u2014 od proslul\u00FDch brambor p\u0159es mrkev, zel\u00ED, p\u00F3rek a d\u00FDn\u011B a\u017E po romanesco, \u010Derstv\u00E9 bylinky a jedl\u00E9 kv\u011Bty.",
               "Aktu\u00E1ln\u00ED sklize\u0148 vypisuj\u00ED na webu ka\u017Ed\u00FD t\u00FDden; objedn\u00E1v\u00E1 se e-mailem nejm\u00E9n\u011B 24 hodin p\u0159edem.",
               "Ka\u017Ed\u00FD \u010Dtvrtek v sez\u00F3n\u011B stoj\u00ED jejich samoobslu\u017En\u00FD st\u00E1nek na farm\u00E1\u0159sk\u00E9m trhu na Malostransk\u00E9m n\u00E1m\u011Bst\u00ED \u2014 zbo\u017E\u00ED si zv\u00E1\u017E\u00EDte sami a zaplat\u00EDte na\u010Dten\u00EDm QR k\u00F3du.",
-              "V pond\u011Bl\u00ED rozv\u00E1\u017Eej\u00ED KPZ bed\u00FDnky do pra\u017Esk\u00E9 Bubenky a Etapy, v sobotu zav\u00E1\u017E\u00ED do Turnova.",
               "Dod\u00E1vaj\u00ED tak\u00E9 restaurac\u00EDm, bistr\u016Fm, hotel\u016Fm a obchod\u016Fm."],
           en:["Hana Sahulov\u00E1 Sou\u010Dkov\u00E1's farm at Semice in the Elbe lowlands, where she grew up and now farms alongside her parents Hana and Pepa.",
               "She started on about half a hectare; today she works almost 45.",
               "They grow more than 55 plant species \u2014 from their well-known potatoes through carrots, cabbage, leek and squash to romanesco, fresh herbs and edible flowers.",
               "The current harvest is posted on the site each week; orders go by e-mail at least 24 hours ahead.",
               "Every Thursday in season their self-service stall stands at the Malostransk\u00E9 n\u00E1m\u011Bst\u00ED farmers' market \u2014 you weigh your own goods and pay by scanning a QR code.",
-              "On Mondays they deliver CSA boxes to Bubenka and Etapa in Prague, and on Saturdays they drive to Turnov.",
               "They also supply restaurants, bistros, hotels and shops."] } },
 
 { id:"biokosar", cert:"bio",
@@ -2879,7 +3053,7 @@ function trackEvent(path, title){
               "Scuk lists around ninety items: organic beef from mince to fillet, T-bone and Rib Eye, organic lamb, venison (red, fallow, roe and wild boar) and fresh fish \u2014 rainbow and salmon trout, and African catfish.",
               "Note there is a different Poctiv\u00E1 farma at Verm\u011B\u0159ovice in the \u00DAst\u00ED nad Orlic\u00ED area; the two are unrelated."] } },
 
-{ id:"poctivavermerovice",
+{ id:"poctivavermerovice", shipNote:{cs:"Prod\u00E1vaj\u00ED bed\u00FDnky: 3 kg zeleniny a bylinek za 300 K\u010D, 6 kg za 500 K\u010D a 10 kg ovoce se zeleninou za 700 K\u010D; obsah se m\u011Bn\u00ED ka\u017Ed\u00FD t\u00FDden. Zav\u00E1\u017Eej\u00ED do Letohradu, Jablonn\u00E9ho nad Orlic\u00ED, Neko\u0159e, Jamn\u00E9ho nad Orlic\u00ED, Mistrovic, Doln\u00ED a Horn\u00ED \u010Cermn\u00E9, Doln\u00ED Dobrou\u010De, Lan\u0161krouna a Lukavice. Doprava dom\u016F stoj\u00ED 40 K\u010D, p\u0159i objedn\u00E1vce nad 500 K\u010D je zdarma.", en:"They sell boxes: 3 kg of vegetables and herbs for 300 CZK, 6 kg for 500 CZK, and a 10 kg fruit-and-vegetable mix for 700 CZK, with contents changing weekly. They deliver to Letohrad, Jablonn\u00E9 nad Orlic\u00ED, Neko\u0159, Jamn\u00E9 nad Orlic\u00ED, Mistrovice, Doln\u00ED and Horn\u00ED \u010Cermn\u00E1, Doln\u00ED Dobrou\u010D, Lan\u0161kroun and Lukavice. Home delivery costs 40 CZK and is free on orders over 500 CZK."},
   website:"https://poctiva-farma.webnode.cz/",
   facebook:"http://www.facebook.com/poctiva.farma.54",
   instagram:"https://www.instagram.com/poctivafarma/",
@@ -2891,15 +3065,9 @@ function trackEvent(path, title){
   lat:50.0056, lon:16.5627, cats:["veggies"],
   tags:["bed\u00FDnky","zelenina","ovoce","vermikompost","veg boxes"],
   story:{ cs:["P\u011Bstitel\u00E9 zeleniny a ovoce ve Verm\u011B\u0159ovic\u00EDch na Orlicko\u00FAstecku \u2014 jin\u00E1 farma ne\u017E stejnojmenn\u00E1 Poctiv\u00E1 farma na Dob\u0159\u00ED\u0161sku.",
-              "Prod\u00E1vaj\u00ED bed\u00FDnky: 3 kg zeleniny a bylinek za 300 K\u010D, 6 kg za 500 K\u010D a 10 kg ovoce se zeleninou za 700 K\u010D; obsah se m\u011Bn\u00ED ka\u017Ed\u00FD t\u00FDden.",
-              "Zav\u00E1\u017Eej\u00ED do Letohradu, Jablonn\u00E9ho nad Orlic\u00ED, Neko\u0159e, Jamn\u00E9ho nad Orlic\u00ED, Mistrovic, Doln\u00ED a Horn\u00ED \u010Cermn\u00E9, Doln\u00ED Dobrou\u010De, Lan\u0161krouna a Lukavice.",
-              "Doprava dom\u016F stoj\u00ED 40 K\u010D, p\u0159i objedn\u00E1vce nad 500 K\u010D je zdarma.",
               "Vedle p\u011Bstov\u00E1n\u00ED se v\u011Bnuj\u00ED i vermikompostov\u00E1n\u00ED a prodeji vermikompost\u00E9r\u016F.",
               "Upozorn\u011Bn\u00ED: jejich web i blog se naposledy ve\u0159ejn\u011B aktualizovaly v roce 2020, aktu\u00E1ln\u00ED nab\u00EDdku je proto lep\u0161\u00ED si p\u0159edem ov\u011B\u0159it telefonicky."],
           en:["Vegetable and fruit growers at Verm\u011B\u0159ovice in the \u00DAst\u00ED nad Orlic\u00ED area \u2014 a different farm from the Poctiv\u00E1 farma near Dob\u0159\u00ED\u0161.",
-              "They sell boxes: 3 kg of vegetables and herbs for 300 CZK, 6 kg for 500 CZK, and a 10 kg fruit-and-vegetable mix for 700 CZK, with contents changing weekly.",
-              "They deliver to Letohrad, Jablonn\u00E9 nad Orlic\u00ED, Neko\u0159, Jamn\u00E9 nad Orlic\u00ED, Mistrovice, Doln\u00ED and Horn\u00ED \u010Cermn\u00E1, Doln\u00ED Dobrou\u010D, Lan\u0161kroun and Lukavice.",
-              "Home delivery costs 40 CZK and is free on orders over 500 CZK.",
               "Alongside growing they also do vermicomposting and sell wormery bins.",
               "Note: their site and blog were last updated publicly in 2020, so it is worth phoning ahead to check what they currently offer."] } },
 
@@ -2938,8 +3106,7 @@ function trackEvent(path, title){
               "Meat and other orders are handled by Anna Holovsk\u00E1 on +420 602 951 288.",
               "A farm shop in the yard is planned."] } },
 
-{
-      id:"bogarovo", delivery:["brno"], facebook:"https://www.facebook.com/BogarovoHospodarstvi/", name:"Bogarovo hospod\u00E1\u0159stv\u00ED",
+{ id:"bogarovo", shipNote:{cs:"Rozv\u00E1\u017E\u00ED do Brna ka\u017Ed\u00E9 \u00FAter\u00FD, objedn\u00E1vky jdou p\u0159es t\u00FDdenn\u00ED e-mailovou nab\u00EDdku.", en:"Delivers to Brno every Tuesday; orders go out through a weekly email list."}, delivery:["brno"], facebook:"https://www.facebook.com/BogarovoHospodarstvi/", name:"Bogarovo hospod\u00E1\u0159stv\u00ED",
       hours:{cs:"Rozvoz do Brna ka\u017Ed\u00E9 \u00FAter\u00FD", en:"Delivery to Brno every Tuesday"},
       town:{cs:"V\u00EDcem\u011B\u0159ice, okres Prost\u011Bjov", en:"V\u00EDcem\u011B\u0159ice, Prost\u011Bjov District"},
       region:{cs:"Olomouck\u00FD kraj", en:"Olomouc Region"},
@@ -2947,20 +3114,12 @@ function trackEvent(path, title){
       website:"https://bogarovo.cz/", eshop:"https://bogarovo.cz/cz/kontakty",
       email:"hospodarstvi@bogarovo.cz", phone:"+420 773 570 379",
       instagram:"https://www.instagram.com/bogarovo_hospodarstvi/",
-      story:{
-        cs:[
-          "Rodinn\u00E1 mini-ml\u00E9k\u00E1rna zpracov\u00E1vaj\u00EDc\u00ED syrov\u00E9 ml\u00E9ko od vlastn\u00EDch krav plemene Jersey.",
-          "Ml\u00E9ko je \u010Derstv\u00E9, syrov\u00E9, nepasterovan\u00E9 a nehomogenizovan\u00E9, spl\u0148uje p\u0159\u00EDsn\u00E9 hygienick\u00E9 a veterin\u00E1rn\u00ED normy.",
-          "Kr\u00E1vy jsou zdrav\u00E9, spokojen\u00E9 a poctiv\u011B krmen\u00E9 p\u0159\u00EDmo na statku ve V\u00EDcem\u011B\u0159ic\u00EDch.",
-          "Rozv\u00E1\u017E\u00ED do Brna ka\u017Ed\u00E9 \u00FAter\u00FD, objedn\u00E1vky jdou p\u0159es t\u00FDdenn\u00ED e-mailovou nab\u00EDdku."
-        ],
-        en:[
-          "A family micro-dairy processing raw milk from its own Jersey cows.",
-          "Milk is fresh, raw, unpasteurized and unhomogenized, meeting strict hygiene and veterinary standards.",
-          "Cows are kept healthy, content and honestly fed right on the farm in V\u00EDcem\u011B\u0159ice.",
-          "Delivers to Brno every Tuesday; orders go out through a weekly email list."
-        ]
-      }
+      story:{ cs:["Rodinn\u00E1 mini-ml\u00E9k\u00E1rna zpracov\u00E1vaj\u00EDc\u00ED syrov\u00E9 ml\u00E9ko od vlastn\u00EDch krav plemene Jersey.",
+              "Ml\u00E9ko je \u010Derstv\u00E9, syrov\u00E9, nepasterovan\u00E9 a nehomogenizovan\u00E9, spl\u0148uje p\u0159\u00EDsn\u00E9 hygienick\u00E9 a veterin\u00E1rn\u00ED normy.",
+              "Kr\u00E1vy jsou zdrav\u00E9, spokojen\u00E9 a poctiv\u011B krmen\u00E9 p\u0159\u00EDmo na statku ve V\u00EDcem\u011B\u0159ic\u00EDch."],
+          en:["A family micro-dairy processing raw milk from its own Jersey cows.",
+              "Milk is fresh, raw, unpasteurized and unhomogenized, meeting strict hygiene and veterinary standards.",
+              "Cows are kept healthy, content and honestly fed right on the farm in V\u00EDcem\u011B\u0159ice."] }
     },
 
 {
@@ -3082,7 +3241,7 @@ function trackEvent(path, title){
               "Eggs, vegetables and fruit \u2014 all covered by the same organic certificate.",
               "They sell through Scuk."] } },
 
-{ id:"zlouky", facebook:"https://www.facebook.com/zlouky", instagram:"https://www.instagram.com/zlouky/", cert:"bio", website:"https://www.zlouky.cz/", eshop:"https://www.zlouky.cz/",
+{ id:"zlouky", shipNote:{cs:"Nakoup\u00EDte v e-shopu, v kamenn\u00E9 prodejn\u011B v Dob\u0159ejovic\u00EDch, nebo v\u00E1m to p\u0159ivezou po Praze \u2014 nad 800 K\u010D zdarma.", en:"Buy in the shop online, at their store in Dob\u0159ejovice, or have it delivered around Prague \u2014 free over 800 CZK."}, facebook:"https://www.facebook.com/zlouky", instagram:"https://www.instagram.com/zlouky/", cert:"bio", website:"https://www.zlouky.cz/", eshop:"https://www.zlouky.cz/",
   email:"info@zlouky.cz", phone:"+420 602 685 038",
   delivery:["praha"],
   offers:["automat"],
@@ -3093,11 +3252,9 @@ function trackEvent(path, title){
   region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
   lat:49.9817, lon:14.5784, cats:["eggs"],
   story:{ cs:["Vejce od slepic v mobiln\u00EDch kurn\u00EDc\u00EDch, kter\u00E9 se pravideln\u011B p\u0159esouvaj\u00ED na \u010Derstvou pastvu.",
-              "Vedle b\u011B\u017En\u00E9 \u0159ady maj\u00ED i certifikovanou BIO linii, kter\u00E1 je z\u0159eteln\u011B odd\u011Blen\u00E1.",
-              "Nakoup\u00EDte v e-shopu, v kamenn\u00E9 prodejn\u011B v Dob\u0159ejovic\u00EDch, nebo v\u00E1m to p\u0159ivezou po Praze \u2014 nad 800 K\u010D zdarma."],
+              "Vedle b\u011B\u017En\u00E9 \u0159ady maj\u00ED i certifikovanou BIO linii, kter\u00E1 je z\u0159eteln\u011B odd\u011Blen\u00E1."],
           en:["Eggs from hens in mobile coops that are moved regularly onto fresh pasture.",
-              "Alongside the standard range they run a certified organic line, clearly kept separate.",
-              "Buy in the shop online, at their store in Dob\u0159ejovice, or have it delivered around Prague \u2014 free over 800 CZK."] } },
+              "Alongside the standard range they run a certified organic line, clearly kept separate."] } },
 
 { id:"kares", website:"https://www.karesovoovoce.cz/", email:"petrkares@gmail.com", phone:"+420 777 711 870", cert:"bio", shops:{ scuk:"https://www.scuk.cz/ovocnarska-farma-kares" },
   name:"Ovocn\u00E1\u0159sk\u00E1 biofarma Kare\u0161",
@@ -3152,7 +3309,7 @@ function trackEvent(path, title){
               "The dairy is made from their own milk and fruit from their own orchard: plain and fruit yoghurt, pickled and scalded cheese, acidophilus milk, cultured drinks, curd desserts, fresh and herb butter.",
               "They sell from the little shop at number 42, a few doors from the farmstead, and also run the village pub."] } },
 
-{ id:"nasefarma", facebook:"https://www.facebook.com/restauracenasefarma/", cert:"bio", website:"https://www.nasefarma.cz/", eshop:"https://eshop.nasefarma.cz/",
+{ id:"nasefarma", shipNote:{cs:"E-shop rozv\u00E1\u017E\u00ED po cel\u00E9 \u010CR; nad 3 000 K\u010D je doprava zdarma. Odb\u011Br je mo\u017En\u00FD i v Praze na Karlov\u011B n\u00E1m\u011Bst\u00ED a v \u010Cesk\u00FDch Bud\u011Bjovic\u00EDch.", en:"The shop delivers nationwide, free over 3,000 CZK, with pickup in Prague at Karlovo n\u00E1m\u011Bst\u00ED and in \u010Cesk\u00E9 Bud\u011Bjovice."}, facebook:"https://www.facebook.com/restauracenasefarma/", cert:"bio", website:"https://www.nasefarma.cz/", eshop:"https://eshop.nasefarma.cz/",
   instagram:"https://www.instagram.com/nase_farma_biomasa/",
   email:"objednavky@sohors.cz", phone:"+420 731 534 562",
   delivery:["cr","praha"],
@@ -3163,12 +3320,10 @@ function trackEvent(path, title){
   lat:48.8424, lon:14.6393, cats:["meat"],
   story:{ cs:["Spole\u010Dn\u00FD projekt n\u011Bkolika jiho\u010Desk\u00FDch BIO farem z okol\u00ED Novohradsk\u00FDch hor a \u010Cesk\u00E9 Kanady.",
               "BIO hov\u011Bz\u00ED v\u010Detn\u011B vyzr\u00E1l\u00E9ho, klob\u00E1sy, su\u0161en\u00E9 maso a dal\u0161\u00ED masn\u00E9 v\u00FDrobky.",
-              "Vlastn\u00ED BIO jatka provozuj\u00ED v Besednici.",
-              "E-shop rozv\u00E1\u017E\u00ED po cel\u00E9 \u010CR; nad 3 000 K\u010D je doprava zdarma. Odb\u011Br je mo\u017En\u00FD i v Praze na Karlov\u011B n\u00E1m\u011Bst\u00ED a v \u010Cesk\u00FDch Bud\u011Bjovic\u00EDch."],
+              "Vlastn\u00ED BIO jatka provozuj\u00ED v Besednici."],
           en:["A joint project of several South Bohemian organic farms around the Novohradsk\u00E9 hory and \u010Cesk\u00E1 Kanada.",
               "Organic beef including dry-aged cuts, sausages, jerky and other meat products.",
-              "Their own organic abattoir runs at Besednice.",
-              "The shop delivers nationwide, free over 3,000 CZK, with pickup in Prague at Karlovo n\u00E1m\u011Bst\u00ED and in \u010Cesk\u00E9 Bud\u011Bjovice."] } },
+              "Their own organic abattoir runs at Besednice."] } },
 
 { id:"detan", email:"perdix.sro@seznam.cz", instagram:"https://www.instagram.com/ekofarma_detan/",
   phone:"+420 608 178 581",
@@ -3233,7 +3388,7 @@ function trackEvent(path, title){
               "The birds are raised without medication \u2014 one herbal preparation permitted in organic farming over a lifetime \u2014 on organic feed grown without pesticides.",
               "Day-old chicks come from the nearest hatchery 65 km away, spend three to four weeks in a heated brooder and then move to cold rearing and pasture."] } },
 
-{ id:"cidlina", facebook:"https://www.facebook.com/statekcidlina", cert:"bio", website:"https://statekcidlina.cz/", eshop:"https://statekcidlina.cz/",
+{ id:"cidlina", shipNote:{cs:"Maj\u00ED plnohodnotn\u00FD e-shop, osobn\u00ED odb\u011Br na statku i rozvoz.", en:"A full e-shop, collection at the farm and delivery are all available."}, facebook:"https://www.facebook.com/statekcidlina", cert:"bio", website:"https://statekcidlina.cz/", eshop:"https://statekcidlina.cz/",
   instagram:"https://www.instagram.com/statek_cidlina/",
   email:"statek@statekcidlina.cz", phone:"+420 774 419 690",
   delivery:["cr"],
@@ -3242,11 +3397,9 @@ function trackEvent(path, title){
   region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
   lat:50.4728, lon:15.3847, cats:["veggies","honey"],
   story:{ cs:["Certifikovan\u00FD BIO statek u Ji\u010D\u00EDna (ABCERT CZ-BIO-002).",
-              "BIO ovoce, zelenina, byliny, \u0161\u0165\u00E1vy, cider, su\u0161en\u00E9 ovoce a med.",
-              "Maj\u00ED plnohodnotn\u00FD e-shop, osobn\u00ED odb\u011Br na statku i rozvoz."],
+              "BIO ovoce, zelenina, byliny, \u0161\u0165\u00E1vy, cider, su\u0161en\u00E9 ovoce a med."],
           en:["A certified organic farm near Ji\u010D\u00EDn (ABCERT CZ-BIO-002).",
-              "Organic fruit, vegetables, herbs, juices, cider, dried fruit and honey.",
-              "A full e-shop, collection at the farm and delivery are all available."] } },
+              "Organic fruit, vegetables, herbs, juices, cider, dried fruit and honey."] } },
 
 { id:"nelepec", cert:"bio", website:"https://www.farmanelepec.cz/",
   facebook:"https://www.facebook.com/FarmaNelepec",
@@ -3352,7 +3505,7 @@ function trackEvent(path, title){
               "Their oil also reaches Prague farmers' markets through their partner Zdrav\u00ED z pole.",
               "We could not document organic certification for the whole farm."] } },
 
-{ id:"konecne", cert:"bio", website:"https://konecnefarma.cz/",
+{ id:"konecne", shipNote:{cs:"Vejce voz\u00ED v pond\u011Bl\u00ED do Brna a ve \u010Dtvrtek na Ti\u0161novsko; na farm\u011B se d\u00E1 vyzvednout po domluv\u011B.", en:"Eggs go to Brno on Mondays and the Ti\u0161nov area on Thursdays; farm pickup by arrangement."}, cert:"bio", website:"https://konecnefarma.cz/",
   facebook:"https://www.facebook.com/konecnefarma",
   instagram:"https://www.instagram.com/konecnefarma/",
   email:"info@konecnefarma.cz", phone:"+420 778 029 933",
@@ -3365,14 +3518,12 @@ function trackEvent(path, title){
   lat:49.4156, lon:16.4538, cats:["eggs","meat"],
   story:{ cs:["BIO farma u Ti\u0161nova s vyzr\u00E1l\u00FDm hov\u011Bz\u00EDm a vejci z pastvy.",
               "Slepice \u017Eij\u00ED v mobiln\u00EDm kurn\u00EDku a maj\u00ED ka\u017Ed\u00FD den p\u0159\u00EDstup na \u010Derstvou tr\u00E1vu; vejce jsou certifikovan\u00E1 BIO.",
-              "Hov\u011Bz\u00ED se objedn\u00E1v\u00E1 p\u0159\u00EDmo u farmy v bal\u00ED\u010Dc\u00EDch po 5 a 10 kg nebo po jednotliv\u00FDch d\u00EDlech.",
-              "Vejce voz\u00ED v pond\u011Bl\u00ED do Brna a ve \u010Dtvrtek na Ti\u0161novsko; na farm\u011B se d\u00E1 vyzvednout po domluv\u011B."],
+              "Hov\u011Bz\u00ED se objedn\u00E1v\u00E1 p\u0159\u00EDmo u farmy v bal\u00ED\u010Dc\u00EDch po 5 a 10 kg nebo po jednotliv\u00FDch d\u00EDlech."],
           en:["An organic farm near Ti\u0161nov with dry-aged beef and pasture eggs.",
               "The hens live in a mobile coop with daily access to fresh grass, and the eggs are certified organic.",
-              "Beef is ordered straight from the farm in 5 and 10 kg packs or as individual cuts.",
-              "Eggs go to Brno on Mondays and the Ti\u0161nov area on Thursdays; farm pickup by arrangement."] } },
+              "Beef is ordered straight from the farm in 5 and 10 kg packs or as individual cuts."] } },
 
-{ id:"vecozhane", facebook:"https://www.facebook.com/profile.php?id=61578411337437", instagram:"https://www.instagram.com/vecozhane/", website:"https://www.vecozhane.cz/",
+{ id:"vecozhane", shipNote:{cs:"Vejce si vyzvednete z automatu v Dolanech, kter\u00FD jede nep\u0159etr\u017Eit\u011B, nebo z druh\u00E9ho automatu v Olomouci.", en:"Collect from the vending machine in Dolany, running around the clock, or the second one in Olomouc."}, facebook:"https://www.facebook.com/profile.php?id=61578411337437", instagram:"https://www.instagram.com/vecozhane/", website:"https://www.vecozhane.cz/",
   email:"chci@vecozhane.cz", phone:"+420 604 199 302",
   offers:["automat"],
   tags:["vejce z pastvy","mobiln\u00ED kurn\u00EDk","pasture eggs"],
@@ -3383,11 +3534,9 @@ function trackEvent(path, title){
   region:{cs:"Olomouck\u00FD kraj", en:"Olomouc Region"},
   lat:49.6500, lon:17.3225, cats:["eggs"],
   story:{ cs:["Vejce od slepic ze dvou robotick\u00FDch sol\u00E1rn\u00EDch mobiln\u00EDch kurn\u00EDk\u016F, kter\u00E9 se opakovan\u011B st\u011Bhuj\u00ED na \u010Derstvou pastvu.",
-              "Vejce si vyzvednete z automatu v Dolanech, kter\u00FD jede nep\u0159etr\u017Eit\u011B, nebo z druh\u00E9ho automatu v Olomouci.",
               "Potk\u00E1te je i na Olomouck\u00E9 tr\u017Enici ve st\u0159edu a v sobotu a na vybran\u00FDch trz\u00EDch ve \u0160ternberku.",
               "Chov je pastevn\u00ED."],
           en:["Eggs from hens in two robotic, solar-powered mobile coops that are moved repeatedly onto fresh pasture.",
-              "Collect from the vending machine in Dolany, running around the clock, or the second one in Olomouc.",
               "They also stand at the Olomouc market hall on Wednesdays and Saturdays and selected \u0160ternberk markets.",
               "The hens are pasture-raised."] } },
 
@@ -3535,13 +3684,10 @@ function trackEvent(path, title){
   /* ---- Render sidebar lists ---- */
   function farmCardHTML(f){
     var cat = CAT[displayCat(f)];
-    var d = (nearActive && userLoc) ? farmDistance(f) : null;
-    var dist = d === null ? '' : '<span class="dist">'+Math.round(d)+' km</span>';
     return '<button class="farm-card" data-id="'+f.id+'">' +
       '<span class="swatch" style="background:'+cat.color+'">'+svgIconFilled(cat.icon)+'</span>' +
       '<span class="meta"><span class="name">'+f.name+'</span>' +
         '<span class="town">'+svgIcon(ICONS.pin)+'<span>'+f.town[LANG]+'</span></span></span>' +
-      dist +
       '<span class="fav-btn' + (FAVS.has(f.id) ? ' on' : '') + '" data-fav="'+f.id+'"' +
         ' role="button" tabindex="0" aria-pressed="'+FAVS.has(f.id)+'"' +
         ' aria-label="'+(FAVS.has(f.id) ? t('favRemove') : t('favAdd'))+'">' +
@@ -3552,7 +3698,6 @@ function trackEvent(path, title){
   var mobileFarmListEl = document.getElementById('mobileFarmList');
   function renderFarmLists(){
     var sorted = FARMS.slice().sort(function(a, b){
-      if (nearActive && userLoc) return farmDistance(a) - farmDistance(b);
       if (sortMode === 'region'){
         var byRegion = a.region[LANG].localeCompare(b.region[LANG], 'cs');
         if (byRegion !== 0) return byRegion;
@@ -3608,7 +3753,10 @@ function trackEvent(path, title){
     fitStage();
     var w = mapStage.offsetWidth;
     if (!w) return;
-    var k = Math.max(0.90, Math.min(w / 1100, 1.25));
+    /* On a phone the country is only ~370px wide, so a pin sized for the
+       desktop map covers a whole district. Let the floor fall with the map. */
+    var floor = w < 420 ? 0.58 : w < 560 ? 0.68 : 0.90;
+    var k = Math.max(floor, Math.min(w / 1100, 1.25));
     pinsLayer.style.setProperty('--pin-scale', k.toFixed(3));
     positionCityLabels();
   }
@@ -3656,22 +3804,6 @@ function trackEvent(path, title){
      There is no routing service reachable from this page, so "30 minutes away"
      is estimated: straight-line distance, assuming ~50 km/h of road driving and
      that roads run about 25% longer than the crow flies. */
-  var AVG_KMH = 50, ROAD_FACTOR = 0.8;
-  var userLoc = null, nearActive = false, nearMinutes = 30, pickingLocation = false;
-
-  function nearRadiusKm(){ return AVG_KMH * (nearMinutes / 60) * ROAD_FACTOR; }
-
-  function distanceKm(a, b){
-    var R = 6371, rad = Math.PI / 180;
-    var dLat = (b.lat - a.lat) * rad, dLon = (b.lon - a.lon) * rad;
-    var h = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(a.lat*rad) * Math.cos(b.lat*rad);
-    return 2 * R * Math.asin(Math.sqrt(h));
-  }
-
-  function farmDistance(f){
-    return userLoc ? distanceKm(userLoc, { lat:f.lat, lon:f.lon }) : null;
-  }
 
 /* Every Czech municipality with its coordinates, so the search box can find a
    place we have no farm in and still answer "what is near here?".
@@ -3714,7 +3846,6 @@ function farmHaystack(f){
 
 function matches(f){
     if (onlyFavs && !FAVS.has(f.id)) return false;
-    if (nearActive && userLoc && farmDistance(f) > nearRadiusKm()) return false;
     var catOk = !activeCats.length || f.cats.some(function(c){ return activeCats.indexOf(c) !== -1; });
     var chanOk = activeChannel === 'all' || farmChannels(f).indexOf(activeChannel) !== -1;
     var regionOk = activeRegion === 'all' || f.region.cs === activeRegion;
@@ -3841,12 +3972,6 @@ function matches(f){
     renderDeliveryOptions();
     applyFilters();
   });
-  var nearDD = makeDropdown('nearDD', function(v){
-    nearMinutes = parseInt(v, 10);
-    renderNearOptions();
-    drawNearRing();
-    renderFarmLists();
-  });
 
   function renderChannelOptions(){
     var counts = {};
@@ -3878,17 +4003,26 @@ function matches(f){
       el.textContent = (onlyFavs && FAVS.size === 0) ? t('favEmpty') : t('noMatch');
     });
     var filtered = activeCats.length > 0 || activeChannel !== 'all' || activeRegion !== 'all' || activeDelivery !== 'all' ||
-                   nearActive || searchQuery;
+                   searchQuery;
     document.getElementById('mapCaption').textContent = visibleCount + ' ' + t('farmWord')(visibleCount) + (filtered ? t('farmsShown') + FARMS.length : '');
     document.getElementById('sidebarCount').textContent = visibleCount + (filtered ? '/' + FARMS.length : '');
+    var sc = document.getElementById('sheetCount');
+    if (sc) sc.textContent = visibleCount + ' ' + t('farmWord')(visibleCount);
+    document.querySelectorAll('.list-filter-input').forEach(function(inp){
+      if (document.activeElement !== inp) inp.value = searchQuery;
+    });
+    var hi = document.getElementById('searchInput');
+    document.querySelector('.topbar').classList
+      .toggle('searching', document.activeElement === hi || !!hi.value);
     refreshPinMarks();
     var activeCount = [activeCats.length > 0, activeChannel !== 'all', activeDelivery !== 'all',
-                       activeRegion !== 'all', onlyFavs, nearActive, !!searchQuery]
+                       activeRegion !== 'all', onlyFavs, !!searchQuery]
                       .filter(Boolean).length;
     var clearBtn = document.getElementById('clearFilters');
     clearBtn.hidden = activeCount === 0;
     document.getElementById('count-active').textContent = activeCount || '';
     updateMapControls();
+    if (typeof renderSeason === 'function') renderSeason();
   }
 
   /* "V\u0161e" clears the lot; any other chip toggles itself on or off, and with
@@ -3928,106 +4062,6 @@ function matches(f){
     applyFilters();
   });
 
-  /* ---- Proximity controls ---- */
-  var nearChip = document.getElementById('nearChip');
-  var nearDDHost = document.getElementById('nearDD');
-  var nearRing = document.getElementById('nearRing');
-
-  function renderNearOptions(){
-    nearDD.set([30, 45, 60].map(function(m){
-      return { value:String(m), label:t('driveMinutes')(m) };
-    }), String(nearMinutes));
-    nearDD.setOn(true);
-  }
-
-  function showHint(text){
-    showToast(text);
-  }
-
-  function startPicking(){
-    pickingLocation = true;
-    document.querySelector('.map-wrap').classList.add('picking');
-    showHint(t('nearHint'), false);
-  }
-
-  function drawNearRing(){
-    if (!userLoc){ setSvgHidden(nearRing, true); return; }
-    var x = (userLoc.lon - PROJ.minlon) * PROJ.cosLat * PROJ.scale + PROJ.margin;
-    var y = (PROJ.maxlat - userLoc.lat) * PROJ.scale + PROJ.margin;
-    var km = nearRadiusKm();
-    var dLon = km / (111.32 * Math.cos(userLoc.lat * Math.PI / 180));
-    var dLat = km / 110.57;
-    document.getElementById('nearEllipse').setAttribute('cx', x.toFixed(1));
-    document.getElementById('nearEllipse').setAttribute('cy', y.toFixed(1));
-    document.getElementById('nearEllipse').setAttribute('rx', (dLon * PROJ.cosLat * PROJ.scale).toFixed(1));
-    document.getElementById('nearEllipse').setAttribute('ry', (dLat * PROJ.scale).toFixed(1));
-    document.getElementById('nearDot').setAttribute('cx', x.toFixed(1));
-    document.getElementById('nearDot').setAttribute('cy', y.toFixed(1));
-    setSvgHidden(nearRing, !nearActive);
-  }
-
-  function setUserLocation(loc, quiet){
-    userLoc = loc;
-    pickingLocation = false;
-    document.querySelector('.map-wrap').classList.remove('picking');
-    if (quiet){
-      /* Remember where they are, but leave the proximity filter to them. */
-      nearDDHost.hidden = false;
-      renderNearOptions();
-      renderFarmLists();
-      return;
-    }
-    nearActive = true;
-    nearChip.classList.add('active');
-    nearChip.setAttribute('aria-pressed', 'true');
-    nearDDHost.hidden = false;
-    renderNearOptions();
-    drawNearRing();
-    showHint(t('youAreHere'), true);
-    renderFarmLists();
-  }
-
-  function deactivateNear(){
-    nearActive = false;
-    pickingLocation = false;
-    document.querySelector('.map-wrap').classList.remove('picking');
-    nearChip.classList.remove('active');
-    nearChip.setAttribute('aria-pressed', 'false');
-    nearDDHost.hidden = true;
-    setSvgHidden(nearRing, true);
-    renderFarmLists();
-  }
-
-  nearChip.addEventListener('click', function(){
-    if (nearActive || pickingLocation){ deactivateNear(); return; }
-    if (userLoc){ setUserLocation(userLoc); return; }
-    if (navigator.geolocation){
-      nearChip.classList.add('active');
-      navigator.geolocation.getCurrentPosition(
-        function(pos){ setUserLocation({ lat:pos.coords.latitude, lon:pos.coords.longitude }); },
-        function(){ startPicking(); showHint(t('nearDenied'), false); },
-        { timeout:7000 }
-      );
-    } else {
-      startPicking();
-    }
-  });
-
-  document.getElementById('sortRow').addEventListener('click', function(e){
-    var btn = e.target.closest('.sort-btn');
-    if (!btn) return;
-    sortMode = btn.dataset.sort;
-    this.querySelectorAll('.sort-btn').forEach(function(b){
-      b.classList.toggle('active', b.dataset.sort === sortMode);
-    });
-    renderFarmLists();
-  });
-
-  document.getElementById('searchInput').addEventListener('input', function(e){
-    searchQuery = e.target.value;
-    applyFilters();
-  });
-
   /* ---- Region selection + map zoom ---- */
   var mapStage = document.getElementById('mapStage');
 
@@ -4035,8 +4069,25 @@ function matches(f){
 
   /* Map point -> screen point. The stage's own rect already carries the zoom
      and pan, so one linear mapping covers every view. */
+  /* The pin layer rides on the stage rather than inside it: give it the
+     stage's current box and every pin's left/top percentage still resolves
+     to the same point on the country, at full resolution. */
+  function positionPins(){
+    var inner = mapStage.parentElement;
+    var sr = mapStage.getBoundingClientRect();
+    var ir = inner.getBoundingClientRect();
+    if (!sr.width || !sr.height) return;
+    var st = pinsLayer.style;
+    st.left   = (sr.left - ir.left).toFixed(1) + 'px';
+    st.top    = (sr.top  - ir.top ).toFixed(1) + 'px';
+    st.width  = sr.width.toFixed(1) + 'px';
+    st.height = sr.height.toFixed(1) + 'px';
+    st.right = st.bottom = 'auto';
+  }
+
   var cityLabelEls = null;
   function positionCityLabels(){
+    positionPins();
     var inner = mapStage.parentElement;
     if (!cityLabelEls || !cityLabelEls.length){
       cityLabelEls = [].slice.call(cityLabels.children);
@@ -4058,15 +4109,26 @@ function matches(f){
 
   /* The stage eases over ~0.5s, so follow it frame by frame rather than
      snapping the labels to the destination. */
+  /* Follow until the stage has actually stopped, not for a fixed stretch of
+     time: a frame budget that merely covers the 0.5s transition leaves the
+     labels and the pin layer parked at the previous zoom if anything delays
+     a frame. */
   var labelFollow = 0;
   function followCityLabels(ms){
     cancelAnimationFrame(labelFollow);
-    var until = performance.now() + (ms || 560);
+    var deadline = performance.now() + (ms || 1400);
+    var lastW = -1, still = 0;
     (function step(){
       positionCityLabels();
-      if (performance.now() < until) labelFollow = requestAnimationFrame(step);
+      var w = mapStage.getBoundingClientRect().width;
+      still = (Math.abs(w - lastW) < 0.05) ? still + 1 : 0;
+      lastW = w;
+      if (still < 3 && performance.now() < deadline) labelFollow = requestAnimationFrame(step);
     })();
   }
+  mapStage.addEventListener('transitionend', function(e){
+    if (e.propertyName === 'transform') positionCityLabels();
+  });
 
   function applyView(){
     if (view.s <= 1.001){
@@ -4080,6 +4142,7 @@ function matches(f){
     }
     mapStage.style.setProperty('--zoom-scale', view.s.toFixed(3));
     setZoomedDetail(view.s > 1.35);
+    if (view.s > 1.01) setSeasonOpen(false);
     updateMapControls();
     updatePinScale();
     updateTipSides();
@@ -4122,7 +4185,6 @@ function matches(f){
   }
 
   wrap.addEventListener('touchstart', function(e){
-    if (pickingLocation) return;
     var t = e.touches;
     if (t.length === 2){
       gest = { mode:'pinch', d0:dist(t), s0:view.s, anchor:toStage(mid(t).x, mid(t).y) };
@@ -4249,7 +4311,7 @@ function focusLabels(kraj){
     document.getElementById('zoomIn').disabled = view.s >= 6;
     document.getElementById('zoomOut').disabled = view.s <= 1;
     var filtered = activeCats.length > 0 || activeChannel !== 'all' || activeRegion !== 'all' ||
-                   nearActive || searchQuery || view.s > 1;
+                   searchQuery || view.s > 1;
     document.getElementById('mapReset').hidden = !filtered;
   }
 
@@ -4257,7 +4319,6 @@ function focusLabels(kraj){
   document.getElementById('zoomOut').addEventListener('click', function(){ zoomBy(1 / 1.6); });
 
   function resetFilters(){
-    if (nearActive) deactivateNear();
     activeCats = [];
     activeChannel = 'all';
     searchQuery = '';
@@ -4279,7 +4340,6 @@ function focusLabels(kraj){
 
   /* Clicking the empty ground around Czechia is how you leave a region. */
   document.querySelector('.map-inner').addEventListener('click', function(e){
-    if (pickingLocation) return;
     if (e.target.closest('path.region') || e.target.closest('.pin') ||
         e.target.closest('.map-zoom') || e.target.closest('.map-reset')) return;
     if (activeRegion !== 'all' || view.s > 1) resetFilters();
@@ -4294,18 +4354,6 @@ function focusLabels(kraj){
     if (dragJustEnded){ dragJustEnded = false; return; }
     var path = e.target.closest('path.region');
     if (!path) return;
-
-    if (pickingLocation){
-      var stage = mapStage.getBoundingClientRect();
-      if (!stage.width || !stage.height) return;
-      var vx = ((e.clientX - stage.left) / stage.width) * VB_W;
-      var vy = ((e.clientY - stage.top) / stage.height) * VB_H;
-      setUserLocation({
-        lon: PROJ.minlon + (vx - PROJ.margin) / (PROJ.cosLat * PROJ.scale),
-        lat: PROJ.maxlat - (vy - PROJ.margin) / PROJ.scale
-      });
-      return;
-    }
 
     var name = path.getAttribute('data-region');
     setRegion(activeRegion === name ? 'all' : name);
@@ -4368,7 +4416,7 @@ function focusLabels(kraj){
 
     regionsLayer.addEventListener('mousedown', function(e){
       killClick = false;
-      if (e.button !== 0 || pickingLocation) return;
+      if (e.button !== 0) return;
       dragFrom = regionAt(e.clientX, e.clientY);
       startX = e.clientX; startY = e.clientY;
       dragOver = null;
@@ -4386,6 +4434,48 @@ function focusLabels(kraj){
       var p = regionAt(e.clientX, e.clientY);
       if (p !== dragOver) preview(p);
     });
+
+    /* Touch: one finger is unused while the whole country is shown \u2014 pinch
+       zooms and one-finger pan only kicks in once zoomed \u2014 so that is where
+       dragging between kraje lives. Zoomed in, the finger still pans. */
+    var touchDrag = false;
+
+    regionsLayer.addEventListener('touchstart', function(e){
+      if (e.touches.length !== 1 || view.s > 1.01) return;
+      var t = e.touches[0];
+      dragFrom = regionAt(t.clientX, t.clientY);
+      startX = t.clientX; startY = t.clientY;
+      dragOver = null; dragging = false; killClick = false;
+      touchDrag = !!dragFrom;
+    }, { passive:true });
+
+    window.addEventListener('touchmove', function(e){
+      if (!touchDrag || !dragFrom || e.touches.length !== 1) return;
+      var t = e.touches[0];
+      if (!dragging){
+        var dx = t.clientX - startX, dy = t.clientY - startY;
+        if (dx * dx + dy * dy < DRAG_SLOP * DRAG_SLOP) return;
+        dragging = true;
+        mapStage.classList.add('region-dragging');
+      }
+      var p = regionAt(t.clientX, t.clientY);
+      if (p !== dragOver) preview(p);
+    }, { passive:true });
+
+    function endTouchDrag(){
+      if (touchDrag && dragging){
+        var target = dragOver;
+        mapStage.classList.remove('region-dragging');
+        clearPreview();
+        var name = target && target.getAttribute('data-region');
+        killClick = true;
+        if (name && name !== activeRegion) setRegion(name);
+        else restoreOutline();
+      }
+      touchDrag = false; dragFrom = null; dragOver = null; dragging = false;
+    }
+    window.addEventListener('touchend', endTouchDrag);
+    window.addEventListener('touchcancel', endTouchDrag);
 
     window.addEventListener('mouseup', function(){
       if (dragging){
@@ -4688,10 +4778,25 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
 
     syncDrawerFav(f.id);
     syncDrawerShare(f.id);
+    fitDrawerCats();
     drawer.classList.add('open');
     drawer.setAttribute('aria-hidden','false');
     scrim.classList.add('show');
   }
+
+  /* The share/save/close buttons float over the top-right corner of the card,
+     where they were landing on top of the category chips. How much room they
+     need depends on the pointer type and the language, so measure it. */
+  function fitDrawerCats(){
+    var cats = drawerContent.querySelector('.d-cats');
+    var tools = document.querySelector('.drawer-tools');
+    if (!cats || !tools) return;
+    var btns = tools.querySelectorAll('.drawer-tool');
+    if (!btns.length) return;
+    var w = tools.getBoundingClientRect().right - btns[0].getBoundingClientRect().left;
+    if (w > 0) cats.style.paddingRight = Math.round(w + 10) + 'px';
+  }
+  window.addEventListener('resize', fitDrawerCats);
 
   /* A farm's own link, so a found farm can be passed on the way a map pin is. */
   function farmLink(id){
@@ -4732,16 +4837,87 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
 
   /* ---- Mobile farm list drawer ---- */
   var mobileListDrawer = document.getElementById('mobileListDrawer');
+  var sheetGrab = document.getElementById('sheetGrab');
+  var sheetSearch = document.getElementById('sheetSearch');
+
+  /* On a phone the list is a bottom sheet that rests peeking under the map,
+     rather than a panel that slides in from the left: portrait leaves ~500px
+     of dead space below the country, and browsing 91 farms should not mean
+     aiming at a clump of pins. Wider than that it stays the side drawer. */
+  function phoneSheet(){ return window.matchMedia('(max-width:600px)').matches; }
+
+  function setSheetOpen(on){
+    mobileListDrawer.classList.toggle('open', on);
+    sheetGrab.setAttribute('aria-expanded', on ? 'true' : 'false');
+    /* Peeking, the sheet is on screen and readable, so it must not be hidden
+       from assistive tech the way the off-canvas side drawer is. */
+    mobileListDrawer.setAttribute('aria-hidden', (on || phoneSheet()) ? 'false' : 'true');
+  }
   function openMobileList(){
-    mobileListDrawer.classList.add('open');
-    mobileListDrawer.setAttribute('aria-hidden','false');
+    setSheetOpen(true);
     scrim.classList.add('show');
   }
   function closeMobileList(){
-    mobileListDrawer.classList.remove('open');
-    mobileListDrawer.setAttribute('aria-hidden','true');
+    setSheetOpen(false);
     if (!drawer.classList.contains('open')) scrim.classList.remove('show');
   }
+  setSheetOpen(false);
+  window.addEventListener('resize', function(){
+    setSheetOpen(mobileListDrawer.classList.contains('open'));
+  });
+
+  /* Drag the bar to open or collapse, or just tap it. */
+  (function sheetDrag(){
+    var y0 = 0, dy = 0, dragging = false, wasOpen = false, moved = false;
+    function travel(){ return mobileListDrawer.offsetHeight - sheetGrab.offsetHeight; }
+    sheetGrab.addEventListener('touchstart', function(e){
+      if (!phoneSheet() || e.touches.length !== 1) return;
+      dragging = true; moved = false; dy = 0;
+      y0 = e.touches[0].clientY;
+      wasOpen = mobileListDrawer.classList.contains('open');
+      mobileListDrawer.style.transition = 'none';
+    }, { passive:true });
+    sheetGrab.addEventListener('touchmove', function(e){
+      if (!dragging) return;
+      dy = e.touches[0].clientY - y0;
+      if (Math.abs(dy) > 4) moved = true;
+      var t = travel();
+      mobileListDrawer.style.transform =
+        'translateY(' + Math.max(0, Math.min((wasOpen ? 0 : t) + dy, t)) + 'px)';
+      e.preventDefault();
+    }, { passive:false });
+    function end(){
+      if (!dragging) return;
+      dragging = false;
+      mobileListDrawer.style.transition = '';
+      mobileListDrawer.style.transform = '';
+      if (!moved) return;                 /* a tap - the click handler has it */
+      setSheetOpen(wasOpen ? dy < 60 : dy < -40);
+      syncSheetScrim();
+    }
+    sheetGrab.addEventListener('touchend', end);
+    sheetGrab.addEventListener('touchcancel', end);
+    sheetGrab.addEventListener('click', function(){
+      if (!phoneSheet()) return;
+      if (moved){ moved = false; return; }
+      setSheetOpen(!mobileListDrawer.classList.contains('open'));
+      syncSheetScrim();
+    });
+  })();
+
+  function syncSheetScrim(){
+    if (mobileListDrawer.classList.contains('open')) scrim.classList.add('show');
+    else if (!drawer.classList.contains('open')) scrim.classList.remove('show');
+  }
+
+  /* Every copy of the filter box drives the one query, so the panel, the
+     slide-in and the sheet never disagree about what is being shown. */
+  document.querySelectorAll('.list-filter-input').forEach(function(inp){
+    inp.addEventListener('input', function(e){
+      searchQuery = e.target.value;
+      applyFilters();
+    });
+  });
   /* Wide enough for a column, the list opens beside the map; on a narrow
      screen there is no room for that, so it slides over instead. */
   document.getElementById('listToggle').addEventListener('click', function(){
@@ -4795,7 +4971,6 @@ document.addEventListener('keydown', function(e){
 var suggestBox = document.getElementById('searchSuggest');
 var searchEl = document.getElementById('searchInput');
 
-function placeToLatLon(p){ return { lat:p.lat, lon:p.lon }; }
 
 function showSuggestions(q){
   var fq = fold(q.trim());
@@ -4858,15 +5033,13 @@ function goToPlace(p){
   searchQuery = '';
   hideSuggestions();
   /* Someone typing a town wants the farms around it, so the region that town
-     belongs to becomes the filter and the whole kraj fills the map. The town
-     is only remembered as a reference point for "Blizko me". */
+     belongs to becomes the filter and the whole kraj fills the map. */
   var kraj = krajOfOkres(p.okres);
-  setUserLocation(placeToLatLon(p), !!kraj);
   if (kraj){
     setRegion(kraj);
-    showHint(t('townRegion')(p.name, kraj), true);
+    showToast(t('townRegion')(p.name, kraj));
   } else {
-    showHint(t('nearPlace')(p.name, p.okres), true);
+    showToast(t('nearPlace')(p.name, p.okres));
   }
 
   /* setRegion already framed the whole kraj. Only when the town sits in no
@@ -4918,19 +5091,216 @@ searchEl.addEventListener('keydown', function(e){
     });
   }
 
+/* ---- What is in season, by month ----
+   A guide to Czech growing conditions, not a claim about any one farm's
+   stock: the farm records carry sales channels, not individual crops.
+   Each entry is marked f = fresh from the field, s = from store (this
+   year's harvest, kept), g = under glass. Apples in February are real
+   and Czech, but they are stored, and a calendar that hides that is
+   telling half the truth. */
+var SEASON_ITEMS = {
+  mrkev:{cs:"Mrkev",en:"Carrots"},
+  celer:{cs:"Celer",en:"Celeriac"},
+  petrzel:{cs:"Petr\u017Eel",en:"Parsley root"},
+  pastinak:{cs:"Pastin\u00E1k",en:"Parsnip"},
+  repa:{cs:"\u010Cerven\u00E1 \u0159epa",en:"Beetroot"},
+  zeli:{cs:"Zel\u00ED",en:"Cabbage"},
+  kapusta:{cs:"Kapusta",en:"Savoy cabbage"},
+  kaderavek:{cs:"Kade\u0159\u00E1vek",en:"Kale"},
+  ruzickova:{cs:"R\u016F\u017Ei\u010Dkov\u00E1 kapusta",en:"Brussels sprouts"},
+  porek:{cs:"P\u00F3rek",en:"Leek"},
+  cibule:{cs:"Cibule",en:"Onions"},
+  cesnek:{cs:"\u010Cesnek",en:"Garlic"},
+  brambory:{cs:"Brambory",en:"Potatoes"},
+  novebrambory:{cs:"Nov\u00E9 brambory",en:"New potatoes"},
+  dyne:{cs:"D\u00FDn\u011B",en:"Pumpkin"},
+  kren:{cs:"K\u0159en",en:"Horseradish"},
+  polnicek:{cs:"Poln\u00ED\u010Dek",en:"Lamb's lettuce"},
+  spenat:{cs:"\u0160pen\u00E1t",en:"Spinach"},
+  salat:{cs:"Sal\u00E1t",en:"Lettuce"},
+  redkvicka:{cs:"\u0158edkvi\u010Dka",en:"Radishes"},
+  jarnicibulka:{cs:"Jarn\u00ED cibulka",en:"Spring onions"},
+  chrest:{cs:"Ch\u0159est",en:"Asparagus"},
+  kedluben:{cs:"Kedluben",en:"Kohlrabi"},
+  hrasek:{cs:"Hr\u00E1\u0161ek",en:"Peas"},
+  fazolky:{cs:"Fazolky",en:"Green beans"},
+  bob:{cs:"Bob",en:"Broad beans"},
+  cuketa:{cs:"Cuketa",en:"Courgette"},
+  okurka:{cs:"Okurka",en:"Cucumber"},
+  rajce:{cs:"Raj\u010Data",en:"Tomatoes"},
+  paprika:{cs:"Paprika",en:"Peppers"},
+  lilek:{cs:"Lilek",en:"Aubergine"},
+  kvetak:{cs:"Kv\u011Bt\u00E1k",en:"Cauliflower"},
+  brokolice:{cs:"Brokolice",en:"Broccoli"},
+  kukurice:{cs:"Kuku\u0159ice",en:"Sweetcorn"},
+  cernykoren:{cs:"\u010Cern\u00FD ko\u0159en",en:"Salsify"},
+  mladamrkev:{cs:"Mlad\u00E1 mrkev",en:"Young carrots"},
+  jablka:{cs:"Jablka",en:"Apples"},
+  hrusky:{cs:"Hru\u0161ky",en:"Pears"},
+  svestky:{cs:"\u0160vestky",en:"Plums"},
+  mirabelky:{cs:"Mirabelky",en:"Mirabelles"},
+  ryngle:{cs:"Ryngle",en:"Greengages"},
+  tresne:{cs:"T\u0159e\u0161n\u011B",en:"Cherries"},
+  visne:{cs:"Vi\u0161n\u011B",en:"Sour cherries"},
+  jahody:{cs:"Jahody",en:"Strawberries"},
+  maliny:{cs:"Maliny",en:"Raspberries"},
+  rybiz:{cs:"Ryb\u00EDz",en:"Currants"},
+  angrest:{cs:"Angre\u0161t",en:"Gooseberries"},
+  boruvky:{cs:"Bor\u016Fvky",en:"Blueberries"},
+  ostruziny:{cs:"Ostru\u017Einy",en:"Blackberries"},
+  merunky:{cs:"Meru\u0148ky",en:"Apricots"},
+  broskve:{cs:"Broskve",en:"Peaches"},
+  hrozny:{cs:"Hrozny",en:"Grapes"},
+  kdoule:{cs:"Kdoule",en:"Quince"},
+  orechy:{cs:"Vla\u0161sk\u00E9 o\u0159echy",en:"Walnuts"},
+  bezinky:{cs:"Bezinky",en:"Elderberries"},
+  sipky:{cs:"\u0160\u00EDpky",en:"Rosehips"},
+  trnky:{cs:"Trnky",en:"Sloes"},
+  kastany:{cs:"Jedl\u00E9 ka\u0161tany",en:"Sweet chestnuts"},
+  rebarbora:{cs:"Rebarbora",en:"Rhubarb"},
+  pazitka:{cs:"Pa\u017Eitka",en:"Chives"},
+  petrzelovanat:{cs:"Petr\u017Eelov\u00E1 na\u0165",en:"Parsley"},
+  kopr:{cs:"Kopr",en:"Dill"},
+  bazalka:{cs:"Bazalka",en:"Basil"},
+  mata:{cs:"M\u00E1ta",en:"Mint"},
+  medunka:{cs:"Medu\u0148ka",en:"Lemon balm"},
+  tymian:{cs:"Tymi\u00E1n",en:"Thyme"},
+  rozmaryn:{cs:"Rozmar\u00FDn",en:"Rosemary"},
+  salvej:{cs:"\u0160alv\u011Bj",en:"Sage"},
+  oregano:{cs:"Dobromysl",en:"Oregano"},
+  levandule:{cs:"Levandule",en:"Lavender"},
+  libecek:{cs:"Libe\u010Dek",en:"Lovage"},
+  saturejka:{cs:"Saturejka",en:"Savory"},
+  hermanek:{cs:"He\u0159m\u00E1nek",en:"Chamomile"},
+  bezkvet:{cs:"Bezov\u00FD kv\u011Bt",en:"Elderflower"},
+  medvedicesnek:{cs:"Medv\u011Bd\u00ED \u010Desnek",en:"Wild garlic"},
+  koprivy:{cs:"Kop\u0159ivy",en:"Nettles"},
+  smetanka:{cs:"Smetanka",en:"Dandelion"},
+  trezalka:{cs:"T\u0159ezalka",en:"St John's wort"},
+};
+var SEASON = {
+  1:{veg:[["kaderavek","f"],["porek","f"],["ruzickova","f"],["polnicek","g"],["mrkev","s"],["celer","s"],["zeli","s"],["brambory","s"],["cibule","s"],["dyne","s"]], fruit:[["jablka","s"],["hrusky","s"],["orechy","s"]], herbs:[["pazitka","g"],["petrzelovanat","g"]]},
+  2:{veg:[["kaderavek","f"],["porek","f"],["polnicek","g"],["mrkev","s"],["celer","s"],["petrzel","s"],["zeli","s"],["brambory","s"],["cibule","s"],["kren","s"]], fruit:[["jablka","s"],["hrusky","s"],["orechy","s"]], herbs:[["pazitka","g"],["petrzelovanat","g"]]},
+  3:{veg:[["medvedicesnek","f"],["porek","f"],["kaderavek","f"],["kren","f"],["spenat","g"],["redkvicka","g"],["salat","g"],["mrkev","s"],["brambory","s"],["cibule","s"]], fruit:[["jablka","s"],["orechy","s"]], herbs:[["medvedicesnek","f"],["pazitka","f"],["koprivy","f"],["smetanka","f"]]},
+  4:{veg:[["chrest","f"],["redkvicka","f"],["spenat","f"],["salat","f"],["jarnicibulka","f"],["medvedicesnek","f"],["mrkev","s"],["brambory","s"],["cibule","s"]], fruit:[["rebarbora","f"],["jablka","s"]], herbs:[["medvedicesnek","f"],["pazitka","f"],["libecek","f"],["koprivy","f"],["petrzelovanat","f"]]},
+  5:{veg:[["chrest","f"],["redkvicka","f"],["salat","f"],["spenat","f"],["kedluben","f"],["mladamrkev","f"],["jarnicibulka","f"],["hrasek","f"]], fruit:[["jahody","f"],["rebarbora","f"]], herbs:[["pazitka","f"],["libecek","f"],["mata","f"],["medunka","f"],["kopr","f"],["bezkvet","f"]]},
+  6:{veg:[["hrasek","f"],["fazolky","f"],["kedluben","f"],["salat","f"],["mladamrkev","f"],["novebrambory","f"],["kvetak","f"],["cuketa","f"],["bob","f"]], fruit:[["jahody","f"],["tresne","f"],["rybiz","f"],["maliny","f"],["angrest","f"]], herbs:[["bazalka","f"],["kopr","f"],["mata","f"],["medunka","f"],["tymian","f"],["hermanek","f"],["bezkvet","f"]]},
+  7:{veg:[["cuketa","f"],["okurka","f"],["rajce","f"],["fazolky","f"],["mrkev","f"],["brambory","f"],["cesnek","f"],["kvetak","f"],["brokolice","f"],["repa","f"]], fruit:[["visne","f"],["tresne","f"],["rybiz","f"],["maliny","f"],["angrest","f"],["boruvky","f"],["merunky","f"],["jablka","f"]], herbs:[["bazalka","f"],["kopr","f"],["mata","f"],["oregano","f"],["tymian","f"],["levandule","f"],["saturejka","f"],["trezalka","f"]]},
+  8:{veg:[["rajce","f"],["paprika","f"],["cuketa","f"],["okurka","f"],["lilek","f"],["fazolky","f"],["kukurice","f"],["mrkev","f"],["brambory","f"],["cibule","f"],["zeli","f"],["dyne","f"]], fruit:[["svestky","f"],["mirabelky","f"],["broskve","f"],["jablka","f"],["hrusky","f"],["ostruziny","f"],["maliny","f"],["boruvky","f"],["bezinky","f"]], herbs:[["bazalka","f"],["oregano","f"],["tymian","f"],["saturejka","f"],["mata","f"],["salvej","f"]]},
+  9:{veg:[["dyne","f"],["zeli","f"],["kapusta","f"],["porek","f"],["mrkev","f"],["repa","f"],["celer","f"],["brambory","f"],["rajce","f"],["paprika","f"],["brokolice","f"]], fruit:[["jablka","f"],["hrusky","f"],["svestky","f"],["ryngle","f"],["hrozny","f"],["bezinky","f"],["orechy","f"],["kdoule","f"]], herbs:[["petrzelovanat","f"],["pazitka","f"],["tymian","f"],["salvej","f"],["mata","f"],["libecek","f"]]},
+  10:{veg:[["dyne","f"],["zeli","f"],["kapusta","f"],["ruzickova","f"],["porek","f"],["mrkev","f"],["celer","f"],["petrzel","f"],["pastinak","f"],["repa","f"],["brambory","f"],["kren","f"],["polnicek","f"],["cernykoren","f"]], fruit:[["jablka","f"],["hrusky","f"],["kdoule","f"],["orechy","f"],["hrozny","f"],["sipky","f"],["trnky","f"],["kastany","f"]], herbs:[["petrzelovanat","f"],["pazitka","f"],["tymian","f"],["salvej","f"],["rozmaryn","f"]]},
+  11:{veg:[["ruzickova","f"],["kaderavek","f"],["porek","f"],["polnicek","f"],["kren","f"],["mrkev","s"],["celer","s"],["zeli","s"],["brambory","s"],["cibule","s"],["dyne","s"]], fruit:[["kdoule","f"],["trnky","f"],["sipky","f"],["jablka","s"],["hrusky","s"],["orechy","s"]], herbs:[["tymian","f"],["rozmaryn","f"],["petrzelovanat","f"]]},
+  12:{veg:[["ruzickova","f"],["kaderavek","f"],["porek","f"],["polnicek","f"],["mrkev","s"],["celer","s"],["zeli","s"],["brambory","s"],["cibule","s"],["dyne","s"],["kren","s"]], fruit:[["jablka","s"],["hrusky","s"],["orechy","s"]], herbs:[["tymian","f"]]},
+};
+
+  /* The card renders whatever month is selected; it opens on the real one and
+     the arrows step a month either way, which is how you find out whether to
+     wait a fortnight for the asparagus. */
+  var MONTH_NAMES = {
+    cs:["Leden","\u00DAnor","B\u0159ezen","Duben","Kv\u011Bten","\u010Cerven",
+        "\u010Cervenec","Srpen","Z\u00E1\u0159\u00ED","\u0158\u00EDjen","Listopad","Prosinec"],
+    en:["January","February","March","April","May","June",
+        "July","August","September","October","November","December"]
+  };
+  var seasonEl = document.getElementById('season');
+  var seasonNow = new Date().getMonth() + 1;
+  var seasonShown = seasonNow;
+
+  function seasonName(m){ return MONTH_NAMES[LANG][(m + 11) % 12]; }
+
+  /* One line per state, in the order they matter. Names run on as prose, so
+     only the first is capitalised - the rest are common nouns mid-sentence. */
+  var STATE_LABEL = { f:'legFresh', s:'legStored', g:'legGlass' };
+  function seasonLines(list){
+    var byState = { f:[], s:[], g:[] };
+    list.forEach(function(e){ (byState[e[1]] || byState.f).push(SEASON_ITEMS[e[0]][LANG]); });
+    var mixed = ['f','s','g'].filter(function(k){ return byState[k].length; }).length > 1
+             || byState.s.length || byState.g.length;
+    return ['f','s','g'].map(function(k){
+      var names = byState[k];
+      if (!names.length) return '';
+      var text = names.map(function(n, i){
+        return i === 0 ? n : n.charAt(0).toLowerCase() + n.slice(1);
+      }).join(', ');
+      return '<p class="season-line ' + k + '">' +
+             (mixed ? '<em>' + t(STATE_LABEL[k]) + '</em>' : '') + text + '</p>';
+    }).join('');
+  }
+
+  function renderSeason(){
+    if (!seasonEl) return;
+    var d = SEASON[seasonShown];
+    document.getElementById('seasonMonth').textContent = seasonName(seasonShown);
+    document.getElementById('seasonKicker').textContent =
+      seasonShown === seasonNow ? t('seasonKicker') : t('seasonOther');
+    var groups = [['veg','seasonVeg'],['fruit','seasonFruit'],['herbs','seasonHerbs']];
+    document.getElementById('seasonGroups').innerHTML = groups.map(function(g){
+      if (!d[g[0]] || !d[g[0]].length) return '';
+      return '<div class="season-group"><h4>' + t(g[1]) + '</h4>' + seasonLines(d[g[0]]) + '</div>';
+    }).join('');
+    document.getElementById('seasonNote').textContent = t('seasonNote');
+    var n = FARMS.filter(function(f){ return f.cats.indexOf('veggies') !== -1; }).length;
+    document.getElementById('seasonLink').textContent = t('seasonLink')(n);
+    document.getElementById('seasonPrev').textContent = '\u2039 ' + seasonName(seasonShown - 1);
+    document.getElementById('seasonNext').textContent = seasonName(seasonShown + 1) + ' \u203A';
+    var today = document.getElementById('seasonToday');
+    today.hidden = seasonShown === seasonNow;
+    today.textContent = t('seasonToday');
+  }
+
+  function setSeasonOpen(on){
+    if (!seasonEl) return;
+    seasonEl.dataset.open = on ? '1' : '0';
+    document.getElementById('seasonToggle').setAttribute('aria-expanded', on ? 'true' : 'false');
+    try { localStorage.setItem('zf-season-open', on ? '1' : '0'); } catch(e){}
+  }
+
+  if (seasonEl){
+    document.getElementById('seasonToggle').addEventListener('click', function(){
+      setSeasonOpen(seasonEl.dataset.open !== '1');
+    });
+    document.getElementById('seasonPrev').addEventListener('click', function(){
+      seasonShown = seasonShown === 1 ? 12 : seasonShown - 1; renderSeason();
+    });
+    document.getElementById('seasonNext').addEventListener('click', function(){
+      seasonShown = seasonShown === 12 ? 1 : seasonShown + 1; renderSeason();
+    });
+    document.getElementById('seasonToday').addEventListener('click', function(){
+      seasonShown = seasonNow; renderSeason();
+    });
+    /* The panel is a pointer to the map, not a catalogue: it hands you the
+       farms that sell any of this. The records carry no crop-level detail,
+       so it filters to the category and says nothing more specific. */
+    document.getElementById('seasonLink').addEventListener('click', function(){
+      var chip = document.querySelector('.chip[data-cat="veggies"]');
+      if (chip && !chip.classList.contains('active')) chip.click();
+      if (window.matchMedia('(max-width:600px)').matches) setSeasonOpen(false);
+    });
+    var pref = null;
+    try { pref = localStorage.getItem('zf-season-open'); } catch(e){}
+    setSeasonOpen(pref !== null ? pref === '1'
+      : !window.matchMedia('(max-width:600px)').matches);
+  }
+
   function applyStaticText(){
     document.documentElement.lang = LANG;
     document.getElementById('txtTitle').textContent = t('title');
     document.getElementById('txtTagline').textContent = t('tagline');
+    document.getElementById('txtTaglineM').textContent = t('tagline');
     document.getElementById('txtListToggle').textContent = t('listToggle');
     document.getElementById('txtFootnote').textContent = t('footnote');
     if (document.querySelector('[data-rec-open]')) recLabels();
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
+    renderSeason();
+    document.getElementById('txtSheetTitle').textContent = t('listHeading');
+    document.querySelectorAll('.list-filter-input').forEach(function(inp){
+      inp.placeholder = t('listFilter');
+      inp.setAttribute('aria-label', t('listFilter'));
+    });
     document.getElementById('filterBar').setAttribute('aria-label', t('filterAria'));
     document.querySelector('.chip[data-cat="all"] .chip-label').textContent = t('chipAll');
     document.getElementById('txtListHeading').textContent = t('listHeading');
     document.getElementById('txtFavChip').textContent = t('favChip');
-    document.getElementById('txtNearChip').textContent = t('nearChip');
     document.getElementById('txtClear').textContent = t('clearFilters');
     document.getElementById('txtMapReset').textContent = t('mapReset');
     Object.keys(CAT).forEach(function(c){
