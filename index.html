@@ -18,7 +18,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --peek:78px;
     --bg:#F6F0E1;
     --surface:#FFFDF7;
     --surface-2:#EFE2C6;
@@ -257,9 +256,11 @@
     opacity:0.75;
   }
   .filter-sep{width:1px;height:22px;background:var(--border);flex-shrink:0;margin:0 2px;}
-  /* Kraj sits outside the scrolling chip track: on a 1280px window the
-     track pushed it off-screen entirely, and out here its right edge lines
-     up with the search field directly above it. */
+  /* The three dropdowns sit outside the scrolling chip track. Inside it they
+     made the track 967px of content in a 280px window on a phone - you saw
+     two of eight controls and the rest were behind a sideways scroll nobody
+     finds. Out here the track carries the six categories and nothing else,
+     and Kraj's right edge lines up with the search field above it. */
   .filters > .dd{flex-shrink:0;margin-left:10px;}
   .filter-sep-pin{margin-left:14px;}
   /* Filter dropdowns are built from the page's own parts rather than a native
@@ -733,6 +734,7 @@
     position:fixed;z-index:61;left:50%;top:50%;transform:translate(-50%,-50%);
     width:min(720px, calc(100vw - 40px));
     max-height:calc(100vh - 48px);
+    max-height:calc(100dvh - 48px);
     display:flex;flex-direction:column;
     background:var(--surface);border:1px solid var(--border);
     border-radius:var(--radius-lg);box-shadow:0 18px 48px var(--shadow);
@@ -888,6 +890,7 @@
     position:fixed;left:50%;top:50%;
     width:min(680px, calc(100vw - 56px));
     max-height:min(88vh, 940px);
+    max-height:min(88dvh, 940px);
     background:var(--surface);
     border:1px solid var(--border);
     border-radius:var(--radius-lg);
@@ -1158,6 +1161,7 @@
   .rec-panel{
     position:fixed;z-index:61;left:50%;top:50%;transform:translate(-50%,-50%);
     width:min(460px, calc(100vw - 32px));max-height:calc(100vh - 48px);overflow:auto;
+    max-height:calc(100dvh - 48px);
     background:var(--surface);border:1px solid var(--border);
     border-radius:var(--radius-lg);box-shadow:0 18px 48px var(--shadow);
     padding:22px 24px 20px;
@@ -1242,6 +1246,7 @@
     /* Too narrow to centre a card: it comes up from the bottom instead. */
     .drawer{width:100%;max-width:100%;left:0;top:auto;bottom:0;
       height:86vh;max-height:86vh;
+      height:86dvh;max-height:86dvh;
       border:none;border-top:1px solid var(--border);
       border-radius:20px 20px 0 0;
       transform:translateY(100%);opacity:1;pointer-events:auto;
@@ -1292,21 +1297,38 @@
     .suggest-item .sub{max-width:40%;}
     .fav-toggle{padding:0 11px;min-height:44px;}
 
-    .filters{padding:8px 12px;}
-    .filters-scroll{gap:7px;}
-    .chip{padding:0 14px;min-height:44px;font-size:0.88rem;}
-    .dd-trigger{padding:0 13px;min-height:44px;}
-    /* Room is tight beside the chips, so the region name truncates rather
-       than squeezing the track to nothing. */
+    /* Two rows on a phone: the categories get the full width to themselves,
+       and the three dropdowns drop to a line of their own where all of them
+       are visible at once. The vertical cost lands on the empty band above
+       the country, which the map was not using for anything. */
+    .filters{padding:7px 12px 8px;flex-wrap:wrap;row-gap:7px;}
+    .filters-scroll{
+      flex:1 1 100%;gap:6px;
+      -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);
+      mask-image:linear-gradient(to right,#000 calc(100% - 20px),transparent);
+    }
+    .filters > .dd:first-of-type{margin-left:0;}
+    .filter-sep-pin{display:none;}
+    .chip-clear::before{display:none;}
+    .chip{padding:0 12px;min-height:42px;font-size:0.84rem;gap:6px;}
+    .chip .dot.cat-icon{width:16px;height:16px;}
+    .chip .dot.cat-icon svg{width:16px;height:16px;}
+    .chip-count{font-size:0.73rem;}
+    .dd-trigger{padding:0 12px;min-height:42px;font-size:0.84rem;}
+    /* Pinned Kraj costs the chip track a third of its width on a phone, and
+       the word "Kraj" says nothing the pin icon does not. It shows the name
+       only once a region is actually chosen, when the name is the point. */
     .filters > .dd{margin-left:7px;}
-    .filters > .dd .dd-trigger{max-width:124px;}
-    .filter-sep-pin{margin-left:9px;}
+    #regionDD:not(.on) .dd-label{display:none;}
+    #regionDD:not(.on) .dd-trigger{padding:0 9px;gap:5px;}
+    .filters > .dd .dd-trigger{max-width:none;}
+    #regionDD.on .dd-trigger{max-width:176px;}
+    #regionDD{margin-left:auto;}
+    .filter-sep-pin{margin-left:8px;}
     .chip-clear{margin-left:14px;padding:0 13px;min-height:44px;}
     .chip-clear::before{right:calc(100% + 7px);}
 
-    /* The sheet sits on the bottom of the frame, so the country centres in
-       what is left rather than behind it. */
-    .map-inner{padding:4px 6px calc(var(--peek) + 8px);}
+    .map-inner{padding:4px 6px 38px;}
     /* The trigger shrinks to the month alone; the panel it opens comes up
        from the bottom like every other sheet on a phone. */
     .season-pill{left:10px;top:8px;padding:9px 13px;min-height:40px;gap:6px;}
@@ -1314,6 +1336,7 @@
     .season-modal{
       left:0;top:auto;bottom:0;transform:none;
       width:100%;max-width:100%;max-height:82vh;
+      max-height:82dvh;
       border:0;border-top:1px solid var(--border);
       border-radius:20px 20px 0 0;
     }
@@ -1322,9 +1345,6 @@
     .season-body{padding:14px 16px;}
     .season-foot{padding:12px 16px 16px;}
     .season-link{max-width:none;}
-    .map-caption{left:10px;bottom:10px;font-size:0.72rem;}
-    .map-reset{right:12px;bottom:10px;padding:0 14px;min-height:44px;}
-    .map-zoom{right:12px;bottom:62px;}
     .map-zoom button{width:44px;height:44px;}
 
     /* Town names shrink with the map, or they cover half the country. */
@@ -1336,38 +1356,29 @@
     .city-labels.zoomed span.town{font-size:10.5px;}
 
     /* ---- Farm list as a bottom sheet ----
-       In portrait the country can only ever fill about a third of the screen,
-       so the space under it carries the list instead of staying empty. The
-       sheet rests peeking; dragging or tapping the bar opens it. */
+       It sits fully off-screen until "Farmy" is tapped: a permanently peeking
+       bar cost a strip of the map on every screen for something most visits
+       never open. The handle is only there to drag the open sheet shut. */
     .mobile-list-drawer{
       display:flex;flex-direction:column;
       top:auto;bottom:0;left:0;
-      width:100%;max-width:100%;height:72vh;
+      width:100%;max-width:100%;height:72vh;height:72dvh;
       padding:0;overflow:hidden;
       border-right:0;border-top:1px solid var(--border);
       border-radius:18px 18px 0 0;
       box-shadow:0 -6px 24px var(--shadow);
-      transform:translateY(calc(100% - var(--peek)));
+      bottom:var(--kb, 0px);
+      transform:translateY(100%);
     }
     .mobile-list-drawer.open{transform:translateY(0);}
     .sheet-grab{
-      display:flex;flex-direction:column;align-items:center;gap:2px;
+      display:flex;align-items:center;justify-content:center;
       position:relative;flex:0 0 auto;
-      width:100%;min-height:var(--peek);padding:9px 14px 10px;
+      width:100%;padding:10px 14px 8px;
       background:none;border:0;cursor:pointer;font:inherit;color:inherit;
       touch-action:none;
     }
-    .sheet-bar{
-      width:38px;height:4px;border-radius:2px;
-      background:var(--border);margin-bottom:5px;
-    }
-    .sheet-title{
-      font-size:0.74rem;font-weight:700;letter-spacing:0.07em;
-      text-transform:uppercase;color:var(--text-soft);
-    }
-    .sheet-count{
-      font-size:0.8rem;color:var(--text-soft);font-variant-numeric:tabular-nums;
-    }
+    .sheet-bar{width:38px;height:4px;border-radius:2px;background:var(--border);}
     /* 91 farms is a lot of thumb: the list gets its own filter box so you
        can narrow it without going back up to the header. */
     /* Thumb-sized inside the sheet, and clear of its rounded edges. */
@@ -1379,10 +1390,9 @@
     }
     .mobile-list-drawer .rec-open{flex:0 0 auto;margin:0;padding:12px 14px 16px;}
 
-    /* the map's own controls step above the peeking sheet */
-    .map-caption{bottom:calc(var(--peek) + 10px);}
-    .map-reset{bottom:calc(var(--peek) + 10px);}
-    .map-zoom{bottom:calc(var(--peek) + 62px);}
+    .map-caption{left:10px;bottom:10px;font-size:0.72rem;}
+    .map-reset{right:12px;bottom:10px;padding:0 14px;min-height:44px;}
+    .map-zoom{right:12px;bottom:62px;}
 
     .drawer-content{padding:14px 18px 28px;}
     .drawer h2{font-size:1.3rem;}
@@ -1474,7 +1484,8 @@
     <button class="chip" data-cat="eggs" style="--cat:var(--eggs)"><span class="dot"></span><span class="chip-label">Vejce a dr&#367;be&#382;</span><span class="chip-count" id="count-eggs"></span></button>
     <button class="chip" data-cat="veggies" style="--cat:var(--veg)"><span class="dot"></span><span class="chip-label">Zelenina a plodiny</span><span class="chip-count" id="count-veggies"></span></button>
     <button class="chip" data-cat="honey" style="--cat:var(--honey)"><span class="dot"></span><span class="chip-label">Med</span><span class="chip-count" id="count-honey"></span></button>
-    <span class="filter-sep" aria-hidden="true"></span>
+    </div>
+    <span class="filter-sep filter-sep-pin" aria-hidden="true"></span>
     <div class="dd" id="channelDD">
       <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false">
         <span class="dd-icon" data-icon="cart" aria-hidden="true"></span>
@@ -1489,8 +1500,6 @@
         <svg class="icon dd-chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
     </div>
-    </div>
-    <span class="filter-sep filter-sep-pin" aria-hidden="true"></span>
     <div class="dd" id="regionDD">
       <button type="button" class="dd-trigger" aria-haspopup="listbox" aria-expanded="false">
         <span class="dd-icon" data-icon="pin" aria-hidden="true"></span>
@@ -1558,10 +1567,8 @@
 </div>
 
 <nav class="mobile-list-drawer" id="mobileListDrawer" aria-hidden="true">
-  <button type="button" class="sheet-grab" id="sheetGrab" aria-expanded="false">
+  <button type="button" class="sheet-grab" id="sheetGrab" aria-expanded="false" aria-label="Zavrit seznam">
     <span class="sheet-bar" aria-hidden="true"></span>
-    <span class="sheet-title" id="txtSheetTitle">Farmy na map&#283;</span>
-    <span class="sheet-count" id="sheetCount"></span>
   </button>
   <div class="list-filter">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1639,15 +1646,15 @@ function trackEvent(path, title){
   }
 
   var CAT = {
-    meat:   { label:{cs:"Maso",               en:"Meat"},               color:"var(--meat)",
+    meat:   { label:{cs:"Maso",               en:"Meat"}, short:{cs:"Maso",     en:"Meat"},               color:"var(--meat)",
       icon:'<path fill-rule="evenodd" d="M1.9 9.6C1.9 6.6 6.6 4.2 12.4 4.2S22.9 6.6 22.9 9.6v3.6c0 3.2-2.6 6.2-6.3 6.7-2.7.4-4.8-1-7.2-1.9-2.2-.8-4.5-.7-6.1-2-.9-.7-1.4-1.6-1.4-2.6ZM12.4 4.7c5.6 0 10 2.2 10 4.9s-4.4 4.9-10 4.9-10-2.2-10-4.9 4.4-4.9 10-4.9ZM12.4 6.1c4.7 0 8.5 1.6 8.5 3.5s-3.8 3.5-8.5 3.5-8.5-1.6-8.5-3.5 3.8-3.5 8.5-3.5ZM14.3 6.1l1.9.8-2 2.7 3.7 2.8-1.6 1.2-3.6-2.8-4.1 2.6-1.4-1.3 4.1-2.6Z"/>' },
-    dairy:  { label:{cs:"Ml\u00E9ko a s\u00FDry",       en:"Dairy & cheese"},              color:"var(--dairy)",
+    dairy:  { label:{cs:"Ml\u00E9ko a s\u00FDry",       en:"Dairy & cheese"}, short:{cs:"Ml\u00E9ko",    en:"Dairy"},              color:"var(--dairy)",
       icon:'<path d="M6.6 9.8 10.2 3.4h3.6l3.6 6.4v10.6A1.6 1.6 0 0 1 15.8 22H8.2a1.6 1.6 0 0 1-1.6-1.6Z"/>' },
-    eggs:   { label:{cs:"Vejce a dr\u016Fbe\u017E",     en:"Eggs & Poultry"},     color:"var(--eggs)",
+    eggs:   { label:{cs:"Vejce a dr\u016Fbe\u017E",     en:"Eggs & Poultry"}, short:{cs:"Vejce",    en:"Eggs"},     color:"var(--eggs)",
       icon:'<path d="M12 2.4c3.7 0 6.9 6.3 6.9 11.1a6.9 6.9 0 0 1-13.8 0C5.1 8.7 8.3 2.4 12 2.4Z"/>' },
-    veggies:{ label:{cs:"Zelenina a plodiny", en:"Vegetables & Crops"}, color:"var(--veg)",
+    veggies:{ label:{cs:"Zelenina a plodiny", en:"Vegetables & Crops"}, short:{cs:"Zelenina", en:"Veg"}, color:"var(--veg)",
       icon:'<path d="M12 8.3c1.9-.1 3.4 1.4 3.2 3.3-.4 4.1-2 10-3.2 10s-2.8-5.9-3.2-10c-.2-1.9 1.3-3.4 3.2-3.3Z"/><path d="M12.3 8.9C12 6.5 10.5 4.6 8.4 3.6c.5 2.5 2 4.4 3.9 5.3Z"/><path d="M11.7 8.9c.3-2.4 1.8-4.3 3.9-5.3-.5 2.5-2 4.4-3.9 5.3Z"/>' },
-    honey:  { label:{cs:"Med",                en:"Honey"},              color:"var(--honey)",
+    honey:  { label:{cs:"Med",                en:"Honey"}, short:{cs:"Med",      en:"Honey"},              color:"var(--honey)",
       icon:'<path fill-rule="evenodd" d="M4.2 5.4h15.6a1.1 1.1 0 0 1 1.1 1.3l-.5 2.6H3.6l-.5-2.6a1.1 1.1 0 0 1 1.1-1.3Zm.2 5.7h15.2c.6 3 .9 5.7.9 8.1a2.2 2.2 0 0 1-2.2 2.2H5.7a2.2 2.2 0 0 1-2.2-2.2c0-2.4.3-5.1.9-8.1Zm4.9 3.4c0 1 .8 1.7 1.7 1.7s1.7-.8 1.7-1.7c0-1-1.7-2.9-1.7-2.9s-1.7 1.9-1.7 2.9Z"/>' }
   };
 
@@ -4079,8 +4086,6 @@ function matches(f){
                    searchQuery;
     document.getElementById('mapCaption').textContent = visibleCount + ' ' + t('farmWord')(visibleCount) + (filtered ? t('farmsShown') + FARMS.length : '');
     document.getElementById('sidebarCount').textContent = visibleCount + (filtered ? '/' + FARMS.length : '');
-    var sc = document.getElementById('sheetCount');
-    if (sc) sc.textContent = visibleCount + ' ' + t('farmWord')(visibleCount);
     document.querySelectorAll('.list-filter-input').forEach(function(inp){
       if (document.activeElement !== inp) inp.value = searchQuery;
     });
@@ -4900,6 +4905,13 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     if (w > 0) cats.style.paddingRight = Math.round(w + 10) + 'px';
   }
   window.addEventListener('resize', fitDrawerCats);
+  (function(){
+    var wide = window.matchMedia('(max-width:600px)').matches;
+    window.addEventListener('resize', function(){
+      var now = window.matchMedia('(max-width:600px)').matches;
+      if (now !== wide){ wide = now; applyStaticText(); }
+    });
+  })();
 
   /* A farm's own link, so a found farm can be passed on the way a map pin is. */
   function farmLink(id){
@@ -4954,7 +4966,7 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     sheetGrab.setAttribute('aria-expanded', on ? 'true' : 'false');
     /* Peeking, the sheet is on screen and readable, so it must not be hidden
        from assistive tech the way the off-canvas side drawer is. */
-    mobileListDrawer.setAttribute('aria-hidden', (on || phoneSheet()) ? 'false' : 'true');
+    mobileListDrawer.setAttribute('aria-hidden', on ? 'false' : 'true');
   }
   function openMobileList(){
     setSheetOpen(true);
@@ -4972,7 +4984,8 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
   /* Drag the bar to open or collapse, or just tap it. */
   (function sheetDrag(){
     var y0 = 0, dy = 0, dragging = false, wasOpen = false, moved = false;
-    function travel(){ return mobileListDrawer.offsetHeight - sheetGrab.offsetHeight; }
+    /* No peek any more: closed is a full slide off the bottom. */
+    function travel(){ return mobileListDrawer.offsetHeight; }
     sheetGrab.addEventListener('touchstart', function(e){
       if (!phoneSheet() || e.touches.length !== 1) return;
       dragging = true; moved = false; dy = 0;
@@ -4995,16 +5008,17 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
       mobileListDrawer.style.transition = '';
       mobileListDrawer.style.transform = '';
       if (!moved) return;                 /* a tap - the click handler has it */
-      setSheetOpen(wasOpen ? dy < 60 : dy < -40);
+      setSheetOpen(wasOpen && dy < 60);
       syncSheetScrim();
     }
     sheetGrab.addEventListener('touchend', end);
     sheetGrab.addEventListener('touchcancel', end);
+    /* The handle is reachable only while the sheet is open, so a tap on it
+       can only mean "put it away". */
     sheetGrab.addEventListener('click', function(){
       if (!phoneSheet()) return;
       if (moved){ moved = false; return; }
-      setSheetOpen(!mobileListDrawer.classList.contains('open'));
-      syncSheetScrim();
+      closeMobileList();
     });
   })();
 
@@ -5117,10 +5131,43 @@ function showSuggestions(q){
   suggestBox._places = placeHits;
   suggestBox.hidden = false;
   searchEl.setAttribute('aria-expanded', 'true');
+  fitSuggest();
 }
+
+/* A dropdown measured in vh runs straight under the on-screen keyboard -
+   you get the top half of the list and nothing else, with no way to scroll
+   to the rest. Only visualViewport reports what is actually on screen once
+   the keyboard is up, so the panel is measured against that instead. */
+function fitSuggest(){
+  if (!suggestBox || suggestBox.hidden) return;
+  var vv = window.visualViewport;
+  if (!vv) return;
+  var below = (vv.offsetTop + vv.height) - searchEl.getBoundingClientRect().bottom - 16;
+  /* Never taller than the design cap - this is here to SHRINK the panel
+     when the keyboard is up, not to let it grow on a tall desktop window. */
+  suggestBox.style.maxHeight = Math.max(132, Math.min(Math.round(below), 340)) + 'px';
+}
+
+/* iOS measures vh against the layout viewport, which includes the strip
+   behind the browser chrome and the whole keyboard. Everything that has to
+   fit on screen reads these instead. */
+(function viewportFit(){
+  var vv = window.visualViewport;
+  if (!vv) return;
+  function apply(){
+    var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty('--kb', Math.round(kb) + 'px');
+    fitSuggest();
+  }
+  vv.addEventListener('resize', apply);
+  vv.addEventListener('scroll', apply);
+  window.addEventListener('orientationchange', function(){ setTimeout(apply, 120); });
+  apply();
+})();
 
 function hideSuggestions(){
   suggestBox.hidden = true;
+  suggestBox.style.maxHeight = '';
   searchEl.setAttribute('aria-expanded', 'false');
 }
 
@@ -5405,7 +5452,6 @@ var SEASON = {
     if (document.querySelector('[data-rec-open]')) recLabels();
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
     renderSeason();
-    document.getElementById('txtSheetTitle').textContent = t('listHeading');
     document.querySelectorAll('.list-filter-input').forEach(function(inp){
       inp.placeholder = t('listFilter');
       inp.setAttribute('aria-label', t('listFilter'));
@@ -5416,9 +5462,15 @@ var SEASON = {
     document.getElementById('txtFavChip').textContent = t('favChip');
     document.getElementById('txtClear').textContent = t('clearFilters');
     document.getElementById('txtMapReset').textContent = t('mapReset');
+    /* On a 375px screen "Zelenina a plodiny \u00B7 36" is a third of the row, so
+       only two categories were ever visible and the rest lived behind a
+       sideways scroll nobody discovers. The short names fit five. */
+    var narrow = window.matchMedia('(max-width:600px)').matches;
     Object.keys(CAT).forEach(function(c){
       var el = document.querySelector('.chip[data-cat="'+c+'"] .chip-label');
-      if (el) el.textContent = CAT[c].label[LANG];
+      if (!el) return;
+      var short = CAT[c].short;
+      el.textContent = (narrow && short ? short : CAT[c].label)[LANG];
     });
     document.querySelectorAll('#langSwitch button').forEach(function(b){
       b.classList.toggle('active', b.dataset.lang === LANG);
