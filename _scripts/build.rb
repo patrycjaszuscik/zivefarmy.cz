@@ -2,7 +2,9 @@
 # Wraps the artifact fragment in a real document and writes index.html at the repo root.
 root = File.expand_path("..", __dir__)
 frag = File.read(File.join(root, "_src", "czech-farm-atlas.html"), encoding: "UTF-8")
-desc = "Mapa bio a regenerativnich farem v Cesku - kde nakoupit primo od farmare."
+# Entities, not bare ASCII: this string is what Google prints under the
+# result, and stripping the diacritics made it read as broken Czech.
+desc = "Mapa bio a regenerativn&#237;ch farem v &#268;esku &#8212; kde nakoupit maso, ml&#233;ko, vejce a zeleninu p&#345;&#237;mo od farm&#225;&#345;e."
 head = <<~HTML
   <!doctype html>
   <html lang="cs">

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://zivefarmy.cz/sitemap.xml
