@@ -3,16 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Živé farmy</title>
-<meta name="description" content="Mapa bio a regenerativních farem v Česku — 91 farem, u kterých se dá nakoupit maso, mléko a sýry, vejce a drůbež, zelenina i med.">
+<meta name="description" content="Mapa bio a regenerativnich farem v Cesku - kde nakoupit primo od farmare.">
 <link rel="canonical" href="https://zivefarmy.cz/">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%8C%BE</text></svg>">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zivefarmy.cz/">
-<meta property="og:title" content="Živé farmy">
-<meta property="og:description" content="Mapa bio a regenerativních farem v Česku — 91 farem, u kterých se dá nakoupit maso, mléko a sýry, vejce a drůbež, zelenina i med.">
-<meta property="og:locale" content="cs_CZ">
+<meta property="og:title" content="&#381;iv&#233; farmy">
+<meta property="og:description" content="Mapa bio a regenerativnich farem v Cesku - kde nakoupit primo od farmare.">
 <meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127806;</text></svg>">
+</head>
+<body>
+<title>&#381;iv&#233; farmy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -723,10 +724,23 @@
   }
   .season-pill:hover{background:var(--surface-3);}
   .season-leaf{width:16px;height:16px;flex-shrink:0;color:var(--veg);}
-  .season-month{font-size:0.88rem;font-weight:700;letter-spacing:-0.01em;}
+  /* "Rijen" alone reads as a calendar, so the pill says what it is FOR
+     first and carries the month behind it as a quiet badge. The live dot
+     is the cheapest possible signal that this is about today. */
   .season-kicker{
-    font-size:0.74rem;color:var(--text-soft);font-weight:500;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    font-size:0.86rem;font-weight:700;letter-spacing:-0.01em;
+    color:var(--text);white-space:nowrap;
+  }
+  .season-month{
+    font-size:0.74rem;font-weight:600;white-space:nowrap;
+    padding:2px 8px;border-radius:999px;
+    background:var(--pasture-fill);color:var(--veg);
+    border:1px solid var(--pasture-stroke);
+  }
+  .season-dot{
+    width:7px;height:7px;border-radius:50%;flex-shrink:0;
+    background:var(--veg);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--veg) 22%, transparent);
   }
 
   .season-scrim{position:fixed;inset:0;background:var(--scrim);z-index:60;}
@@ -853,6 +867,24 @@
   .map-reset[hidden]{display:none;}
   .map-reset:hover{background:var(--surface-3);}
   .map-reset svg{width:15px;height:15px;}
+  /* Suggesting a farm used to live only at the foot of the farm list, which
+     you had to open and then scroll past 91 cards to reach - on a fresh load
+     there was no way in at all. It gets its own corner of the map frame. */
+  .map-suggest{
+    position:absolute;left:18px;bottom:46px;z-index:3;
+    display:inline-flex;align-items:center;gap:7px;
+    padding:8px 14px;border-radius:999px;
+    background:var(--accent);
+    border:1px solid var(--accent);color:var(--accent-ink);
+    font-family:inherit;font-size:0.82rem;font-weight:700;
+    cursor:pointer;box-shadow:0 3px 12px var(--shadow);
+  }
+  .map-suggest:hover{
+    background:color-mix(in srgb, var(--accent) 86%, var(--text));
+    border-color:color-mix(in srgb, var(--accent) 86%, var(--text));
+  }
+  .map-suggest:focus-visible{outline:2px solid var(--text);outline-offset:2px;}
+  .map-suggest svg{width:14px;height:14px;flex-shrink:0;}
   .map-caption{
     position:absolute;left:18px;bottom:14px;
     font-size:0.74rem;color:var(--text-soft);
@@ -1191,6 +1223,17 @@
   .rec-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
   .rec-actions .btn{cursor:pointer;font:inherit;font-size:0.88rem;font-weight:600;}
   .rec-hint{margin:12px 0 0;font-size:0.78rem;line-height:1.5;color:var(--text-soft);}
+  /* Somebody who would rather just write an email should not have to
+     hunt for the address - it sits in the open, under the form. */
+  .rec-mail{
+    margin:14px 0 0;padding-top:12px;border-top:1px solid var(--border);
+    font-size:0.82rem;line-height:1.5;color:var(--text-soft);
+  }
+  .rec-mail a{
+    color:var(--accent);font-weight:600;text-decoration:none;
+    border-bottom:1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .rec-mail a:hover{border-bottom-color:var(--accent);}
 
   .d-offers{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
   .offer-chip{
@@ -1369,8 +1412,9 @@
     .map-inner{padding:4px 6px 38px;}
     /* The trigger shrinks to the month alone; the panel it opens comes up
        from the bottom like every other sheet on a phone. */
-    .season-pill{left:10px;top:8px;padding:9px 13px;min-height:40px;gap:6px;}
-    .season-kicker{display:none;}
+    .season-pill{left:10px;top:8px;padding:8px 12px;min-height:40px;gap:7px;}
+    .season-kicker{font-size:0.82rem;}
+    .season-month{font-size:0.7rem;padding:2px 7px;}
     .season-modal{
       left:0;top:auto;bottom:0;transform:none;
       width:100%;max-width:100%;max-height:82vh;
@@ -1431,6 +1475,7 @@
     /* The filter bar already states the count; two of them on one screen
        is just clutter over the map. */
     .map-caption{display:none;}
+    .map-suggest{left:10px;bottom:10px;padding:0 13px;min-height:40px;font-size:0.78rem;}
     .map-reset{right:12px;bottom:10px;padding:0 14px;min-height:44px;}
     .map-zoom{right:12px;bottom:62px;}
 
@@ -1454,8 +1499,6 @@
     *{transition-duration:0.01ms !important;}
   }
 </style>
-</head>
-<body>
 <div class="app">
   <header class="topbar">
     <div class="brand">
@@ -1526,6 +1569,7 @@
       <button type="button" class="btn primary" id="recSend"></button>
     </div>
     <p class="rec-hint" id="recHint"></p>
+    <p class="rec-mail"><span id="recMailLead"></span> <a id="recMailTo" href="#"></a></p>
   </div>
 
   <div class="filterbar-m">
@@ -1607,10 +1651,15 @@
       </div>
       <button type="button" class="season-pill" id="seasonOpen" aria-haspopup="dialog">
         <svg class="season-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
-        <span class="season-month" id="seasonMonth"></span>
+        <span class="season-dot" aria-hidden="true"></span>
         <span class="season-kicker" id="seasonKicker"></span>
+        <span class="season-month" id="seasonMonth"></span>
       </button>
       <div class="map-caption" id="mapCaption">10 farem</div>
+      <button type="button" class="map-suggest" data-rec-open="short">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span data-rec-label></span>
+      </button>
       <div class="map-zoom" role="group" aria-label="Zoom">
         <button type="button" id="zoomIn" aria-label="+">
           <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1731,6 +1780,8 @@ function trackEvent(path, title){
       listToggle:"Farmy",
       searchPlaceholder:"Hledat farmu nebo m\u011Bsto\u2026",
       seasonKicker:"te\u010F v sez\u00F3n\u011B",
+      seasonNowLead:"Te\u010F v sez\u00F3n\u011B",
+      seasonNowTitle:"Co je te\u010F v sez\u00F3n\u011B",
       seasonOther:"v sez\u00F3n\u011B",
       seasonVeg:"Zelenina",
       seasonFruit:"Ovoce",
@@ -1751,14 +1802,16 @@ function trackEvent(path, title){
       townRegion:function(town, kraj){ return town + " \u00B7 " + kraj + " \u2014 ukazujeme v\u0161echny farmy v kraji."; },
       certNames:{ bio:"BIO certifikace", regen:"Regenerativn\u00ED zem\u011Bd\u011Blstv\u00ED" },
       recOpen:"Zn\u00E1te farmu, kter\u00E1 tu chyb\u00ED?",
+      recOpenShort:"Chyb\u00ED tu farma?",
       recTitle:"Doporu\u010Dte farmu",
-      recLead:"Napi\u0161te n\u00E1m, koho jsme minuli.",
+      recLead:"Mapu stav\u00EDme po jedn\u00E9 farm\u011B. Napi\u0161te n\u00E1m, koho jsme minuli \u2014 sta\u010D\u00ED jm\u00E9no a odkaz, zbytek dohled\u00E1me.",
       recName:"N\u00E1zev farmy",
       recWeb:"Web, e-shop nebo Facebook",
       recNote:"Co prod\u00E1vaj\u00ED, pro\u010D sem pat\u0159\u00ED",
       recSend:"Odeslat e-mailem",
       recNeedName:"Dopl\u0148te pros\u00EDm aspo\u0148 n\u00E1zev farmy.",
       recHint:"Zpr\u00E1va se otev\u0159e ve va\u0161em e-mailov\u00E9m programu \u2014 nic se neodes\u00EDl\u00E1 na pozad\u00ED.",
+      recMailLead:"Nebo n\u00E1m rovnou napi\u0161te na",
       favChip:"Obl\u00EDben\u00E9",
       favEmpty:"Zat\u00EDm nem\u00E1te \u017E\u00E1dnou obl\u00EDbenou farmu. Klepn\u011Bte na srdce u farmy a ulo\u017E\u00ED se sem.",
       favAdd:"P\u0159idat mezi obl\u00EDben\u00E9",
@@ -1817,6 +1870,8 @@ function trackEvent(path, title){
       listToggle:"Farms",
       searchPlaceholder:"Search farm or town\u2026",
       seasonKicker:"in season now",
+      seasonNowLead:"In season now",
+      seasonNowTitle:"What is in season now",
       seasonOther:"in season",
       seasonVeg:"Vegetables",
       seasonFruit:"Fruit",
@@ -1837,14 +1892,16 @@ function trackEvent(path, title){
       townRegion:function(town, kraj){ return town + " is in " + kraj + " \u2014 showing every farm there."; },
       certNames:{ bio:"Certified organic", regen:"Regenerative farming" },
       recOpen:"Know a farm that is missing?",
+      recOpenShort:"Missing a farm?",
       recTitle:"Recommend a farm",
-      recLead:"Tell us who we have missed.",
+      recLead:"We build this map one farm at a time. Tell us who we have missed \u2014 a name and a link is enough, we will do the rest.",
       recName:"Farm name",
       recWeb:"Website, shop or Facebook",
       recNote:"What they sell, why it belongs here",
       recSend:"Send by email",
       recNeedName:"Please give at least the farm's name.",
       recHint:"The message opens in your own mail app \u2014 nothing is sent in the background.",
+      recMailLead:"Or just write to us at",
       favChip:"Favourites",
       favEmpty:"No favourites yet. Tap the heart on a farm and it lands here.",
       favAdd:"Add to favourites",
@@ -5603,10 +5660,14 @@ var SEASON = {
     /* The pill always names the real month; only the panel follows the
        arrows, so the corner never lies about what is in season today. */
     document.getElementById('seasonMonth').textContent = seasonName(seasonNow);
-    document.getElementById('seasonKicker').textContent = t('seasonKicker');
-    document.getElementById('seasonTitle').textContent = seasonName(seasonShown);
+    document.getElementById('seasonKicker').textContent = t('seasonNowLead');
+    /* Opened on today it answers the question; stepped away it becomes an
+       ordinary month view and says so. */
+    var isNow = seasonShown === seasonNow;
+    document.getElementById('seasonTitle').textContent =
+      isNow ? t('seasonNowTitle') : seasonName(seasonShown);
     document.getElementById('seasonKickerM').textContent =
-      seasonShown === seasonNow ? t('seasonKicker') : t('seasonOther');
+      isNow ? seasonName(seasonNow) : t('seasonOther');
     var groups = [['veg','seasonVeg'],['fruit','seasonFruit'],['herbs','seasonHerbs']];
     document.getElementById('seasonGroups').innerHTML = groups.map(function(g){
       if (!d[g[0]] || !d[g[0]].length) return '';
@@ -5747,13 +5808,16 @@ var SEASON = {
    whole, because this page is public and a plain address in the markup is the
    first thing an address harvester picks up. Nothing is posted to a server
    from here - the visitor sends the mail from their own client. */
-var SUGGEST_TO = ["patrycja.szuscik", "gmail.com"].join("@");
+var SUGGEST_TO = ["ahoj", "zivefarmy.cz"].join("@");
 
 var recPanel = document.getElementById('recPanel');
 var recScrim = document.getElementById('recScrim');
 
 function recLabels(){
-  document.querySelectorAll('[data-rec-open]').forEach(function(b){ b.textContent = t('recOpen'); });
+  document.querySelectorAll('[data-rec-open]').forEach(function(b){
+    var tgt = b.querySelector('[data-rec-label]') || b;
+    tgt.textContent = t(b.getAttribute('data-rec-open') === 'short' ? 'recOpenShort' : 'recOpen');
+  });
   document.getElementById('recTitle').textContent  = t('recTitle');
   document.getElementById('recLead').textContent   = t('recLead');
   document.getElementById('recLName').textContent  = t('recName');
@@ -5761,6 +5825,10 @@ function recLabels(){
   document.getElementById('recLNote').textContent  = t('recNote');
   document.getElementById('recSend').textContent   = t('recSend');
   document.getElementById('recHint').textContent   = t('recHint');
+  document.getElementById('recMailLead').textContent = t('recMailLead');
+  var a = document.getElementById('recMailTo');
+  a.textContent = SUGGEST_TO;
+  a.href = 'mailto:' + SUGGEST_TO + '?subject=' + encodeURIComponent(t('recTitle'));
 }
 
 function recText(){
@@ -5800,7 +5868,6 @@ recLabels();
 
 </body></html>
 
-<script data-goatcounter="https://zivefarmy.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </body>
 </html>
