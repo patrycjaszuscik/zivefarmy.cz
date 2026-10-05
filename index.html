@@ -1222,6 +1222,7 @@
   .rec-field input:focus,.rec-field textarea:focus{outline:2px solid var(--accent);outline-offset:1px;}
   .rec-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
   .rec-actions .btn{cursor:pointer;font:inherit;font-size:0.88rem;font-weight:600;}
+  .rec-trap{position:absolute;left:-9999px;width:1px;height:1px;opacity:0;}
   .rec-hint{margin:12px 0 0;font-size:0.78rem;line-height:1.5;color:var(--text-soft);}
   /* Somebody who would rather just write an email should not have to
      hunt for the address - it sits in the open, under the form. */
@@ -1565,6 +1566,7 @@
     <label class="rec-field"><span id="recLName"></span><input id="recName" type="text" autocomplete="off"></label>
     <label class="rec-field"><span id="recLWeb"></span><input id="recWeb" type="text" autocomplete="off" inputmode="url"></label>
     <label class="rec-field"><span id="recLNote"></span><textarea id="recNote" rows="3"></textarea></label>
+    <input id="recTrap" class="rec-trap" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
     <div class="rec-actions">
       <button type="button" class="btn primary" id="recSend"></button>
     </div>
@@ -1810,6 +1812,10 @@ function trackEvent(path, title){
       recNote:"Co prod\u00E1vaj\u00ED, pro\u010D sem pat\u0159\u00ED",
       recSend:"Odeslat e-mailem",
       recNeedName:"Dopl\u0148te pros\u00EDm aspo\u0148 n\u00E1zev farmy.",
+      recSendPost:"Odeslat",
+      recSending:"Odes\u00EDl\u00E1m\u2026",
+      recSent:"D\u00EDky! Tip je u n\u00E1s.",
+      recFailed:"Odesl\u00E1n\u00ED se nepovedlo \u2014 napi\u0161te n\u00E1m pros\u00EDm na ahoj@zivefarmy.cz.",
       recHint:"Zpr\u00E1va se otev\u0159e ve va\u0161em e-mailov\u00E9m programu \u2014 nic se neodes\u00EDl\u00E1 na pozad\u00ED.",
       recMailLead:"Nebo n\u00E1m rovnou napi\u0161te na",
       favChip:"Obl\u00EDben\u00E9",
@@ -1866,7 +1872,7 @@ function trackEvent(path, title){
     },
     en:{
       title:"\u017Div\u00E9 farmy",
-      tagline:"A map of organic and regenerative farms in the Czech Republic",
+      tagline:"A map of organic and regenerative farms in Czechia",
       listToggle:"Farms",
       searchPlaceholder:"Search farm or town\u2026",
       seasonKicker:"in season now",
@@ -1900,6 +1906,10 @@ function trackEvent(path, title){
       recNote:"What they sell, why it belongs here",
       recSend:"Send by email",
       recNeedName:"Please give at least the farm's name.",
+      recSendPost:"Send",
+      recSending:"Sending\u2026",
+      recSent:"Thank you! We have your tip.",
+      recFailed:"That did not send \u2014 please write to ahoj@zivefarmy.cz instead.",
       recHint:"The message opens in your own mail app \u2014 nothing is sent in the background.",
       recMailLead:"Or just write to us at",
       favChip:"Favourites",
@@ -2218,7 +2228,7 @@ function trackEvent(path, title){
     { id:"refarma", shipNote:{cs:"Objedn\u00E1vky jdou p\u0159\u00EDmo od farm\u00E1\u0159e k z\u00E1kazn\u00EDkovi \u2013 p\u0159es jednoduch\u00FD formul\u00E1\u0159, osobn\u00ED odb\u011Br nebo rozvoz.", en:"Orders go straight from farmer to customer \u2014 by simple form, farm pickup, or delivery."}, name:"ReFarma",
       town:{cs:"Lidma\u0148, okres Pelh\u0159imov", en:"Lidma\u0148, Pelh\u0159imov District"},
       region:{cs:"Kraj Vyso\u010Dina", en:"Vyso\u010Dina Region"},
-      lat:49.466, lon:15.169, cats:["meat"],
+      lat:49.466, lon:15.169, cats:["meat"], tags:["j\u00E1tra","srdce","heart","droby","vnit\u0159nosti","offal","ledvinky","kidneys","jazyk","tongue","kostn\u00ED d\u0159e\u0148","bone marrow"],
       website:"https://refar.ma/", eshop:"https://docs.google.com/forms/d/e/1FAIpQLSd_9fz_Uo_9VRWMc9_1AZMLcPFEocZECeMoJgZJY2u6BFpbgg/viewform",
       phone:"+420 728 643 798",
       story:{ cs:["Rodinn\u00E1 regenerativn\u00ED farma na Vyso\u010Din\u011B chovaj\u00EDc\u00ED skot plemene Aberdeen Angus a pastevn\u00ED ku\u0159ata.",
@@ -2298,6 +2308,7 @@ function trackEvent(path, title){
       town:{cs:"Drahenice, P\u0159\u00EDbramsko", en:"Drahenice, P\u0159\u00EDbram area"},
       region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
       lat:49.535, lon:13.992, cats:["meat"],
+  tags:["j\u00E1tra"],
       website:"https://rege.food/dangusdrahenice/", eshop:"https://rege.food/",
       story:{
         cs:[
@@ -2317,6 +2328,7 @@ function trackEvent(path, title){
       town:{cs:"Podorlicko, Orlick\u00E9 hory", en:"Podorlicko, Orlick\u00E9 hory foothills"},
       region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
       lat:50.165, lon:16.465, cats:["meat"],
+  tags:["j\u00E1tra","liver","srdce","heart","ledvinky","kidneys","jazyk","tongue","dr\u0161\u0165ky","tripe","kostn\u00ED d\u0159e\u0148","bone marrow"],
       website:"https://farmaehl.cz/",
       story:{ cs:["Regenerativn\u00ED hospoda\u0159en\u00ED v BIO kvalit\u011B v Podorlicku.",
                   "Hov\u011Bz\u00ED maso z plemene Aberdeen Angus krmen\u00E9ho v\u00FDhradn\u011B travou."],
@@ -2566,7 +2578,7 @@ function trackEvent(path, title){
               "Order by phone on +420 608 960 018 or +420 721 578 391, by e-mail, or by message on Facebook.",
               "Collection is in person by prior arrangement at Doln\u00ED Dvory 40 near Ka\u0161persk\u00E9 Hory. They mail out whatever surplus is currently available to anyone who signs up."] } },
 
-    { id:"bosina", cert:"bio", tags:["vep\u0159ov\u00E9","mangalica","pork","dr\u016Fbe\u017E"], delivery:["pickup"], hours:{cs:"V kr\u00E1mku jsou i v\u00FDrobky sousedn\u00EDch farm\u00E1\u0159\u016F. Farm\u00E1\u0159sk\u00FD kr\u00E1mek jednou za dva t\u00FDdny v lich\u00E9m t\u00FDdnu: P\u00E1 10:00\u201317:00, So 10:00\u201313:00; objedn\u00E1vky z e-shopu se vyzved\u00E1vaj\u00ED na farm\u011B", en:"The shop also carries neighbouring farmers' products. Farm shop every second (odd) week: Fri 10:00\u201317:00, Sat 10:00\u201313:00; e-shop orders are collected at the farm"}, sellers:[{name:"Mlsn\u00E1 farm\u00E1\u0159ka, Tyr\u0161ova 63, N\u00E1chod", url:"https://www.regionysobe.cz/kralovehradecky/mlsna-farmarka/"}], eshop:"https://www.masozfarmy.cz/", facebook:"https://www.facebook.com/EkofarmaBosina", instagram:"https://www.instagram.com/ekofarmabosina/", name:"Ekofarma Bo\u0161ina",
+    { id:"bosina", cert:"bio", tags:["j\u00E1tra","srdce","heart","s\u00E1dlo","lard","vep\u0159ov\u00E9","mangalica","pork","dr\u016Fbe\u017E"], delivery:["pickup"], hours:{cs:"V kr\u00E1mku jsou i v\u00FDrobky sousedn\u00EDch farm\u00E1\u0159\u016F. Farm\u00E1\u0159sk\u00FD kr\u00E1mek jednou za dva t\u00FDdny v lich\u00E9m t\u00FDdnu: P\u00E1 10:00\u201317:00, So 10:00\u201313:00; objedn\u00E1vky z e-shopu se vyzved\u00E1vaj\u00ED na farm\u011B", en:"The shop also carries neighbouring farmers' products. Farm shop every second (odd) week: Fri 10:00\u201317:00, Sat 10:00\u201313:00; e-shop orders are collected at the farm"}, sellers:[{name:"Mlsn\u00E1 farm\u00E1\u0159ka, Tyr\u0161ova 63, N\u00E1chod", url:"https://www.regionysobe.cz/kralovehradecky/mlsna-farmarka/"}], eshop:"https://www.masozfarmy.cz/", facebook:"https://www.facebook.com/EkofarmaBosina", instagram:"https://www.instagram.com/ekofarmabosina/", name:"Ekofarma Bo\u0161ina",
       town:{cs:"Vern\u00E9\u0159ovice 248, Broumovsko", en:"Vern\u00E9\u0159ovice 248, Broumov area"},
       region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
       lat:50.60, lon:16.25, cats:["meat","eggs"],
@@ -2609,6 +2621,7 @@ function trackEvent(path, title){
       town:{cs:"L\u00EDpa nad Orlic\u00ED 60, T\u00FDni\u0161t\u011B nad Orlic\u00ED", en:"L\u00EDpa nad Orlic\u00ED 60, T\u00FDni\u0161t\u011B nad Orlic\u00ED"},
       region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
       lat:50.15, lon:16.11, cats:["meat"],
+  tags:["dr\u0161\u0165ky","tripe","droby","vnit\u0159nosti","offal"],
       website:"https://www.farmaurekyorlice.cz/",
       story:{ cs:["BIO farma u \u0159eky Orlice s chovem plemene Aberdeen Angus.",
                   "Hov\u011Bz\u00ED maso v\u010Detn\u011B vyzr\u00E1l\u00FDch steakov\u00FDch v\u00FDsek\u016F."],
@@ -2699,6 +2712,7 @@ function trackEvent(path, title){
       town:{cs:"Hrub\u00E1 Vrbka, B\u00EDl\u00E9 Karpaty", en:"Hrub\u00E1 Vrbka, White Carpathians"},
       region:{cs:"Jihomoravsk\u00FD kraj", en:"South Moravian Region"},
       lat:48.87, lon:17.51, cats:["meat","veggies"],
+  tags:["j\u00E1tra","liver","kostn\u00ED d\u0159e\u0148","bone marrow","s\u00E1dlo","lard"],
       website:"https://www.hornackafarma.cz/",
       story:{
         cs:[
@@ -2863,6 +2877,7 @@ function trackEvent(path, title){
   town:{cs:"Mil\u00EDnov 99, Nezv\u011Bstice", en:"Mil\u00EDnov 99, Nezv\u011Bstice"},
   region:{cs:"Plze\u0148sk\u00FD kraj", en:"Plze\u0148 Region"},
   lat:49.6432, lon:13.5660, cats:["meat","eggs"],
+  tags:["droby","vnit\u0159nosti","offal"],
   offers:["tours"],
   story:{ cs:["Rodinn\u00E1 farma na Plze\u0148sku s BIO hov\u011Bz\u00EDm z vlastn\u00EDho chovu.",
               "Krom\u011B masa nab\u00EDzej\u00ED vejce a dom\u00E1c\u00ED marmel\u00E1dy \u2014 jahodov\u00E9, bor\u016Fvkov\u00E9, vi\u0161\u0148ov\u00E9 se sko\u0159ic\u00ED, meru\u0148kov\u00E9.",
@@ -2897,6 +2912,7 @@ function trackEvent(path, title){
   town:{cs:"Rybni\u010Dn\u00E1 482, Abertamy", en:"Rybni\u010Dn\u00E1 482, Abertamy"},
   region:{cs:"Karlovarsk\u00FD kraj", en:"Karlovy Vary Region"},
   lat:50.3689, lon:12.8184, cats:["dairy","meat"],
+  tags:["srdce","heart"],
   story:{ cs:["Horsk\u00E9 hospod\u00E1\u0159stv\u00ED v Kru\u0161n\u00FDch hor\u00E1ch, kter\u00E9 si samo zpracov\u00E1v\u00E1 ml\u00E9ko i maso.",
               "Hospoda\u0159\u00ED v re\u017Eimu ekologick\u00E9ho zem\u011Bd\u011Blstv\u00ED; jejich ov\u010D\u00ED bios\u00FDr Arnika z\u00EDskal ocen\u011Bn\u00ED \u010Cesk\u00E1 biopotravina.",
               "V Abertamech maj\u00ED bistro, s\u00FDr\u00E1rnu a \u0159eznictv\u00ED pod jednou st\u0159echou \u2014 s\u00FDry, ml\u00E9ko a maso z vlastn\u00EDho chovu.",
@@ -2965,6 +2981,7 @@ function trackEvent(path, title){
   town:{cs:"Horn\u00ED Brann\u00E1 117, Podkrkono\u0161\u00ED", en:"Horn\u00ED Brann\u00E1 117, Krkono\u0161e foothills"},
   region:{cs:"Libereck\u00FD kraj", en:"Liberec Region"},
   lat:50.6084, lon:15.5716, cats:["meat"],
+  tags:["j\u00E1tra","liver","srdce","heart","jazyk","tongue","dr\u0161\u0165ky","tripe","l\u016Fj","tallow","s\u00E1dlo","lard"],
   story:{ cs:["Mal\u00E1 rodinn\u00E1 ekologick\u00E1 farma v Horn\u00ED Brann\u00E9 pod Krkono\u0161emi.",
               "Produkuj\u00ED BIO hov\u011Bz\u00ED z vlastn\u00EDho chovu a vyr\u00E1b\u011Bj\u00ED z n\u011Bj krkono\u0161sk\u00E9 hov\u011Bz\u00ED speciality.",
               "Pod zna\u010Dkou Krkono\u0161sk\u00E9 hov\u011Bz\u00ED je najdete i na Scuku, kde maj\u00ED p\u0159es pades\u00E1t BIO polo\u017Eek.",
@@ -3079,6 +3096,7 @@ function trackEvent(path, title){
   town:{cs:"Rudimov 105, Slavi\u010D\u00EDn, B\u00EDl\u00E9 Karpaty", en:"Rudimov 105, Slavi\u010D\u00EDn, White Carpathians"},
   region:{cs:"Zl\u00EDnsk\u00FD kraj", en:"Zl\u00EDn Region"},
   lat:49.0798, lon:17.8283, cats:["meat"],
+  tags:["j\u00E1tra","l\u016Fj","tallow","droby","vnit\u0159nosti","offal"],
   story:{ cs:["Certifikovan\u00E1 BIO farma v B\u00EDl\u00FDch Karpatech s vlastn\u00ED por\u00E1\u017Ekou a zpracov\u00E1n\u00EDm.",
               "Skot i ovce se pasou venku; maso nech\u00E1vaj\u00ED vyzr\u00E1t a prod\u00E1vaj\u00ED pod zna\u010Dkou Maso z l\u00FAky.",
               "V nab\u00EDdce je vyzr\u00E1l\u00E9 hov\u011Bz\u00ED a jehn\u011B\u010D\u00ED, uzeniny a pa\u0161tiky, ale i ovoce a ov\u010D\u00ED ko\u017Ee\u0161iny."],
@@ -3161,7 +3179,7 @@ function trackEvent(path, title){
   town:{cs:"Horn\u00ED Adr\u0161pach 26, Broumovsko", en:"Horn\u00ED Adr\u0161pach 26, Broumov area"},
   region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
   lat:50.6244, lon:16.0835, cats:["meat"],
-  tags:["hov\u011Bz\u00ED","charolais","vyzr\u00E1l\u00E9 hov\u011Bz\u00ED","beef"],
+  tags:["dr\u0161\u0165ky","tripe","srdce","hov\u011Bz\u00ED","charolais","vyzr\u00E1l\u00E9 hov\u011Bz\u00ED","beef"],
   story:{ cs:["BIO farma v podh\u016F\u0159\u00ED Krkono\u0161, v srdci CHKO Broumovsko, na dohled p\u00EDskovcov\u00FDch skal.",
               "Chovaj\u00ED 120 kus\u016F z\u00E1kladn\u00EDho st\u00E1da masn\u00E9ho plemene Charolais podle pravidel ekologick\u00E9ho zem\u011Bd\u011Blstv\u00ED.",
               "Skot se pase od jara a\u017E do zimy na vlastn\u00EDch pastvin\u00E1ch; seno a sen\u00E1\u017E poch\u00E1zej\u00ED z jejich luk, bez pr\u016Fmyslov\u00FDch krmiv a chemie.",
@@ -3239,7 +3257,7 @@ function trackEvent(path, title){
   town:{cs:"Chaloupky-Oub\u011Bnice, Dob\u0159\u00ED\u0161sko", en:"Chaloupky-Oub\u011Bnice, Dob\u0159\u00ED\u0161 area"},
   region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
   lat:49.7177, lon:14.1599, cats:["meat"],
-  tags:["hov\u011Bz\u00ED","jehn\u011B\u010D\u00ED","zv\u011B\u0159ina","jelen\u00ED","dan\u010D\u00ED","pstruh","venison","lamb"],
+  tags:["jazyk","tongue","l\u016Fj","tallow","s\u00E1dlo","lard","hov\u011Bz\u00ED","jehn\u011B\u010D\u00ED","zv\u011B\u0159ina","jelen\u00ED","dan\u010D\u00ED","pstruh","venison","lamb"],
   story:{ cs:["Farmu zalo\u017Eil v roce 2005 Martin Kozohorsk\u00FD s rodinou v osad\u011B Chaloupky-Oub\u011Bnice na Dob\u0159\u00ED\u0161sku \u2014 p\u016Fvodn\u011B jako farmu jelen\u00ED.",
               "Maj\u00ED prostornou oboru s loukami, p\u00EDskovcov\u00FDmi skalami a lesem, kde chovaj\u00ED divokou zv\u011B\u0159 i masn\u00FD skot.",
               "Zv\u00ED\u0159ata jsou na pastv\u011B ve dne i v noci, na jedno p\u0159ipad\u00E1 jeden a\u017E dva hektary a p\u0159ipou\u0161t\u00ED se p\u0159irozen\u011B.",
@@ -3288,7 +3306,7 @@ function trackEvent(path, title){
   town:{cs:"Trn\u011Bn\u00FD \u00DAjezd, Karl\u0161tejn", en:"Trn\u011Bn\u00FD \u00DAjezd, Karl\u0161tejn"},
   region:{cs:"St\u0159edo\u010Desk\u00FD kraj", en:"Central Bohemian Region"},
   lat:49.9529, lon:14.2087, cats:["meat","eggs"],
-  tags:["vep\u0159ov\u00E9","p\u0159e\u0161tick\u00E9","pork","hov\u011Bz\u00ED","jehn\u011B\u010D\u00ED"],
+  tags:["l\u016Fj","tallow","s\u00E1dlo","lard","droby","vnit\u0159nosti","offal","vep\u0159ov\u00E9","p\u0159e\u0161tick\u00E9","pork","hov\u011Bz\u00ED","jehn\u011B\u010D\u00ED"],
   story:{ cs:["Rodinn\u00E1 ekologick\u00E1 farma Radima Holovsk\u00E9ho ml. v Trn\u011Bn\u00E9m \u00DAjezd\u011B u Karl\u0161tejna, z\u010D\u00E1sti v CHKO \u010Cesk\u00FD kras, nedaleko lom\u016F Velk\u00E1 a Mal\u00E1 Amerika.",
               "Hospoda\u0159\u00ED na 220 hektarech \u2014 zhruba p\u016Fl na p\u016Fl orn\u00E1 p\u016Fda a travn\u00ED porosty.",
               "Chovaj\u00ED masn\u00E1 plemena skotu, ovce, prasata a dr\u016Fbe\u017E; trval\u00E9 travn\u00ED porosty slou\u017E\u00ED hlavn\u011B jako pastviny.",
@@ -3362,7 +3380,7 @@ function trackEvent(path, title){
       hours:{cs:"Prodejna Al\u0161ovo n\u00E1m. 691/4, Ostrava-Poruba: Po\u2013P\u00E1 8:00\u201315:30", en:"Shop at Al\u0161ovo n\u00E1m. 691/4, Ostrava-Poruba: Mon\u2013Fri 8:00\u201315:30"}, offers:["bedynky"],
       town:{cs:"Ostrava-Poruba", en:"Ostrava-Poruba"},
       region:{cs:"Moravskoslezsk\u00FD kraj", en:"Moravian-Silesian Region"},
-      lat:49.8355, lon:18.1622, cats:["veggies","meat","dairy","eggs"],
+      lat:49.8355, lon:18.1622, cats:["veggies","meat","dairy","eggs"], tags:["jazyk","tongue"],
       website:"https://www.biokosiky.cz/", eshop:"https://www.biokosiky.cz/",
       phone:"727 862 655",
       story:{
@@ -3520,6 +3538,7 @@ function trackEvent(path, title){
   town:{cs:"\u017D\u00E1r 70, Trhov\u00E9 Sviny", en:"\u017D\u00E1r 70, Trhov\u00E9 Sviny"},
   region:{cs:"Jiho\u010Desk\u00FD kraj", en:"South Bohemian Region"},
   lat:48.8424, lon:14.6393, cats:["meat"],
+  tags:["s\u00E1dlo","lard"],
   story:{ cs:["Spole\u010Dn\u00FD projekt n\u011Bkolika jiho\u010Desk\u00FDch BIO farem z okol\u00ED Novohradsk\u00FDch hor a \u010Cesk\u00E9 Kanady.",
               "BIO hov\u011Bz\u00ED v\u010Detn\u011B vyzr\u00E1l\u00E9ho, klob\u00E1sy, su\u0161en\u00E9 maso a dal\u0161\u00ED masn\u00E9 v\u00FDrobky.",
               "Vlastn\u00ED BIO jatka provozuj\u00ED v Besednici."],
@@ -3555,6 +3574,7 @@ function trackEvent(path, title){
   town:{cs:"\u0160achov 13, Borohr\u00E1dek", en:"\u0160achov 13, Borohr\u00E1dek"},
   region:{cs:"Kr\u00E1lov\u00E9hradeck\u00FD kraj", en:"Hradec Kr\u00E1lov\u00E9 Region"},
   lat:50.0979, lon:16.0934, cats:["veggies","meat"],
+  tags:["l\u016Fj","tallow","s\u00E1dlo","lard"],
   story:{ cs:["Certifikovan\u00E1 ekologick\u00E1 ovocn\u00E1\u0159sk\u00E1 farma na Rychnovsku.",
               "BIO jablka, \u0161vestky, hru\u0161ky a t\u0159e\u0161n\u011B, d\u00FDn\u011B hokkaido, mrkev a \u010Derven\u00E1 \u0159epa; k tomu vlastn\u00ED \u0161\u0165\u00E1vy.",
               "Jehn\u011B\u010D\u00ED maj\u00ED jen sezonn\u011B \u2014 na maso se ozv\u011Bte p\u0159edem, jestli je zrovna v nab\u00EDdce.",
@@ -3649,7 +3669,7 @@ function trackEvent(path, title){
   instagram:"https://www.instagram.com/kyselovic_hospodarstvi/",
   email:"angus@kyselovichospodarstvi.cz", phone:"+420 725 714 021",
   offers:["automat"],
-  tags:["vejce z pastvy","pasture eggs","l\u016Fj"],
+  tags:["srdce","heart","vejce z pastvy","pasture eggs","l\u016Fj"],
   hours:{cs:"Samoobslu\u017En\u00E1 Vejcovnice 24/7; hov\u011Bz\u00ED zhruba jednou m\u011Bs\u00ED\u010Dn\u011B na p\u0159edobjedn\u00E1vku", en:"Self-service egg hut 24/7; beef roughly monthly, by pre-order"},
   name:"Kyselovic hospod\u00E1\u0159stv\u00ED",
   town:{cs:"P\u0159estavlky u \u010Cer\u010Dan 94", en:"P\u0159estavlky u \u010Cer\u010Dan 94"},
@@ -4086,6 +4106,74 @@ function farmHaystack(f){
   return f._hay;
 }
 
+/* People search by product, not by farm name, and they mix the two languages
+   and the word order freely: "hovezi jatra", "organ meats", "raw milk".
+   Every group below is interchangeable in both directions, and a query of
+   several words matches when each word finds something - so "veprove jatra"
+   hits a farm whose page says pork in one place and liver in another. */
+var SEARCH_SYN = (function(){
+  var groups = [
+    ["maso","meat"],["hovezi","beef"],["veprove","pork"],["jehneci","lamb"],
+    ["skopove","mutton"],["telec\u00ED","telec","veal"],["kureci","kure","chicken"],
+    ["drubez","poultry"],["kachna","kachni","duck"],["husa","husi","goose"],
+    ["kruta","kruti","turkey"],["kralik","kralici","rabbit"],
+    ["zverina","game","venison"],["jeleni","red deer"],["danci","fallow"],
+    ["srnci","roe"],["divocak","wild boar"],
+    ["vnitrnosti","droby","offal","organ meats","organ meat"],
+    ["jatra","liver"],["srdce","heart"],["ledvinky","ledviny","kidney","kidneys"],
+    ["jazyk","tongue"],["kostni dren","bone marrow","marrow","morek"],
+    ["brzlik","sweetbread","sweetbreads"],["drstky","tripe"],
+    ["loj","tallow"],["sadlo","lard"],["slanina","bacon"],
+    ["klobasa","klobasy","sausage","sausages","parky","spekacky"],
+    ["sunka","ham"],["pastika","pate"],["gulas","goulash"],["steak","biftek"],
+    ["mleko","milk"],["syrove mleko","raw milk"],["syr","syry","cheese"],
+    ["maslo","butter"],["jogurt","yoghurt","yogurt"],["tvaroh","curd","quark"],
+    ["smetana","cream"],["kefir","kefir drink"],["podmasli","buttermilk"],
+    ["kozi","goat"],["ovci","sheep"],["kravske","cow"],
+    ["vejce","egg","eggs"],["med","honey"],
+    ["zelenina","vegetables","veg"],["ovoce","fruit"],["brambory","potatoes"],
+    ["bylinky","herbs"],["mouka","flour"],["chleb","bread"],
+    ["bedynky","bedynka","veg box","box"]
+  ];
+  var m = {};
+  groups.forEach(function(g){
+    g.forEach(function(w){
+      m[w] = (m[w] || []).concat(g.filter(function(x){ return x !== w; }));
+    });
+  });
+  return m;
+})();
+
+/* Matching at the START of a word, not anywhere inside one: a plain
+   substring made "liver" fire on "delivery" and "med" on "Medlanky",
+   while a full word boundary would have broken typing half a farm's
+   name. Word-start keeps the prefix search and drops the nonsense. */
+var WORD_RE = {};
+function wordStart(hay, w){
+  var re = WORD_RE[w] || (WORD_RE[w] =
+    new RegExp('(^|[^a-z0-9])' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  return re.test(hay);
+}
+function termHit(hay, w){
+  if (wordStart(hay, w)) return true;
+  var alts = SEARCH_SYN[w];
+  if (!alts) return false;
+  for (var i = 0; i < alts.length; i++){ if (wordStart(hay, alts[i])) return true; }
+  return false;
+}
+
+/* Whole phrase first, so "organ meats" and "raw milk" keep their meaning;
+   only then word by word, which is what rescues "hovezi srdce". */
+function searchHit(hay, q){
+  var fq = fold(q).trim();
+  if (!fq) return true;
+  if (termHit(hay, fq)) return true;
+  var words = fq.split(/\s+/).filter(Boolean);
+  if (words.length < 2) return false;
+  for (var i = 0; i < words.length; i++){ if (!termHit(hay, words[i])) return false; }
+  return true;
+}
+
 function matches(f){
     if (onlyFavs && !FAVS.has(f.id)) return false;
     var catOk = !activeCats.length || f.cats.some(function(c){ return activeCats.indexOf(c) !== -1; });
@@ -4093,7 +4181,7 @@ function matches(f){
     var regionOk = activeRegion === 'all' || f.region.cs === activeRegion;
     var delivOk = activeDelivery === 'all' || (f.delivery || []).indexOf(activeDelivery) !== -1;
     var q = searchQuery.trim().toLowerCase();
-    var textOk = !q || farmHaystack(f).indexOf(fold(q)) !== -1;
+    var textOk = !q || searchHit(farmHaystack(f), q);
     return catOk && chanOk && regionOk && delivOk && textOk;
   }
 
@@ -5810,6 +5898,12 @@ var SEASON = {
    from here - the visitor sends the mail from their own client. */
 var SUGGEST_TO = ["ahoj", "zivefarmy.cz"].join("@");
 
+/* Paste the endpoint from the form service here and the box posts the tip
+   straight through - no mail client opens. Left empty it falls back to
+   mailto so the form is never a dead end. Note the POST only works on the
+   real site: the artifact preview blocks requests to outside hosts. */
+var SUGGEST_ENDPOINT = "https://formsubmit.co/ajax/" + SUGGEST_TO;
+
 var recPanel = document.getElementById('recPanel');
 var recScrim = document.getElementById('recScrim');
 
@@ -5823,8 +5917,10 @@ function recLabels(){
   document.getElementById('recLName').textContent  = t('recName');
   document.getElementById('recLWeb').textContent   = t('recWeb');
   document.getElementById('recLNote').textContent  = t('recNote');
-  document.getElementById('recSend').textContent   = t('recSend');
-  document.getElementById('recHint').textContent   = t('recHint');
+  document.getElementById('recSend').textContent   = t(SUGGEST_ENDPOINT ? 'recSendPost' : 'recSend');
+  var recHintEl = document.getElementById('recHint');
+  recHintEl.textContent = t('recHint');
+  recHintEl.hidden = !!SUGGEST_ENDPOINT;
   document.getElementById('recMailLead').textContent = t('recMailLead');
   var a = document.getElementById('recMailTo');
   a.textContent = SUGGEST_TO;
@@ -5853,12 +5949,52 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'Escape' && !recPanel.hidden) closeRec();
 });
 
+var recSending = false;
 document.getElementById('recSend').addEventListener('click', function(){
-  if (!document.getElementById('recName').value.trim()){ showToast(t('recNeedName')); return; }
-  window.location.href = 'mailto:' + SUGGEST_TO +
-    '?subject=' + encodeURIComponent(t('recTitle')) +
-    '&body=' + encodeURIComponent(recText());
-  closeRec();
+  if (recSending) return;
+  var val = function(id){ return document.getElementById(id).value.trim(); };
+  if (!val('recName')){ showToast(t('recNeedName')); return; }
+  /* Anything that filled the hidden field is a bot. Act sent, send nothing. */
+  if (val('recTrap')){ closeRec(); showToast(t('recSent')); return; }
+
+  if (!SUGGEST_ENDPOINT){
+    window.location.href = 'mailto:' + SUGGEST_TO +
+      '?subject=' + encodeURIComponent(t('recTitle')) +
+      '&body=' + encodeURIComponent(recText());
+    closeRec();
+    return;
+  }
+
+  var btn = this;
+  recSending = true;
+  btn.disabled = true;
+  btn.textContent = t('recSending');
+  fetch(SUGGEST_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      _subject: t('recTitle') + ': ' + val('recName'),
+      _captcha: 'false',
+      _template: 'table',
+      farma: val('recName'),
+      web: val('recWeb'),
+      poznamka: val('recNote'),
+      jazyk: LANG
+    })
+  }).then(function(r){
+    if (!r.ok) throw new Error(r.status);
+    ['recName','recWeb','recNote'].forEach(function(id){ document.getElementById(id).value = ''; });
+    closeRec();
+    showToast(t('recSent'));
+  }).catch(function(){
+    /* The address is sitting in the open under the form, so say so rather
+       than hijacking them into a mail client they did not ask for. */
+    showToast(t('recFailed'));
+  }).then(function(){
+    recSending = false;
+    btn.disabled = false;
+    btn.textContent = t(SUGGEST_ENDPOINT ? 'recSendPost' : 'recSend');
+  });
 });
 
 recLabels();
