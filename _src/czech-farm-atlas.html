@@ -1621,6 +1621,7 @@
       </div>
       <ul class="farm-list" id="farmList"></ul>
       <p class="sidebar-footnote" id="txtFootnote">Kur&#225;torovan&#253; v&#253;b&#283;r regenerativn&#237;ch a bio farem v &#268;esku, sestaven&#253; z web&#367; jednotliv&#253;ch farem. Chyb&#237; v&#225;m tu n&#283;jak&#225; farma? Ozv&#283;te se.</p>
+      <a class="rec-open" data-all-farms href="/farmy/">Seznam v&#353;ech farem</a>
       <button type="button" class="rec-open" id="recOpen" data-rec-open></button>
     </aside>
 
@@ -1673,6 +1674,7 @@
     <input type="text" class="list-filter-input" id="sheetSearch" autocomplete="off">
   </div>
   <ul class="farm-list" id="mobileFarmList"></ul>
+  <a class="rec-open" data-all-farms href="/farmy/">Seznam v&#353;ech farem</a>
   <button type="button" class="rec-open" data-rec-open></button>
 </nav>
 
@@ -1766,6 +1768,7 @@ function trackEvent(path, title){
       title:"\u017Div\u00E9 farmy",
       tagline:"Mapa bio a regenerativn\u00EDch farem v \u010Cesku",
       listToggle:"Farmy",
+      allFarms:"Seznam v\u0161ech farem",
       searchPlaceholder:"Hledat farmu nebo m\u011Bsto\u2026",
       seasonKicker:"te\u010F v sez\u00F3n\u011B",
       seasonNowLead:"Te\u010F v sez\u00F3n\u011B",
@@ -1860,6 +1863,7 @@ function trackEvent(path, title){
       title:"\u017Div\u00E9 farmy",
       tagline:"A map of organic and regenerative farms in Czechia",
       listToggle:"Farms",
+      allFarms:"All farms, as a list",
       searchPlaceholder:"Search farm or town\u2026",
       seasonKicker:"in season now",
       seasonNowLead:"In season now",
@@ -5165,6 +5169,7 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     syncDrawerFav(f.id);
     syncDrawerShare(f.id);
     fitDrawerCats();
+    try { history.replaceState(null, '', '#farma=' + id); } catch(e){}
     drawer.classList.add('open');
     drawer.setAttribute('aria-hidden','false');
     scrim.classList.add('show');
@@ -5216,6 +5221,7 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
   function closeDrawer(){
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden','true');
+    if (location.hash) { try { history.replaceState(null, '', location.pathname + location.search); } catch(e){} }
     scrim.classList.remove('show');
     document.querySelectorAll('.pin').forEach(function(p){ p.classList.remove('selected'); });
     document.querySelectorAll('.farm-card').forEach(function(c){ c.classList.remove('active'); });
@@ -5803,6 +5809,7 @@ var SEASON = {
     document.getElementById('txtTagline').textContent = t('tagline');
     document.getElementById('txtTaglineM').textContent = t('tagline');
     document.getElementById('txtListToggle').textContent = t('listToggle');
+    document.querySelectorAll('[data-all-farms]').forEach(function(a){ a.textContent = t('allFarms'); });
     document.getElementById('txtFootnote').textContent = t('footnote');
     if (document.querySelector('[data-rec-open]')) recLabels();
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
@@ -5863,6 +5870,23 @@ var SEASON = {
   renderRegionOptions();
   renderFarmLists();
   updatePinScale();
+
+/* Deep links. The crawlable pages at /farma/<id>/ point back here with
+   #farma=<id>, and a farm on screen should survive a reload or a paste
+   into a chat. Guarded so a stale or bogus id just shows the plain map. */
+function farmFromHash(){
+  var m = /(?:^|[#&])farma=([A-Za-z0-9_-]+)/.exec(location.hash || "");
+  return m ? m[1] : null;
+}
+function openFromHash(){
+  var id = farmFromHash();
+  if (!id) return;
+  for (var i = 0; i < FARMS.length; i++){
+    if (FARMS[i].id === id){ openFarm(id); return; }
+  }
+}
+window.addEventListener('hashchange', openFromHash);
+openFromHash();
 
   /* A shared link lands on its farm. The parameter is dropped from the bar
      afterwards so a reload doesn't reopen the card unexpectedly. */

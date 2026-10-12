@@ -2,14 +2,14 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<title>&#381;iv&#233; farmy</title>
+<title>&#381;iv&#233; farmy &#8212; mapa bio a regenerativn&#237;ch farem v &#268;esku</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Mapa bio a regenerativn&#237;ch farem v &#268;esku &#8212; kde nakoupit maso, ml&#233;ko, vejce a zeleninu p&#345;&#237;mo od farm&#225;&#345;e.">
 <link rel="canonical" href="https://zivefarmy.cz/">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://zivefarmy.cz/">
 <meta property="og:site_name" content="&#381;iv&#233; farmy">
-<meta property="og:title" content="&#381;iv&#233; farmy">
+<meta property="og:title" content="&#381;iv&#233; farmy &#8212; mapa bio a regenerativn&#237;ch farem v &#268;esku">
 <meta property="og:description" content="Mapa bio a regenerativn&#237;ch farem v &#268;esku &#8212; kde nakoupit maso, ml&#233;ko, vejce a zeleninu p&#345;&#237;mo od farm&#225;&#345;e.">
 <meta property="og:locale" content="cs_CZ">
 <meta property="og:image" content="https://zivefarmy.cz/og.png">
@@ -19,13 +19,16 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Mapa &#268;eska s vyzna&#269;en&#253;mi bio a regenerativn&#237;mi farmami">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="&#381;iv&#233; farmy">
+<meta name="twitter:title" content="&#381;iv&#233; farmy &#8212; mapa bio a regenerativn&#237;ch farem v &#268;esku">
 <meta name="twitter:description" content="Mapa bio a regenerativn&#237;ch farem v &#268;esku &#8212; kde nakoupit maso, ml&#233;ko, vejce a zeleninu p&#345;&#237;mo od farm&#225;&#345;e.">
 <meta name="twitter:image" content="https://zivefarmy.cz/og.png">
 <meta name="twitter:image:alt" content="Mapa &#268;eska s vyzna&#269;en&#253;mi bio a regenerativn&#237;mi farmami">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127806;</text></svg>">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"\u017div\u00e9 farmy","url":"https://zivefarmy.cz/","inLanguage":["cs","en"],"description":"Mapa bio a regenerativn\u00edch farem v \u010cesku \u2014 kde nakoupit maso, ml\u00e9ko, vejce a zeleninu p\u0159\u00edmo od farm\u00e1\u0159e.","hasPart":{"@type":"CollectionPage","name":"Seznam farem","url":"https://zivefarmy.cz/farmy/"}}</script>
 </head>
 <body>
+<noscript><p style="font:16px/1.5 system-ui,sans-serif;padding:18px;margin:0;background:#FFFDF7;color:#332619;border-bottom:1px solid #DECBA3">
+Interaktivn&#237; mapa pot&#345;ebuje JavaScript. Kompletn&#237; <a href="/farmy/">seznam v&#353;ech farem</a> je i v textov&#233; podob&#283;.</p></noscript>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1647,6 +1650,7 @@
       </div>
       <ul class="farm-list" id="farmList"></ul>
       <p class="sidebar-footnote" id="txtFootnote">Kur&#225;torovan&#253; v&#253;b&#283;r regenerativn&#237;ch a bio farem v &#268;esku, sestaven&#253; z web&#367; jednotliv&#253;ch farem. Chyb&#237; v&#225;m tu n&#283;jak&#225; farma? Ozv&#283;te se.</p>
+      <a class="rec-open" data-all-farms href="/farmy/">Seznam v&#353;ech farem</a>
       <button type="button" class="rec-open" id="recOpen" data-rec-open></button>
     </aside>
 
@@ -1699,6 +1703,7 @@
     <input type="text" class="list-filter-input" id="sheetSearch" autocomplete="off">
   </div>
   <ul class="farm-list" id="mobileFarmList"></ul>
+  <a class="rec-open" data-all-farms href="/farmy/">Seznam v&#353;ech farem</a>
   <button type="button" class="rec-open" data-rec-open></button>
 </nav>
 
@@ -1792,6 +1797,7 @@ function trackEvent(path, title){
       title:"\u017Div\u00E9 farmy",
       tagline:"Mapa bio a regenerativn\u00EDch farem v \u010Cesku",
       listToggle:"Farmy",
+      allFarms:"Seznam v\u0161ech farem",
       searchPlaceholder:"Hledat farmu nebo m\u011Bsto\u2026",
       seasonKicker:"te\u010F v sez\u00F3n\u011B",
       seasonNowLead:"Te\u010F v sez\u00F3n\u011B",
@@ -1886,6 +1892,7 @@ function trackEvent(path, title){
       title:"\u017Div\u00E9 farmy",
       tagline:"A map of organic and regenerative farms in Czechia",
       listToggle:"Farms",
+      allFarms:"All farms, as a list",
       searchPlaceholder:"Search farm or town\u2026",
       seasonKicker:"in season now",
       seasonNowLead:"In season now",
@@ -5191,6 +5198,7 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     syncDrawerFav(f.id);
     syncDrawerShare(f.id);
     fitDrawerCats();
+    try { history.replaceState(null, '', '#farma=' + id); } catch(e){}
     drawer.classList.add('open');
     drawer.setAttribute('aria-hidden','false');
     scrim.classList.add('show');
@@ -5242,6 +5250,7 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
   function closeDrawer(){
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden','true');
+    if (location.hash) { try { history.replaceState(null, '', location.pathname + location.search); } catch(e){} }
     scrim.classList.remove('show');
     document.querySelectorAll('.pin').forEach(function(p){ p.classList.remove('selected'); });
     document.querySelectorAll('.farm-card').forEach(function(c){ c.classList.remove('active'); });
@@ -5829,6 +5838,7 @@ var SEASON = {
     document.getElementById('txtTagline').textContent = t('tagline');
     document.getElementById('txtTaglineM').textContent = t('tagline');
     document.getElementById('txtListToggle').textContent = t('listToggle');
+    document.querySelectorAll('[data-all-farms]').forEach(function(a){ a.textContent = t('allFarms'); });
     document.getElementById('txtFootnote').textContent = t('footnote');
     if (document.querySelector('[data-rec-open]')) recLabels();
     document.getElementById('searchInput').placeholder = t('searchPlaceholder');
@@ -5889,6 +5899,23 @@ var SEASON = {
   renderRegionOptions();
   renderFarmLists();
   updatePinScale();
+
+/* Deep links. The crawlable pages at /farma/<id>/ point back here with
+   #farma=<id>, and a farm on screen should survive a reload or a paste
+   into a chat. Guarded so a stale or bogus id just shows the plain map. */
+function farmFromHash(){
+  var m = /(?:^|[#&])farma=([A-Za-z0-9_-]+)/.exec(location.hash || "");
+  return m ? m[1] : null;
+}
+function openFromHash(){
+  var id = farmFromHash();
+  if (!id) return;
+  for (var i = 0; i < FARMS.length; i++){
+    if (FARMS[i].id === id){ openFarm(id); return; }
+  }
+}
+window.addEventListener('hashchange', openFromHash);
+openFromHash();
 
   /* A shared link lands on its farm. The parameter is dropped from the bar
      afterwards so a reload doesn't reopen the card unexpectedly. */
