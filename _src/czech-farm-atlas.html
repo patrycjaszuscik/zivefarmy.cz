@@ -578,6 +578,11 @@
   .city-labels.zoomed span.capital{font-size:15px;}
   .city-labels.zoomed span.town{font-size:11.5px;}
   .cities{pointer-events:none;}
+  /* Praha is the smallest region and carries the densest cluster of pins, so
+     most of its area sits under markers. Its dot and label are always
+     visible, so they are the dependable way to select it. */
+  .cities .capital{pointer-events:auto;cursor:pointer;}
+  .city-labels span.capital{pointer-events:auto;cursor:pointer;}
   .cities circle{
     fill:var(--text-soft);opacity:0.55;
     stroke:var(--surface);stroke-width:calc(1.4px / var(--zoom-scale,1));
@@ -729,7 +734,10 @@
     box-shadow:0 0 0 3px color-mix(in srgb, var(--veg) 22%, transparent);
   }
 
-  .season-scrim{position:fixed;inset:0;background:var(--scrim);z-index:60;}
+  .season-scrim{position:fixed;inset:0;background:var(--scrim);z-index:60;transition:opacity .22s ease;}
+  /* Tap the pill again and the panel slides back down the way it came. */
+  .season-scrim.season-leaving{opacity:0;}
+  .season-modal.season-leaving{transform:translate(-50%,55%);opacity:0;}
   .season-modal{
     position:fixed;z-index:61;left:50%;top:50%;transform:translate(-50%,-50%);
     width:min(720px, calc(100vw - 40px));
@@ -739,6 +747,7 @@
     background:var(--surface);border:1px solid var(--border);
     border-radius:var(--radius-lg);box-shadow:0 18px 48px var(--shadow);
     overflow:hidden;
+    transition:transform .26s cubic-bezier(.4,0,.2,1), opacity .2s ease;
   }
   .season-top{
     display:flex;align-items:center;gap:11px;
@@ -2065,7 +2074,16 @@ function trackEvent(path, title){
 
   var regionsLayer = document.getElementById('regionsLayer');
   var frag = document.createDocumentFragment();
-  REGIONS.forEach(function(entry){
+  /* Praha is an enclave and St\u0159edo\u010Desk\u00FD kraj's outline has no hole cut for
+     it, so the two shapes overlap completely. SVG hit-testing follows paint
+     order, so while Praha was drawn first, every click on the capital was
+     caught by the region around it -- measured, 0 of 79 points inside Praha
+     reached it. Painting it last fixes the clicks and the stacking. */
+  var PRAHA = "Hlavn\u00ED m\u011Bsto Praha";
+  var regionOrder = REGIONS.slice().sort(function(a, b){
+    return (a.split('|')[1] === PRAHA ? 1 : 0) - (b.split('|')[1] === PRAHA ? 1 : 0);
+  });
+  regionOrder.forEach(function(entry){
     var parts = entry.split('|');
     var p = document.createElementNS('http://www.w3.org/2000/svg','path');
     p.setAttribute('d', parts[0]);
@@ -2722,29 +2740,24 @@ function trackEvent(path, title){
     { sellers:[{ name:"V\u0161e o n\u00E1kupu a z\u00E1vozov\u00E9 trasy", url:"https://www.agrofyto.cz/vse-o-nakupu/" },
            { name:"Osobn\u00ED odb\u011Br na farm\u011B v Lide\u010Dku \u2014 zdarma" },
            { name:"V\u00FDdejn\u00ED m\u00EDsto ODTADYMA \u2014 75 K\u010D" },
-           { name:"V\u00FDdejn\u00ED m\u00EDsto BEZOBAL\u00C1\u010C \u2014 75 K\u010D" }], id:"agrofyto", cert:"bio", delivery:["cr","pickup"], eshop:"https://www.agrofyto.cz/e-shop/", email:"obchod@agrofyto.cz", phone:"+420 774 545 916", facebook:"https://www.facebook.com/agrofyto/", instagram:"https://www.instagram.com/agrofyto/", name:"AGROFYTO",
+           { name:"V\u00FDdejn\u00ED m\u00EDsto BEZOBAL\u00C1\u010C \u2014 75 K\u010D" }], id:"agrofyto", cert:"bio", delivery:["ostrava","pickup"], eshop:"https://www.agrofyto.cz/e-shop/", email:"obchod@agrofyto.cz", phone:"+420 774 545 916", facebook:"https://www.facebook.com/agrofyto/", instagram:"https://www.instagram.com/agrofyto/", name:"AGROFYTO",
       town:{cs:"Lide\u010Dko, Vala\u0161sko", en:"Lide\u010Dko, Wallachia"},
       region:{cs:"Zl\u00EDnsk\u00FD kraj", en:"Zl\u00EDn Region"},
       lat:49.20, lon:18.05, cats:["dairy","meat"],
+      shipNote:{cs:"Objedn\u00E1v\u00E1 se p\u0159edem. Rozvoz chlazen\u00FDm vozem po t\u0159ech tras\u00E1ch z Lide\u010Dka \u2014 Zl\u00EDnsko s Olomouckem, Uherskohradi\u0161\u0165sko, a Vala\u0161sko s Ostravou \u2014 za 200 K\u010D; do 20 km od trasy za 250 K\u010D, nad 9 000 K\u010D zdarma. Mimo tyto trasy nezav\u00E1\u017Eej\u00ED. Vyzvednut\u00ED na farm\u011B je zdarma.", en:"Order ahead. Chilled delivery on three routes out of Lide\u010Dko \u2014 Zl\u00EDn with Olomouc, Uhersk\u00E9 Hradi\u0161t\u011B, and Wallachia with Ostrava \u2014 for 200 CZK; up to 20 km off a route 250 CZK, free over 9,000 CZK. They do not deliver beyond those routes. Collection at the farm is free."},
       website:"https://www.agrofyto.cz/",
       story:{ cs:[
           "Rodinn\u00FD podnik v srdci Vala\u0161ska, kde se skot pase na horsk\u00FDch pastvin\u00E1ch.",
           "Vlastn\u00ED bour\u00E1rna a zpracov\u00E1n\u00ED: maso jde z pastvy rovnou k z\u00E1kazn\u00EDkovi, se zn\u00E1m\u00FDm p\u016Fvodem a ve vlastn\u00EDch chladic\u00EDch vozech.",
           "\u201EJsme p\u0159edev\u0161\u00EDm farm\u00E1\u0159i, ne prodejci\u201C \u2014 cel\u00FD \u0159et\u011Bzec od pastvy po v\u00FDdej si dr\u017E\u00ED farma sama.",
           "V e-shopu krom\u011B BIO hov\u011Bz\u00EDho najdete i region\u00E1ln\u00ED v\u00FDrobky sousedn\u00EDch hospod\u00E1\u0159\u016F z podh\u016F\u0159\u00ED B\u00EDl\u00FDch Karpat \u2014 \u0161\u0165\u00E1vy, marmel\u00E1dy a zava\u0159eniny.",
-              "Maso prod\u00E1vaj\u00ED na p\u0159edobjedn\u00E1vku: nejd\u0159\u00EDv se sb\u00EDraj\u00ED objedn\u00E1vky, teprve pak jde zv\u00ED\u0159e na por\u00E1\u017Eku, zr\u00E1n\u00ED a bour\u00E1n\u00ED \u2014 d\u00EDky tomu se vyu\u017Eije cel\u00FD kus a nic se nepl\u00FDtv\u00E1.",
-              "Rozv\u00E1\u017Eej\u00ED chlazen\u00FDm vozem po t\u0159ech tras\u00E1ch z Lide\u010Dka: na Zl\u00EDn, Krom\u011B\u0159\u00ED\u017E, Olomouc a Prost\u011Bjov; na Uhersk\u00FD Brod a Uhersk\u00E9 Hradi\u0161t\u011B; a na Vset\u00EDn, Vala\u0161sk\u00E9 Mezi\u0159\u00ED\u010D\u00ED, Ro\u017Enov a Ostravu \u2014 200 K\u010D.",
-              "Do 20 km od trasy p\u0159ijedou za 250 K\u010D, nad 9 000 K\u010D je doprava zdarma. Mimo tuto oblast nezav\u00E1\u017Eej\u00ED \u2014 maso m\u00E1 podle nich z\u016Fstat ve sv\u00E9m regionu.",
-              "Vyzvednout se d\u00E1 zdarma p\u0159\u00EDmo na farm\u011B, nebo za 75 K\u010D ve v\u00FDdejn\u00E1ch ODTADYMA a BEZOBAL\u00C1\u010C."],
+          "Na por\u00E1\u017Eku jde zv\u00ED\u0159e teprve po nasb\u00EDr\u00E1n\u00ED objedn\u00E1vek, aby se vyu\u017Eil cel\u00FD kus a nic nezbylo."],
           en:[
           "A family business in the heart of Wallachia, with cattle grazing on mountain pastures.",
           "Their own butchery and processing: the meat goes from pasture straight to the customer, traceable to its origin and carried in the farm's own refrigerated vans.",
           "\"We are farmers first, not sellers\" \u2014 the farm keeps the whole chain, from grazing to handover, in its own hands.",
           "Alongside organic beef the shop carries regional products from neighbouring growers in the White Carpathian foothills \u2014 juices, jams and preserves.",
-              "The meat is sold against pre-orders: orders are collected first, and only then does the animal go to slaughter, ageing and butchering \u2014 so the whole carcass is used and nothing is wasted.",
-              "They deliver in a chilled van on three routes out of Lide\u010Dko: to Zl\u00EDn, Krom\u011B\u0159\u00ED\u017E, Olomouc and Prost\u011Bjov; to Uhersk\u00FD Brod and Uhersk\u00E9 Hradi\u0161t\u011B; and to Vset\u00EDn, Vala\u0161sk\u00E9 Mezi\u0159\u00ED\u010D\u00ED, Ro\u017Enov and Ostrava \u2014 200 CZK.",
-              "Up to 20 km off the route costs 250 CZK, and delivery is free over 9,000 CZK. They do not deliver beyond that area \u2014 the meat should stay in its own region.",
-              "Collection is free at the farm, or 75 CZK at the ODTADYMA and BEZOBAL\u00C1\u010C pickup points."] } },
+          "The animal goes to slaughter only once the orders are in, so the whole carcass is used and nothing is wasted."] } },
 
     { id:"varejkuv", cert:"bio", hours:{cs:"Prodej p\u0159\u00EDmo ze dvora, syrov\u00E9 ml\u00E9ko i do vlastn\u00EDch n\u00E1dob", en:"Farm-gate sales; raw milk can be filled into your own containers"}, sellers:[{name:"Ti\u0161novsk\u00E1 spi\u017E\u00EDrna, n\u00E1m. M\u00EDru 118, Ti\u0161nov \u2014 z\u00E1voz po a \u010Dt, objedn\u00E1vky do \u010Dtvrtka", url:"https://tisnovskaspizirna.cz/"}], email:"varejkova@varejkuvdvur.cz", phone:"+420 731 476 358", name:"Va\u0159ejk\u016Fv dv\u016Fr",
       town:{cs:"Mezibo\u0159\u00ED 9, Str\u00E1\u017Eek", en:"Mezibo\u0159\u00ED 9, Str\u00E1\u017Eek"},
@@ -4680,6 +4693,19 @@ function focusLabels(kraj){
     else el.removeAttribute('hidden');
   }
 
+  /* Clicking the capital's dot or its label toggles Praha, exactly as
+     clicking a region path does. */
+  function bindCapital(){
+    var pick = function(e){
+      e.stopPropagation();
+      setRegion(activeRegion === PRAHA ? 'all' : PRAHA);
+    };
+    var dot = citiesLayer.querySelector('g.capital');
+    if (dot) dot.addEventListener('click', pick);
+    var lbl = cityLabels.querySelector('span.capital');
+    if (lbl) lbl.addEventListener('click', pick);
+  }
+
   function setRegion(name){
     if (name !== activeRegion && name !== 'all') trackEvent('kraj/' + name);
     activeRegion = name;
@@ -5767,18 +5793,41 @@ var SEASON = {
   function openSeason(){
     seasonShown = seasonNow;          /* always opens on the real month */
     renderSeason();
+    seasonModal.classList.remove('season-leaving');
+    seasonScrim.classList.remove('season-leaving');
     seasonScrim.hidden = false;
     seasonModal.hidden = false;
     document.getElementById('seasonClose').focus();
   }
   function closeSeason(){
-    seasonModal.hidden = true;
-    seasonScrim.hidden = true;
+    if (seasonModal.hidden) return;
+    /* Animate out, then hide. transitionend can be missed -- a backgrounded
+       tab, reduced motion -- so a timer closes it regardless. */
+    seasonModal.classList.add('season-leaving');
+    seasonScrim.classList.add('season-leaving');
+    var settled = false;
+    var done = function(){
+      if (settled) return;
+      settled = true;
+      seasonModal.hidden = true;
+      seasonScrim.hidden = true;
+      seasonModal.classList.remove('season-leaving');
+      seasonScrim.classList.remove('season-leaving');
+    };
+    var timer = setTimeout(done, 340);
+    seasonModal.addEventListener('transitionend', function once(e){
+      if (e.target !== seasonModal || e.propertyName !== 'transform') return;
+      seasonModal.removeEventListener('transitionend', once);
+      clearTimeout(timer);
+      done();
+    });
     document.getElementById('seasonOpen').focus();
   }
 
   if (seasonModal){
-    document.getElementById('seasonOpen').addEventListener('click', openSeason);
+    document.getElementById('seasonOpen').addEventListener('click', function(){
+      if (seasonModal.hidden) openSeason(); else closeSeason();
+    });
     document.getElementById('seasonClose').addEventListener('click', closeSeason);
     seasonScrim.addEventListener('click', closeSeason);
     document.addEventListener('keydown', function(e){
@@ -5870,6 +5919,7 @@ var SEASON = {
   renderRegionOptions();
   renderFarmLists();
   updatePinScale();
+  bindCapital();
 
 /* Deep links. The crawlable pages at /farma/<id>/ point back here with
    #farma=<id>, and a farm on screen should survive a reload or a paste
