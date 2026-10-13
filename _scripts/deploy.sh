@@ -27,6 +27,14 @@ fi
 ruby _scripts/make-pages.rb
 ruby _scripts/build.rb   # the homepage counts farms, so rebuild after the dump
 
+# The share picture carries the farm count and a dot per farm, so it is
+# generated from the same data. Re-rendering the PNG is only worth it when the
+# card itself actually changed.
+ruby _scripts/make-og-card.rb
+if ! git diff --quiet -- _og/card.html; then
+  ./_scripts/make-og.sh
+fi
+
 if [ -z "$(git status --porcelain)" ]; then
   echo "nothing changed - nothing to publish"
 else

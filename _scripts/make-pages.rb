@@ -318,6 +318,21 @@ File.write(File.join(ROOT, "sitemap.xml"), <<~XML)
   </urlset>
 XML
 
+# ---- prune pages whose farm, region or category no longer exists ----------
+# A farm removed from the map must not leave its page behind: it would stay
+# served, linked from nobody's navigation, quietly contradicting the map.
+def prune(root, dir, keep)
+  base = File.join(root, dir)
+  return [] unless Dir.exist?(base)
+  gone = Dir.children(base).select { |c| File.directory?(File.join(base, c)) && !keep.include?(c) }
+  gone.each { |c| FileUtils.rm_rf(File.join(base, c)) }
+  gone.map { |c| "#{dir}/#{c}" }
+end
+pruned = prune(ROOT, "farma", farms.map { |f| f["id"] }) +
+         prune(ROOT, "kraj", by_region.keys.map { |r| slug(r) }) +
+         prune(ROOT, "co-koupit", CATS.keys)
+puts "pruned: #{pruned.empty? ? 'nothing' : pruned.join(', ')}"
+
 puts "pages: #{written.length}"
 puts "  farma/:     #{written.count { |p| p.start_with?('farma/') }}"
 puts "  kraj/:      #{written.count { |p| p.start_with?('kraj/') }}"
