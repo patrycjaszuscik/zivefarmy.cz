@@ -193,7 +193,7 @@ farms.each do |f|
 
   ld = { "@context" => "https://schema.org", "@type" => "LocalBusiness",
          "name" => f["name"], "url" => farm_url(f),
-         "description" => story.join(" "),
+         "description" => [story.join(" "), f.dig("shipNote", "cs")].compact.join(" "),
          "address" => { "@type" => "PostalAddress", "addressLocality" => f.dig("town", "cs"),
                         "addressRegion" => region, "addressCountry" => "CZ" },
          "geo" => { "@type" => "GeoCoordinates", "latitude" => f["lat"], "longitude" => f["lon"] },
@@ -213,6 +213,7 @@ farms.each do |f|
   body << dl([
     ["Kde koupit",    buy.empty? ? nil : buy.join(" · ")],
     ["Otevírací doba / výdej", f.dig("hours", "cs")],
+    ["Rozvoz a odběr", f.dig("shipNote", "cs")],
     ["Doprava",       (f["delivery"] || []).map { |d| DELIVERY[d] }.compact.join(", ")],
     ["Na farmě také", (f["offers"] || []).map { |o| OFFERS[o] }.compact.join(", ")],
     ["Ocenění",       (f["awards"] || []).map { |a| a["cs"] }.compact.join("; ")],
