@@ -648,7 +648,10 @@
     transition:transform .15s ease, opacity .15s ease;
     z-index:1;
   }
-  .pin:hover,.pin:focus-visible{transform:translate(-50%,-100%) scale(1.16);z-index:5;}
+  .pin:focus-visible{transform:translate(-50%,-100%) scale(1.16);z-index:5;}
+  @media (hover:hover){
+    .pin:hover{transform:translate(-50%,-100%) scale(1.16);z-index:5;}
+  }
   .pin:focus-visible{outline:none;}
   /* Farms outside the current filter leave the map entirely &#8212; a greyed-out
      layer underneath read as noise. */
@@ -663,8 +666,10 @@
      with it, which made the label shout. Trim it back. */
   .pins.zoomed .pin-tip{font-size:0.62rem;padding:4px 8px;border-radius:8px;}
 
-  .pins.zoomed .pin:hover,
   .pins.zoomed .pin:focus-visible{transform:translate(-50%,-100%) scale(1.52);}
+  @media (hover:hover){
+    .pins.zoomed .pin:hover{transform:translate(-50%,-100%) scale(1.52);}
+  }
   .pins.zoomed .pin.hovered{transform:translate(-50%,-100%) scale(1.57);}
   @media (pointer:coarse){
     .pin{filter:none;}
@@ -694,9 +699,18 @@
     opacity:0;pointer-events:none;
     transition:opacity .12s ease, transform .12s ease;
   }
-  .pin:hover .pin-tip,.pin:focus-visible .pin-tip{opacity:1;transform:translateX(-50%) translateY(0);}
+  /* A tap leaves :hover stuck on the pin on a touch screen, so the name hung
+     around after the drawer closed -- and the next tap elsewhere left two
+     names overlapping each other and the town labels. Names that appear on
+     hover are for devices that can actually hover; on a phone the pin is
+     named by the panel the tap opens. */
+  .pin:focus-visible .pin-tip{opacity:1;transform:translateX(-50%) translateY(0);}
   .pin.tip-below .pin-tip{bottom:auto;top:calc(100% + 6px);transform:translateX(-50%) translateY(-4px);}
-  .pin.tip-below:hover .pin-tip,.pin.tip-below:focus-visible .pin-tip{transform:translateX(-50%) translateY(0);}
+  .pin.tip-below:focus-visible .pin-tip{transform:translateX(-50%) translateY(0);}
+  @media (hover:hover){
+    .pin:hover .pin-tip{opacity:1;transform:translateX(-50%) translateY(0);}
+    .pin.tip-below:hover .pin-tip{transform:translateX(-50%) translateY(0);}
+  }
 
   /* ---- What is in season ----
      The map frame carries furniture in three corners already; this takes the
@@ -3849,6 +3863,8 @@ function trackEvent(path, title){
 
   /* ---- Render pins ---- */
   var pinsLayer = document.getElementById('pinsLayer');
+  /* A phone has no hover, so anything keyed to it has to be unwound by hand. */
+  var CAN_HOVER = !window.matchMedia || window.matchMedia('(hover:hover)').matches;
   FARMS.forEach(function(f){
     var btn = document.createElement('button');
     btn.className = 'pin';
@@ -3856,7 +3872,10 @@ function trackEvent(path, title){
     btn.style.top = f.topPct + '%';
     btn.dataset.id = f.id;
     btn.innerHTML = buildPinSVG(f) + '<span class="pin-tip">'+f.name+'</span>';
-    btn.addEventListener('click', function(){ openFarm(f.id); });
+    btn.addEventListener('click', function(){
+      if (!CAN_HOVER) btn.blur();
+      openFarm(f.id);
+    });
     btn.addEventListener('mouseenter', function(){ focusPin(f.id, true); });
     btn.addEventListener('mouseleave', function(){ focusPin(f.id, false); });
     btn.addEventListener('focus', function(){ focusPin(f.id, true); });
@@ -3999,6 +4018,13 @@ function trackEvent(path, title){
     });
   }
   function highlightPin(id, on){ focusPin(id, on); }
+  function clearPinFocus(){
+    pinsLayer.querySelectorAll('.pin.hovered, .pin.faded').forEach(function(p){
+      p.classList.remove('hovered');
+      p.classList.remove('faded');
+    });
+    pinsLayer.classList.remove('focusing');
+  }
 
   /* ---- Filter counts ---- */
   function updateCounts(){
@@ -4889,6 +4915,104 @@ function focusLabels(kraj){
            (social.length ? '<div class="d-contact">'+social.join('')+'</div>' : '');
   }
 
+  /* These used to live further down, inside openFarm, below the line that
+     renders the sellers -- so on every open the `var` bindings were still
+     undefined at the moment sellerTag() ran. Farms whose seller name splits
+     on a dash (Sasov, Ludmila, Sou\u010Dkov\u00E1, Trnov\u00FD dv\u016Fr) threw there and the
+     panel never opened at all. They are plain helpers over their arguments,
+     so they belong out here, evaluated once. */
+  /* Hours reach us as one free-text sentence per farm, and printing that sentence
+     as-is turns the panel into a wall of bold. So each sentence is taken apart
+     into the two things it actually mixes: timings, which belong on their own
+     tabular line under the place they apply to, and remarks ("call ahead",
+     "orders are collected at the farm"), which drop to a quiet note underneath. */
+  var HOURS_TIME = /\d{1,2}[:.]\d{2}|24\/7/;
+  var HOURS_LEAD = /(?:^|\s)(?:Pond\u011Bl\u00ED|\u00DAter\u00FD|St\u0159eda|\u010Ctvrtek|P\u00E1tek|Sobota|Ned\u011Ble|Po|\u00DAt|St|\u010Ct|P\u00E1|So|Ne|Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?=[\s.,;\u2013\u2014-]|$)|(?:^|\s)\d{1,2}[:.]\d{2}|(?:^|\s)24\/7/;
+
+  /* An address can be put on the map; "every other week" cannot. Only labels that
+     carry a number read as somewhere you could actually drive to. */
+  /* A pickup point is somewhere you physically have to go, so where it is
+     matters more than a link to its homepage. An explicit `addr` is mapped as
+     given; failing that, a name carrying a house number is mapped as written,
+     with any trailing "\u2014 75 K\u010D" qualifier trimmed out of the query. Names that
+     are not places ("V\u0161e o n\u00E1kupu") stay plain text. */
+  /* Seller names carry three things at once: a place, sometimes opening hours
+     or a price, sometimes a parenthetical aside. Only the place belongs in a
+     map query, and the farm's own town must never be bolted on -- a label that
+     already names a town would come out as "..., Praha 2, \u017D\u00E1r 70". */
+  var SELLER_QUALIFIER = /\d{1,2}\s*[:.]\d{2}|\bK\u010D\b|zdarma|domluv|^(po|\u00FAt|st|\u010Dt|p\u00E1|so|ne)\b/i;
+  function sellerMapsQuery(s, f){
+    if (s.addr) return s.addr;
+    var label = s.name.replace(/\s*\([^)]*\)\s*$/, '').trim();
+    var cut = label.split(/\s+[\u2014\u2013]\s+/);
+    if (cut.length > 1 && SELLER_QUALIFIER.test(cut[cut.length - 1].trim())){
+      label = cut.slice(0, -1).join(' \u2014 ').trim();
+    }
+    label = label.replace(/,\s*(po|\u00FAt|st|\u010Dt|p\u00E1|so|ne)\s*$/i, '').trim();
+    if (label.length > 80) return '';
+    /* Findable means it names a locality of its own: a comma-separated town or
+       a house number. A bare shop name is not worth a pin. */
+    if (label.indexOf(',') === -1 && !/\d/.test(label)) return '';
+    return label;
+  }
+  function sellerTag(s, f){
+    if (s.url){
+      return '<a class="shop-tag" href="'+s.url+'" target="_blank" rel="noopener">' +
+             s.name + svgIcon(ICONS.external) + '</a>';
+    }
+    var q = sellerMapsQuery(s, f);
+    if (!q) return '<span class="shop-tag plain">'+s.name+'</span>';
+    return '<a class="shop-tag" target="_blank" rel="noopener" href="' +
+      'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q) + '">' +
+      s.name + svgIcon(ICONS.pin) + '</a>';
+  }
+
+  function hoursPlaceLink(label, f){
+    if (!/\d/.test(label) || label.length > 60 || HOURS_TIME.test(label)) return '';
+    return '<a class="d-hours-place" target="_blank" rel="noopener" href="' +
+      'https://www.google.com/maps/search/?api=1&query=' +
+      encodeURIComponent(label + ', ' + f.town.cs.split(/[,\u2013\u2014-]/)[0].trim()) + '">' +
+      '<span>'+label+'</span>'+svgIcon(ICONS.external)+'</a>';
+  }
+
+  function hoursParts(raw){
+    var groups = [], notes = [];
+    raw.split(/\s*;\s*|(?:\.\s+)(?=[A-Z\u00C1-\u017D])/).forEach(function(chunk){
+      chunk.split(/\s+[\u2014\u2013-]\s+/).forEach(function(frag){
+        frag = frag.replace(/[.\s]+$/, '').trim();
+        if (!frag) return;
+        if (!HOURS_TIME.test(frag)){ notes.push(frag); return; }
+
+        var label = '', rest = frag, ci = frag.indexOf(': ');
+        if (ci > -1 && !HOURS_TIME.test(frag.slice(0, ci))){
+          label = frag.slice(0, ci).trim();
+          rest  = frag.slice(ci + 2);
+        } else {
+          var at = frag.search(HOURS_LEAD);
+          if (at > 0){
+            label = frag.slice(0, at).trim().replace(/[,:]$/, '');
+            label = label.charAt(0).toUpperCase() + label.slice(1);
+            rest  = frag.slice(at).trim();
+          }
+        }
+
+        var rows = [], carry = '';
+        rest.split(/,\s*/).forEach(function(r){
+          r = r.trim();
+          if (!r) return;
+          if (!HOURS_TIME.test(r)){ notes.push(r); return; }
+          var lead = r.match(/^([^\d]*?)\s*(?=\d{1,2}[:.]\d{2}|24\/7)/);
+          if (lead && lead[1]) carry = lead[1].trim();
+          else if (carry) r = carry + ' ' + r;
+          rows.push(r);
+        });
+        if (rows.length) groups.push({ label:label, rows:rows });
+        else if (label) notes.push(label);
+      });
+    });
+    return { groups:groups, notes:notes };
+  }
+
   function openFarm(id){
     var f = FARMS.filter(function(x){ return x.id === id; })[0];
     if (!f) return;
@@ -4926,97 +5050,6 @@ function focusLabels(kraj){
     });
     (f.sellers || []).forEach(function(s){ shopsHtml += sellerTag(s, f); });
 
-/* Hours reach us as one free-text sentence per farm, and printing that sentence
-   as-is turns the panel into a wall of bold. So each sentence is taken apart
-   into the two things it actually mixes: timings, which belong on their own
-   tabular line under the place they apply to, and remarks ("call ahead",
-   "orders are collected at the farm"), which drop to a quiet note underneath. */
-var HOURS_TIME = /\d{1,2}[:.]\d{2}|24\/7/;
-var HOURS_LEAD = /(?:^|\s)(?:Pond\u011Bl\u00ED|\u00DAter\u00FD|St\u0159eda|\u010Ctvrtek|P\u00E1tek|Sobota|Ned\u011Ble|Po|\u00DAt|St|\u010Ct|P\u00E1|So|Ne|Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?=[\s.,;\u2013\u2014-]|$)|(?:^|\s)\d{1,2}[:.]\d{2}|(?:^|\s)24\/7/;
-
-/* An address can be put on the map; "every other week" cannot. Only labels that
-   carry a number read as somewhere you could actually drive to. */
-/* A pickup point is somewhere you physically have to go, so where it is
-   matters more than a link to its homepage. An explicit `addr` is mapped as
-   given; failing that, a name carrying a house number is mapped as written,
-   with any trailing "\u2014 75 K\u010D" qualifier trimmed out of the query. Names that
-   are not places ("V\u0161e o n\u00E1kupu") stay plain text. */
-/* Seller names carry three things at once: a place, sometimes opening hours
-   or a price, sometimes a parenthetical aside. Only the place belongs in a
-   map query, and the farm's own town must never be bolted on -- a label that
-   already names a town would come out as "..., Praha 2, \u017D\u00E1r 70". */
-var SELLER_QUALIFIER = /\d{1,2}\s*[:.]\d{2}|\bK\u010D\b|zdarma|domluv|^(po|\u00FAt|st|\u010Dt|p\u00E1|so|ne)\b/i;
-function sellerMapsQuery(s, f){
-  if (s.addr) return s.addr;
-  var label = s.name.replace(/\s*\([^)]*\)\s*$/, '').trim();
-  var cut = label.split(/\s+[\u2014\u2013]\s+/);
-  if (cut.length > 1 && SELLER_QUALIFIER.test(cut[cut.length - 1].trim())){
-    label = cut.slice(0, -1).join(' \u2014 ').trim();
-  }
-  label = label.replace(/,\s*(po|\u00FAt|st|\u010Dt|p\u00E1|so|ne)\s*$/i, '').trim();
-  if (label.length > 80) return '';
-  /* Findable means it names a locality of its own: a comma-separated town or
-     a house number. A bare shop name is not worth a pin. */
-  if (label.indexOf(',') === -1 && !/\d/.test(label)) return '';
-  return label;
-}
-function sellerTag(s, f){
-  if (s.url){
-    return '<a class="shop-tag" href="'+s.url+'" target="_blank" rel="noopener">' +
-           s.name + svgIcon(ICONS.external) + '</a>';
-  }
-  var q = sellerMapsQuery(s, f);
-  if (!q) return '<span class="shop-tag plain">'+s.name+'</span>';
-  return '<a class="shop-tag" target="_blank" rel="noopener" href="' +
-    'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q) + '">' +
-    s.name + svgIcon(ICONS.pin) + '</a>';
-}
-
-function hoursPlaceLink(label, f){
-  if (!/\d/.test(label) || label.length > 60 || HOURS_TIME.test(label)) return '';
-  return '<a class="d-hours-place" target="_blank" rel="noopener" href="' +
-    'https://www.google.com/maps/search/?api=1&query=' +
-    encodeURIComponent(label + ', ' + f.town.cs.split(/[,\u2013\u2014-]/)[0].trim()) + '">' +
-    '<span>'+label+'</span>'+svgIcon(ICONS.external)+'</a>';
-}
-
-function hoursParts(raw){
-  var groups = [], notes = [];
-  raw.split(/\s*;\s*|(?:\.\s+)(?=[A-Z\u00C1-\u017D])/).forEach(function(chunk){
-    chunk.split(/\s+[\u2014\u2013-]\s+/).forEach(function(frag){
-      frag = frag.replace(/[.\s]+$/, '').trim();
-      if (!frag) return;
-      if (!HOURS_TIME.test(frag)){ notes.push(frag); return; }
-
-      var label = '', rest = frag, ci = frag.indexOf(': ');
-      if (ci > -1 && !HOURS_TIME.test(frag.slice(0, ci))){
-        label = frag.slice(0, ci).trim();
-        rest  = frag.slice(ci + 2);
-      } else {
-        var at = frag.search(HOURS_LEAD);
-        if (at > 0){
-          label = frag.slice(0, at).trim().replace(/[,:]$/, '');
-          label = label.charAt(0).toUpperCase() + label.slice(1);
-          rest  = frag.slice(at).trim();
-        }
-      }
-
-      var rows = [], carry = '';
-      rest.split(/,\s*/).forEach(function(r){
-        r = r.trim();
-        if (!r) return;
-        if (!HOURS_TIME.test(r)){ notes.push(r); return; }
-        var lead = r.match(/^([^\d]*?)\s*(?=\d{1,2}[:.]\d{2}|24\/7)/);
-        if (lead && lead[1]) carry = lead[1].trim();
-        else if (carry) r = carry + ' ' + r;
-        rows.push(r);
-      });
-      if (rows.length) groups.push({ label:label, rows:rows });
-      else if (label) notes.push(label);
-    });
-  });
-  return { groups:groups, notes:notes };
-}
 
 var hoursHtml = '';
 if (f.hours){
@@ -5241,6 +5274,7 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
     scrim.classList.remove('show');
     document.querySelectorAll('.pin').forEach(function(p){ p.classList.remove('selected'); });
     document.querySelectorAll('.farm-card').forEach(function(c){ c.classList.remove('active'); });
+    clearPinFocus();
     currentId = null;
   }
 
