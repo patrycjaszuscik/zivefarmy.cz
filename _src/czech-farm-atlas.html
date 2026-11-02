@@ -5279,6 +5279,69 @@ var offersHtml = offerLine(t('waysToBuy'), buyWays, ICONS.cart) +
   }
 
   document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+
+  /* ---- Swipe the farm sheet down to close it ---- */
+  /* On a phone the farm card is a bottom sheet with a grab bar drawn on it,
+     so it should behave like one: a drag down puts it away. The close button
+     sits in the top-right corner, the hardest place to reach one-handed on
+     exactly the screens where the sheet is used.
+
+     The sheet is also the scroll container for a long farm story, so a drag
+     only becomes a dismissal when the content is already at the top and the
+     finger is heading down more than sideways. Anything else is left alone
+     and scrolls the way it always did. */
+  (function drawerSwipe(){
+    var y0 = 0, x0 = 0, dy = 0, t0 = 0;
+    var tracking = false;   /* finger down, a dismissal still possible */
+    var dragging = false;   /* claimed - the sheet now follows the finger */
+
+    function phoneDrawer(){ return window.matchMedia('(max-width:600px)').matches; }
+
+    drawer.addEventListener('touchstart', function(e){
+      if (!phoneDrawer() || e.touches.length !== 1) return;
+      /* Mid-story a downward drag means "scroll back up", not "close". */
+      if (drawer.scrollTop > 0) return;
+      tracking = true; dragging = false; dy = 0;
+      y0 = e.touches[0].clientY;
+      x0 = e.touches[0].clientX;
+      t0 = Date.now();
+    }, { passive:true });
+
+    drawer.addEventListener('touchmove', function(e){
+      if (!tracking) return;
+      dy = e.touches[0].clientY - y0;
+      var dx = e.touches[0].clientX - x0;
+      if (!dragging){
+        /* Upward or sideways: not ours. Drop the gesture entirely so the rest
+           of it scrolls without fighting us. */
+        if (dy < 0 || Math.abs(dx) > Math.abs(dy)){ tracking = false; return; }
+        if (dy < 8) return;              /* slop, so a tap stays a tap */
+        dragging = true;
+        drawer.style.transition = 'none';
+      }
+      drawer.style.transform = 'translateY(' + dy + 'px)';
+      e.preventDefault();
+    }, { passive:false });
+
+    function end(){
+      if (!tracking) return;
+      var wasDragging = dragging;
+      tracking = false; dragging = false;
+      if (!wasDragging) return;
+      drawer.style.transition = '';
+      /* Far enough, or a flick - a short fast swipe reads as "away with it"
+         just as clearly as a slow long one. The flick wants real speed, or a
+         careful 60px nudge would throw the card away by accident. */
+      var ms = Date.now() - t0;
+      var flick = dy > 60 && ms > 0 && (dy / ms) > 0.5;
+      if (dy > 110 || flick) closeDrawer();
+      /* Cleared last, with the open class already gone, so the sheet carries
+         on down from where the finger left it instead of snapping back. */
+      drawer.style.transform = '';
+    }
+    drawer.addEventListener('touchend', end);
+    drawer.addEventListener('touchcancel', end);
+  })();
   scrim.addEventListener('click', function(){ closeDrawer(); closeMobileList(); });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape'){ closeDrawer(); closeMobileList(); closeFilters(); }
